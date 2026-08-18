@@ -108,7 +108,7 @@ data/tracks.json            jeu de données publié (généré, non versionné)
 3. L'application détecte automatiquement le dépôt depuis l'URL `*.github.io` pour
    générer les liens de contribution (constante `REPO_OVERRIDE` dans `assets/app.js`
    si vous renommez le dépôt).
-4. Le premier push sur `main` construit et publie le site.
+4. Le premier push sur la branche par défaut construit et publie le site.
 
 ## Licences
 

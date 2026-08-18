@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: "Proposer directement une modification (pull request)"
-    url: https://github.com/Chardonneaur/pistes-athle/blob/main/CONTRIBUTING.md
+    url: https://github.com/Chardonneaur/pistes-athle/blob/master/CONTRIBUTING.md
     about: "Vous êtes à l'aise avec GitHub ? Éditez un fichier dans data/overrides/."

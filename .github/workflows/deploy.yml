@@ -2,7 +2,7 @@ name: Construire et publier le site
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
   workflow_dispatch:
   schedule:
     # Rafraîchit les données du ministère le 1er de chaque mois à 4 h UTC
