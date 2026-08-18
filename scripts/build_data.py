@@ -127,6 +127,18 @@ def as_int(v):
         return None
 
 
+def app_version():
+    """Lit APP_VERSION dans assets/app.js : une seule source de verite.
+    La valeur voyage dans tracks.json pour qu'un navigateur executant une
+    version perimee puisse le detecter et purger son cache."""
+    js = os.path.join(ROOT, "assets", "app.js")
+    with open(js, encoding="utf-8") as f:
+        m = re.search(r"const APP_VERSION = '([^']+)'", f.read())
+    if not m:
+        raise SystemExit("[ERREUR] APP_VERSION introuvable dans assets/app.js")
+    return m.group(1)
+
+
 def fetch_raw(offline=False):
     if offline and os.path.exists(RAW_CACHE):
         print("-> lecture du cache local", RAW_CACHE)
@@ -440,6 +452,7 @@ def main():
     avec_avis = sum(1 for t in tracks if t.get("av"))
     payload = {
         "generated": date.today().isoformat(),
+        "app_version": app_version(),
         "count": len(tracks),
         "source": {
             "nom": "Recensement des equipements sportifs (Data ES) - Ministere charge des Sports",

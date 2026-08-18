@@ -6,12 +6,12 @@
  * Seuls les contenus immuables (photos, librairies versionnées) sont servis
  * depuis le cache en priorité.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées
 const ASSETS = [
-  './', './index.html', './assets/style.css?v=3', './assets/app.js?v=3',
+  './', './index.html', './assets/style.css?v=4', './assets/app.js?v=4',
   './assets/icon.svg', './assets/manifest.webmanifest',
 ];
 

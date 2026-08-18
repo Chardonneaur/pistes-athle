@@ -5,6 +5,11 @@
 'use strict';
 
 /* ------------------------------------------------------------------ config */
+// Version de l'application. À incrémenter à chaque déploiement du code :
+// scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
+// navigateur exécutant une version périmée de s'en rendre compte tout seul.
+const APP_VERSION = '4';
+
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
 
@@ -85,11 +90,34 @@ const fmtDate = iso => {
 const fmtDist = km => km < 1 ? `${Math.round(km * 1000)} m`
                     : km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
 
+/* ------------------------------------------------- réparation d'un cache périmé
+   tracks.json passe toujours par le réseau : c'est notre canal de vérité.
+   S'il annonce une version d'application différente de celle qui s'exécute,
+   c'est qu'un ancien cache sert du vieux code. On purge et on recharge. */
+async function reparerCachePerime(version) {
+  if (!version || version === APP_VERSION) return false;
+  try {
+    if (sessionStorage.getItem('reparation') === version) return false;  // déjà tenté
+    sessionStorage.setItem('reparation', version);
+  } catch (e) { /* stockage indisponible : on tente quand même une fois */ }
+  console.warn(`Version ${APP_VERSION} périmée (serveur : ${version}) — purge du cache.`);
+  try {
+    if (self.caches) await Promise.all((await caches.keys()).map(k => caches.delete(k)));
+    if (navigator.serviceWorker) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map(r => r.unregister()));
+    }
+  } catch (e) { console.error(e); }
+  location.reload();
+  return true;
+}
+
 /* --------------------------------------------------------------- données */
 async function load() {
   const res = await fetch('data/tracks.json', { cache: 'no-cache' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const raw = await res.json();
+  if (await reparerCachePerime(raw.app_version)) return;
   const map = raw.keymap;
   state.deps = raw.deps || {};
   state.all = raw.tracks.map(rec => {
@@ -115,6 +143,19 @@ async function load() {
   readHash();
 }
 
+/* Plus le score est bas, plus le site est pertinent pour la recherche saisie. */
+function pertinence(t, q, words) {
+  const ville = norm(t.ville);
+  const nom = norm(t.nom);
+  if (ville === q) return 0;                              // « pornic »
+  if (t.cp === q) return 1;                               // « 44210 »
+  if (ville.startsWith(q)) return 2;                      // « porni »
+  if (nom.includes(q)) return 3;                          // « val saint martin »
+  if (ville.includes(q)) return 4;
+  if (words.every(w => nom.includes(w))) return 5;
+  return 6;
+}
+
 /* -------------------------------------------------------------- filtrage */
 function apply() {
   const q = norm(state.q).trim();
@@ -131,13 +172,22 @@ function apply() {
     for (const t of out) t._d = distance(state.me.lat, state.me.lon, t.lat, t.lon);
     out.sort((a, b) => a._d - b._d);
     if (state.active.has('near')) out = out.filter(t => t._d <= 30);
+  } else if (q) {
+    // Une recherche par commune doit faire remonter la commune, pas l'ordre
+    // alphabétique : « val saint martin » doit donner Pornic avant Cergy.
+    for (const t of out) t._r = pertinence(t, q, words);
+    out.sort((a, b) => a._r - b._r ||
+      (a.ville || '').localeCompare(b.ville || '', 'fr') ||
+      (a.nom || '').localeCompare(b.nom || '', 'fr'));
   } else {
     out.sort((a, b) => (a.ville || '').localeCompare(b.ville || '', 'fr'));
   }
 
   state.shown = out;
   state.limit = 40;
-  $('#count').textContent = out.length ? `${out.length} site${out.length > 1 ? 's' : ''}` : '';
+  $('#count').textContent = out.length
+    ? `${out.length} site${out.length > 1 ? 's' : ''}`
+    : 'aucun résultat';
   renderList();
   if (state.mapReady) renderMap();
 }
