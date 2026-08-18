@@ -139,6 +139,14 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .src{font-size:11.5px;color:var(--muted);margin-top:18px;line-height:1.6}
 .src a{color:var(--muted)}
 
+/* ---------- mini-carte dans la fiche ---------- */
+.minimap{margin:-6px 0 16px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.minimap-canvas{height:220px;width:100%}
+.minimap-canvas .leaflet-control-zoom{margin:8px}
+.minimap-full{display:block;width:100%;padding:10px;border:0;border-top:1px solid var(--line);
+  background:var(--bg);color:var(--accent);font-size:13.5px;font-weight:600;cursor:pointer}
+.pin-big{width:100%;height:100%;border-width:3px}
+
 /* ---------- galerie photo ---------- */
 .gallery{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
   margin:0 -16px 16px;padding:0 16px 4px;scrollbar-width:none}

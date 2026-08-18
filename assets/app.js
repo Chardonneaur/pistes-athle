@@ -65,7 +65,7 @@ const has = (t, a) => t.agres.includes(a);
 
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
-                q: '', me: null, openId: null, map: null, cluster: null, mapReady: false };
+                q: '', me: null, openId: null, map: null, mini: null, cluster: null, mapReady: false };
 
 const $ = s => document.querySelector(s);
 const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -199,15 +199,17 @@ function pinColor(t) {
   return '#c2410c';
 }
 
+const fondOSM = () => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+});
+
 function initMap() {
   state.map = L.map('map', { zoomControl: false, tap: false })
               .setView(state.me ? [state.me.lat, state.me.lon] : [46.7, 2.4],
                        state.me ? 11 : 5);
   L.control.zoom({ position: 'bottomright' }).addTo(state.map);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  }).addTo(state.map);
+  fondOSM().addTo(state.map);
   state.cluster = L.markerClusterGroup({
     maxClusterRadius: 55,
     chunkedLoading: true,
@@ -257,7 +259,6 @@ function openSheet(id) {
   state.openId = id;
   const sol = t.surface ? (SOL[t.surface] || [t.surface])[0] : null;
   const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lon}`;
-  const osm = `https://www.openstreetmap.org/?mlat=${t.lat}&mlon=${t.lon}#map=17/${t.lat}/${t.lon}`;
 
   const agres = [
     ...trier(t.agres).map(a => `<span>${esc(AGRES[a] || a)}</span>`),
@@ -300,8 +301,9 @@ function openSheet(id) {
 
     <div class="actions">
       <a class="btn primary" href="${gmaps}" target="_blank" rel="noopener">Itinéraire</a>
-      <a class="btn" href="${osm}" target="_blank" rel="noopener">Voir sur OSM</a>
+      <button class="btn" type="button" id="btn-minimap">Voir sur la carte</button>
     </div>
+    <div id="minimap" class="minimap" hidden></div>
 
     <div class="sec">Piste</div>
     <div class="grid">
@@ -352,6 +354,7 @@ function openSheet(id) {
 }
 
 function closeSheet() {
+  destroyMiniMap();
   state.openId = null;
   $('#sheet').hidden = true;
   document.body.style.overflow = '';
@@ -375,6 +378,56 @@ function readHash() {
   if (q) { state.q = q; $('#q').value = q; $('#q-clear').hidden = false; apply(); }
   const id = h.get('site');
   if (id) openSheet(id);
+}
+
+function destroyMiniMap() {
+  if (state.mini) { state.mini.remove(); state.mini = null; }
+}
+
+function toggleMiniMap() {
+  const box = $('#minimap');
+  const btn = $('#btn-minimap');
+  const t = state.all.find(x => x.id === state.openId);
+  if (!box || !btn || !t) return;
+
+  if (!box.hidden) {                                  // deja ouverte : on replie
+    destroyMiniMap();
+    box.hidden = true;
+    box.innerHTML = '';
+    btn.textContent = 'Voir sur la carte';
+    return;
+  }
+
+  box.hidden = false;
+  btn.textContent = 'Masquer la carte';
+  box.innerHTML = '<div class="minimap-canvas"></div>' +
+    '<button type="button" class="minimap-full" data-full-map>Ouvrir en plein écran</button>';
+
+  destroyMiniMap();
+  state.mini = L.map(box.querySelector('.minimap-canvas'), {
+    zoomControl: true, scrollWheelZoom: false, dragging: true,
+  }).setView([t.lat, t.lon], 17);
+  fondOSM().addTo(state.mini);
+  L.marker([t.lat, t.lon], {
+    icon: L.divIcon({
+      className: '',
+      html: `<div class="pin pin-big" style="background:${pinColor(t)}"></div>`,
+      iconSize: [20, 20], iconAnchor: [10, 10],
+    }),
+    keyboard: false,
+  }).addTo(state.mini);
+
+  setTimeout(() => {
+    state.mini.invalidateSize();
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 60);
+}
+
+function showOnFullMap() {
+  const t = state.all.find(x => x.id === state.openId);
+  closeSheet();
+  switchView('map');
+  if (t) state.map.setView([t.lat, t.lon], 17);
 }
 
 function openPhoto(src, alt) {
@@ -478,6 +531,8 @@ function init() {
   $('#sheet').addEventListener('click', e => {
     const img = e.target.closest('img[data-full]');
     if (img) return openPhoto(img.dataset.full, img.alt);
+    if (e.target.closest('#btn-minimap')) return toggleMiniMap();
+    if (e.target.closest('[data-full-map]')) return showOnFullMap();
     if (e.target.closest('[data-close]')) closeSheet();
   });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
@@ -494,8 +549,17 @@ function init() {
     console.error(err);
   });
 
-  if ('serviceWorker' in navigator && location.protocol === 'https:')
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});
+    // Quand une nouvelle version prend la main, on recharge une seule fois :
+    // sans cela un ancien service worker continuerait de servir l'ancienne appli.
+    let rechargement = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (rechargement) return;
+      rechargement = true;
+      location.reload();
+    });
+  }
 }
 
 function switchView(v) {
