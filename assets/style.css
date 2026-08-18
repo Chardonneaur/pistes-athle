@@ -11,6 +11,7 @@
         --ok:#34d399;--ok-soft:#123328;}
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html,body{margin:0;height:100%}
 body{
   background:var(--bg);color:var(--ink);
@@ -63,6 +64,13 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 /* ---------- liste ---------- */
 .results{list-style:none;margin:0;padding:8px 12px calc(24px + var(--safe-b));display:grid;gap:8px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 13px;cursor:pointer}
+.card.has-photo{display:flex;gap:11px;align-items:flex-start;padding-right:11px}
+.card-main{flex:1;min-width:0}
+.thumb{flex:none;width:74px;height:74px;object-fit:cover;border-radius:10px;background:var(--bg)}
+.rating{display:flex;align-items:center;gap:6px;margin:5px 0 0;font-size:12px;color:var(--muted)}
+.stars{color:#f59e0b;letter-spacing:1px;font-size:12.5px}
+.rating.big{margin:0 0 14px;font-size:13.5px}
+.rating.big .stars{font-size:16px}
 .card:active{transform:scale(.995)}
 .card-top{display:flex;gap:10px;align-items:baseline}
 .card h2{margin:0;font-size:15px;font-weight:650;letter-spacing:-.01em;flex:1;min-width:0}
@@ -130,6 +138,33 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
   padding:10px 12px;font-size:13.5px;margin:8px 0}
 .src{font-size:11.5px;color:var(--muted);margin-top:18px;line-height:1.6}
 .src a{color:var(--muted)}
+
+/* ---------- galerie photo ---------- */
+.gallery{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
+  margin:0 -16px 16px;padding:0 16px 4px;scrollbar-width:none}
+.gallery::-webkit-scrollbar{display:none}
+.gallery figure{flex:none;width:min(84%,420px);margin:0;scroll-snap-align:center}
+.gallery img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;
+  background:var(--bg);cursor:zoom-in;display:block}
+.gallery figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.gallery figcaption span{opacity:.7}
+
+/* ---------- avis ---------- */
+.avis{background:var(--bg);border-radius:12px;padding:11px 13px;margin-bottom:8px}
+.avis header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px}
+.avis header strong{font-size:13.5px}
+.avis header time{font-size:11.5px;color:var(--muted);margin-left:auto}
+.avis p{margin:0;font-size:13.5px;line-height:1.55}
+.vide{font-size:13.5px;color:var(--muted);background:var(--bg);border-radius:12px;
+  padding:14px;margin:0;text-align:center}
+
+/* ---------- photo plein écran ---------- */
+.viewer{position:fixed;inset:0;z-index:1200;background:rgba(2,6,23,.94);
+  display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.viewer img{max-width:100%;max-height:100%;border-radius:8px}
+.viewer button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;
+  width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.15);
+  color:#fff;font-size:24px;line-height:1;cursor:pointer}
 
 /* ---------- à propos ---------- */
 .about h3{margin:18px 0 6px;font-size:15px}

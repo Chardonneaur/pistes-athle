@@ -49,6 +49,7 @@ jobs:
           cp index.html sw.js .nojekyll _site/
           cp assets/* _site/assets/
           cp data/tracks.json _site/data/
+          [ -d data/photos ] && cp -r data/photos _site/data/ || true
           du -sh _site
 
       - uses: actions/configure-pages@v5

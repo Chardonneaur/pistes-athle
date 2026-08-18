@@ -1,0 +1,35 @@
+{
+  "id": "I441310030",
+  "agres": ["longueur", "hauteur", "perche", "poids", "disque", "marteau"],
+  "surface": "synthetique",
+  "longueur_piste": 400,
+  "eclairage": true,
+  "photos": [
+    { "fichier": "01-piste-et-terrain.jpg",
+      "legende": "La piste synthétique et le terrain central engazonné",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "02-ligne-droite.jpg",
+      "legende": "La ligne droite, couloirs numérotés",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "03-aire-de-poids.jpg",
+      "legende": "L'aire de lancer du poids, juste à côté du sautoir en longueur",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "04-sautoir-hauteur.jpg",
+      "legende": "Les matelas du sautoir en hauteur, bâchés en bord de piste",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "05-sautoir-perche.jpg",
+      "legende": "Le sautoir à la perche sous sa protection, le long de la ligne droite",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "06-cage-de-lancer.jpg",
+      "legende": "La cage de lancer du disque et du marteau, sur l'aire extérieure",
+      "credit": "Ronan Chardonneau" }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-18",
+      "note": 5,
+      "texte": "Très belle piste. Tous les agrès sont là et en état : sautoir en longueur, perche, hauteur, aire de lancer du poids, et une cage pour le disque et le marteau. Anneau synthétique 400 m avec terrain engazonné au centre, éclairage en place."
+    }
+  ]
+}

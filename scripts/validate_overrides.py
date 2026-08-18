@@ -23,7 +23,10 @@ BOOL = {"piste", "couvert", "eclairage", "acces_libre", "ouvert_public", "vestia
 INT = {"couloirs", "longueur_piste", "tribunes", "annee", "renovation"}
 NUM = {"lat", "lon"}
 LIST = {"agres", "agres_probables"}
-ALLOWED = STR | BOOL | INT | NUM | LIST | {"id"}
+MEDIA = {"photos", "avis"}
+ALLOWED = STR | BOOL | INT | NUM | LIST | MEDIA | {"id"}
+
+PHOTOS_DIR = os.path.join(ROOT, "data", "photos")
 
 ID_RE = re.compile(r"^(I[0-9A-Z]{9,}|c-[a-z0-9-]{3,60})$")
 
@@ -32,6 +35,56 @@ errors = []
 
 def err(fn, msg):
     errors.append(f"{fn}: {msg}")
+
+
+def check_photos(fn, site_id, photos):
+    if not isinstance(photos, list):
+        return err(fn, "'photos' doit etre une liste")
+    for p in photos:
+        if not isinstance(p, dict) or not p.get("fichier"):
+            err(fn, "chaque photo doit etre un objet avec au moins un champ 'fichier'")
+            continue
+        extra = set(p) - {"fichier", "legende", "credit"}
+        if extra:
+            err(fn, f"photo : cle(s) inconnue(s) {sorted(extra)} "
+                    f"(autorisees : fichier, legende, credit)")
+        f = p["fichier"]
+        if "/" in f or "\\" in f or f.startswith("."):
+            err(fn, f"photo '{f}' : indiquez seulement le nom du fichier")
+            continue
+        if not f.lower().endswith((".jpg", ".jpeg")):
+            err(fn, f"photo '{f}' : format JPEG attendu")
+        path = os.path.join(PHOTOS_DIR, site_id, f)
+        if not os.path.exists(path):
+            err(fn, f"photo introuvable : data/photos/{site_id}/{f} "
+                    f"(lancez scripts/optimize_photos.py)")
+        elif os.path.getsize(path) > 400 * 1024:
+            err(fn, f"photo '{f}' trop lourde ({os.path.getsize(path)//1024} Ko, max 400) : "
+                    f"passez-la par scripts/optimize_photos.py")
+
+
+def check_avis(fn, avis):
+    if not isinstance(avis, list):
+        return err(fn, "'avis' doit etre une liste")
+    for a in avis:
+        if not isinstance(a, dict):
+            err(fn, "chaque avis doit etre un objet JSON")
+            continue
+        extra = set(a) - {"auteur", "date", "note", "texte"}
+        if extra:
+            err(fn, f"avis : cle(s) inconnue(s) {sorted(extra)} "
+                    f"(autorisees : auteur, date, note, texte)")
+        texte = a.get("texte")
+        if not texte or not isinstance(texte, str):
+            err(fn, "avis : le champ 'texte' est obligatoire")
+        elif len(texte) > 1200:
+            err(fn, f"avis : texte trop long ({len(texte)} caracteres, max 1200)")
+        if "note" in a and a["note"] not in (1, 2, 3, 4, 5):
+            err(fn, "avis : 'note' doit etre un entier de 1 a 5")
+        if a.get("date") and not re.match(r"^\d{4}-\d{2}-\d{2}$", str(a["date"])):
+            err(fn, "avis : 'date' doit etre au format AAAA-MM-JJ")
+        if a.get("auteur") and len(str(a["auteur"])) > 40:
+            err(fn, "avis : 'auteur' est limite a 40 caracteres")
 
 
 def check(fn, rec):
@@ -56,6 +109,10 @@ def check(fn, rec):
             err(fn, f"'{k}' doit etre un nombre")
         elif k in STR and not isinstance(v, str):
             err(fn, f"'{k}' doit etre une chaine de caracteres")
+        elif k == "photos":
+            check_photos(fn, rid, v)
+        elif k == "avis":
+            check_avis(fn, v)
         elif k in LIST:
             if not isinstance(v, list):
                 err(fn, f"'{k}' doit etre une liste")

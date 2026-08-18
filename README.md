@@ -19,6 +19,7 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 - **Filtres par agrès** : perche, longueur, hauteur, poids, lancers longs, steeple
 - **Filtres par revêtement** : synthétique (tartan), bitume, cendrée
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
+- **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
 - **Carte** avec regroupement des marqueurs, et fiche détaillée par site
 - **Installable** sur l'écran d'accueil (PWA) et **consultable hors-ligne** une fois chargée
 - 100 % statique : hébergé gratuitement sur GitHub Pages, aucun serveur, aucun tracker
@@ -61,8 +62,9 @@ accessible en semaine ».
 Trois portes d'entrée, de la plus simple à la plus technique :
 
 1. **Sans rien connaître à GitHub** — depuis une fiche de l'application, cliquez sur
-   *Signaler une erreur* ou *Compléter la fiche* : un formulaire GitHub pré-rempli
-   s'ouvre. [Voir les formulaires](../../issues/new/choose).
+   *Donner mon avis*, *Signaler une erreur* ou *Compléter la fiche* : un formulaire
+   GitHub pré-rempli s'ouvre, et les photos se glissent-déposent directement dedans.
+   [Voir les formulaires](../../issues/new/choose).
 2. **En modifiant un fichier depuis le navigateur** — ajoutez un petit fichier JSON
    dans `data/overrides/`. Voir **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 3. **En pull request classique** — clonez, éditez, `python3 scripts/validate_overrides.py`,
@@ -96,7 +98,9 @@ assets/style.css            interface mobile-first, thème clair/sombre
 sw.js                       service worker (hors-ligne)
 scripts/build_data.py       Data ES + overrides -> data/tracks.json
 scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
-data/overrides/*.json       contributions de la communauté
+scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
+data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
+data/photos/<id>/           photos optimisées, une par site
 data/tracks.json            jeu de données publié (généré, non versionné)
 .github/workflows/          construction, validation, déploiement Pages
 ```

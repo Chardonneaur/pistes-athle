@@ -206,6 +206,8 @@ def aggregate(raw):
                 "annee": None,
                 "renovation": None,
                 "url": None,
+                "photos": [],
+                "avis": [],
                 "proprietaire": e.get("equip_prop_type"),
                 "gestionnaire": e.get("equip_gest_type"),
                 "equipements": [],
@@ -293,7 +295,7 @@ ALLOWED_OVERRIDE_KEYS = {
     "id", "nom", "adresse", "cp", "ville", "dep", "lat", "lon", "piste", "couloirs",
     "longueur_piste", "surface", "couvert", "eclairage", "acces_libre", "ouvert_public",
     "horaires", "acces_note", "vestiaires", "douches", "sanitaires", "tribunes",
-    "agres", "agres_probables", "url", "annee", "renovation", "photo", "note",
+    "agres", "agres_probables", "url", "annee", "renovation", "photos", "avis", "note",
     "supprime", "scolaire", "region", "dep_nom", "proprietaire", "gestionnaire",
 }
 
@@ -319,6 +321,7 @@ def apply_overrides(installations, overrides):
                 "sanitaires": False, "tribunes": None, "agres": set(),
                 "agres_probables": set(), "nb_sautoirs": 0, "nb_aires_lancer": 0,
                 "annee": None, "renovation": None, "url": None,
+                "photos": [], "avis": [],
                 "proprietaire": None, "gestionnaire": None, "equipements": [],
                 "source": "communaute",
             }
@@ -346,9 +349,50 @@ KEYMAP = {
     "sanitaires": "wc", "tribunes": "tr", "agres": "g", "agres_probables": "gp",
     "nb_sautoirs": "ns", "nb_aires_lancer": "nl", "annee": "an", "renovation": "rn",
     "url": "u", "scolaire": "sc", "source": "sr", "horaires": "h",
-    "acces_note": "na", "note": "no", "photo": "ph",
+    "acces_note": "na", "note": "no", "photos": "ph", "avis": "av",
+    "note_moyenne": "nt", "nb_avis": "nv",
 }
 SOURCE_CODES = {"res": 0, "res+communaute": 1, "communaute": 2}
+
+
+def prepare_photos(site_id, photos):
+    """Verifie que les fichiers existent et produit les chemins publics."""
+    out = []
+    for p in photos or []:
+        fichier = p.get("fichier") if isinstance(p, dict) else p
+        if not fichier:
+            continue
+        rel = os.path.join("data", "photos", site_id, fichier)
+        if not os.path.exists(os.path.join(ROOT, rel)):
+            raise SystemExit(f"[ERREUR] photo introuvable : {rel}")
+        thumb = fichier.rsplit(".", 1)[0] + ".thumb." + fichier.rsplit(".", 1)[1]
+        entry = {"f": rel.replace(os.sep, "/")}
+        if os.path.exists(os.path.join(ROOT, "data", "photos", site_id, thumb)):
+            entry["t"] = f"data/photos/{site_id}/{thumb}"
+        if isinstance(p, dict):
+            if p.get("legende"):
+                entry["l"] = p["legende"]
+            if p.get("credit"):
+                entry["c"] = p["credit"]
+        out.append(entry)
+    return out
+
+
+def prepare_avis(avis):
+    """Normalise les avis et calcule la note moyenne."""
+    out, notes = [], []
+    for a in sorted(avis or [], key=lambda a: a.get("date", ""), reverse=True):
+        entry = {"t": a["texte"]}
+        if a.get("auteur"):
+            entry["a"] = a["auteur"]
+        if a.get("date"):
+            entry["d"] = a["date"]
+        if a.get("note"):
+            entry["n"] = int(a["note"])
+            notes.append(int(a["note"]))
+        out.append(entry)
+    moyenne = round(sum(notes) / len(notes), 1) if notes else None
+    return out, moyenne
 
 
 def finalize(installations):
@@ -357,6 +401,9 @@ def finalize(installations):
     for inst in installations.values():
         if inst["lat"] is None or inst["lon"] is None:
             continue
+        inst["photos"] = prepare_photos(inst["id"], inst.get("photos"))
+        inst["avis"], inst["note_moyenne"] = prepare_avis(inst.get("avis"))
+        inst["nb_avis"] = len(inst["avis"])
         if inst.get("dep") and inst.get("dep_nom"):
             deps[inst["dep"]] = [inst["dep_nom"], inst.get("region") or ""]
         rec = {}
@@ -389,6 +436,8 @@ def main():
     tracks, deps = finalize(installations)
 
     avec_piste = sum(1 for t in tracks if t.get("p"))
+    avec_photo = sum(1 for t in tracks if t.get("ph"))
+    avec_avis = sum(1 for t in tracks if t.get("av"))
     payload = {
         "generated": date.today().isoformat(),
         "count": len(tracks),
@@ -406,7 +455,8 @@ def main():
         json.dump(payload, f, ensure_ascii=False, separators=(",", ":"))
     size = os.path.getsize(OUT) / 1024
     print(f"-> {OUT}")
-    print(f"   {len(tracks)} sites ({avec_piste} avec piste) - {size:.0f} Ko")
+    print(f"   {len(tracks)} sites ({avec_piste} avec piste, "
+          f"{avec_photo} avec photos, {avec_avis} avec avis) - {size:.0f} Ko")
 
 
 if __name__ == "__main__":

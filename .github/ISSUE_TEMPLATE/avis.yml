@@ -1,0 +1,67 @@
+name: "Donner mon avis sur une piste"
+description: "Raconter comment ça se passe sur place, et envoyer des photos"
+title: "[Avis] "
+labels: ["avis", "données"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Votre retour de terrain vaut mieux que n'importe quelle base de données.
+        Dites ce qui est vraiment là, dans quel état, et si on peut y entrer.
+  - type: input
+    id: id
+    attributes:
+      label: "Référence du site"
+      description: "Affichée en bas de la fiche (ex. I441310030)."
+      placeholder: "I441310030"
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du stade et commune"
+      placeholder: "Centre Sportif du Val Saint Martin, Pornic (44)"
+    validations:
+      required: true
+  - type: dropdown
+    id: note
+    attributes:
+      label: "Votre note"
+      options:
+        - "5 — excellente piste, rien à redire"
+        - "4 — très bonne piste"
+        - "3 — correcte, quelques défauts"
+        - "2 — vétuste ou mal équipée"
+        - "1 — à éviter"
+    validations:
+      required: true
+  - type: textarea
+    id: avis
+    attributes:
+      label: "Votre avis"
+      description: "État de la piste, agrès disponibles, ambiance, fréquentation, accès…"
+      placeholder: |
+        Très belle piste. Tous les agrès sont là et en état : sautoir en longueur,
+        perche, hauteur, aire de poids, cage disque/marteau. Anneau synthétique 400 m.
+    validations:
+      required: true
+  - type: input
+    id: pseudo
+    attributes:
+      label: "Sous quel nom signer ?"
+      description: "Prénom, pseudo, nom de club… Laissez vide pour rester anonyme."
+      placeholder: "Ronan"
+  - type: textarea
+    id: photos
+    attributes:
+      label: "Photos"
+      description: |
+        Glissez-déposez vos photos ici (GitHub les téléverse automatiquement).
+        Photographiez la piste, mais aussi les sautoirs et les aires de lancer :
+        c'est ce qui manque le plus dans la donnée publique.
+        ⚠️ Évitez les photos où des personnes sont reconnaissables.
+  - type: checkboxes
+    id: droits
+    attributes:
+      label: "Droits sur les photos"
+      options:
+        - label: "Ces photos sont les miennes et j'accepte qu'elles soient publiées sur le site sous licence ODbL, avec mon crédit."
+          required: false

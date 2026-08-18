@@ -37,6 +37,9 @@ const AGRES = {
   lancer_indetermine: 'Aire de lancer (type inconnue)',
 };
 const SOURCES = ['Data ES (ministère)', 'Data ES + communauté', 'Contribution communautaire'];
+const ORDRE_AGRES = ['steeple', 'longueur', 'triple', 'hauteur', 'perche',
+                     'poids', 'disque', 'marteau', 'javelot'];
+const trier = list => [...list].sort((a, b) => ORDRE_AGRES.indexOf(a) - ORDRE_AGRES.indexOf(b));
 
 const FILTERS = [
   { id: 'near',   label: '📍 Près de moi', test: null },
@@ -54,6 +57,8 @@ const FILTERS = [
   { id: 'couv',   label: 'Couverte',       test: t => t.couvert },
   { id: 'vest',   label: 'Vestiaires',     test: t => t.vestiaires },
   { id: 'noeco',  label: 'Hors enceinte scolaire', test: t => !t.scolaire },
+  { id: 'photo',  label: '📷 Avec photos',  test: t => t.photos.length > 0 },
+  { id: 'avis',   label: '★ Avec avis',     test: t => t.avis.length > 0 },
 ];
 
 const has = (t, a) => t.agres.includes(a);
@@ -73,6 +78,10 @@ function distance(a, b, c, d) {                     // haversine, km
   const h = Math.sin(dLat/2)**2 + Math.cos(a*r) * Math.cos(c*r) * Math.sin(dLon/2)**2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
+const fmtDate = iso => {
+  const d = new Date(iso);
+  return isNaN(d) ? iso : d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+};
 const fmtDist = km => km < 1 ? `${Math.round(km * 1000)} m`
                     : km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
 
@@ -91,6 +100,8 @@ async function load() {
       t[b] = !!t[b];
     t.agres = t.agres || [];
     t.agres_probables = t.agres_probables || [];
+    t.photos = t.photos || [];
+    t.avis = t.avis || [];
     t.nb_sautoirs = t.nb_sautoirs || 0;
     t.nb_aires_lancer = t.nb_aires_lancer || 0;
     const d = state.deps[t.dep] || [];
@@ -142,7 +153,7 @@ function tagsOf(t) {
   else if (t.couloirs) tags.push(`<span class="tag">${t.couloirs} couloirs</span>`);
   if (t.acces_libre) tags.push('<span class="tag free">Accès libre</span>');
   if (t.couvert) tags.push('<span class="tag">Couverte</span>');
-  for (const a of t.agres) tags.push(`<span class="tag">${esc(AGRES[a] || a)}</span>`);
+  for (const a of trier(t.agres)) tags.push(`<span class="tag">${esc(AGRES[a] || a)}</span>`);
   if (!t.agres.length) {
     if (t.nb_sautoirs) tags.push(`<span class="tag maybe">${t.nb_sautoirs} aire${t.nb_sautoirs>1?'s':''} de saut</span>`);
     if (t.nb_aires_lancer) tags.push(`<span class="tag maybe">${t.nb_aires_lancer} aire${t.nb_aires_lancer>1?'s':''} de lancer</span>`);
@@ -151,17 +162,31 @@ function tagsOf(t) {
   return tags.join('');
 }
 
+function stars(n) {
+  const full = Math.round(n);
+  return `<span class="stars" aria-label="${n} sur 5">${'★'.repeat(full)}${'☆'.repeat(5 - full)}</span>`;
+}
+
 function renderList() {
   const list = state.shown.slice(0, state.limit);
-  $('#results').innerHTML = list.map(t => `
-    <li class="card" data-id="${esc(t.id)}">
-      <div class="card-top">
-        <h2>${esc(t.nom || 'Équipement d’athlétisme')}</h2>
-        ${t._d != null ? `<span class="dist">${fmtDist(t._d)}</span>` : ''}
+  $('#results').innerHTML = list.map(t => {
+    const vignette = t.photos[0];
+    return `
+    <li class="card${vignette ? ' has-photo' : ''}" data-id="${esc(t.id)}">
+      <div class="card-main">
+        <div class="card-top">
+          <h2>${esc(t.nom || 'Équipement d’athlétisme')}</h2>
+          ${t._d != null ? `<span class="dist">${fmtDist(t._d)}</span>` : ''}
+        </div>
+        <p class="loc">${esc([t.ville, t.dep && `(${t.dep})`].filter(Boolean).join(' '))}</p>
+        ${t.note_moyenne ? `<p class="rating">${stars(t.note_moyenne)}
+           <span>${t.note_moyenne.toFixed(1).replace('.', ',')} · ${t.nb_avis} avis</span></p>` : ''}
+        <div class="tags">${tagsOf(t)}</div>
       </div>
-      <p class="loc">${esc([t.ville, t.dep && `(${t.dep})`].filter(Boolean).join(' '))}</p>
-      <div class="tags">${tagsOf(t)}</div>
-    </li>`).join('');
+      ${vignette ? `<img class="thumb" loading="lazy" src="${esc(vignette.t || vignette.f)}"
+         alt="${esc(vignette.l || t.nom)}">` : ''}
+    </li>`;
+  }).join('');
   $('#more').hidden = state.shown.length <= state.limit;
   $('#empty').hidden = state.shown.length > 0;
 }
@@ -235,13 +260,43 @@ function openSheet(id) {
   const osm = `https://www.openstreetmap.org/?mlat=${t.lat}&mlon=${t.lon}#map=17/${t.lat}/${t.lon}`;
 
   const agres = [
-    ...t.agres.map(a => `<span>${esc(AGRES[a] || a)}</span>`),
+    ...trier(t.agres).map(a => `<span>${esc(AGRES[a] || a)}</span>`),
     ...t.agres_probables.map(a => `<span class="maybe">${esc(AGRES[a] || a)}</span>`),
   ].join('');
+
+  const galerie = t.photos.length ? `
+    <div class="gallery" role="group" aria-label="Photos du site">
+      ${t.photos.map((p, i) => `
+        <figure><img loading="${i ? 'lazy' : 'eager'}" src="${esc(p.f)}"
+             alt="${esc(p.l || t.nom)}" data-full="${esc(p.f)}">
+          ${p.l ? `<figcaption>${esc(p.l)}${p.c ? ` <span>© ${esc(p.c)}</span>` : ''}</figcaption>` : ''}
+        </figure>`).join('')}
+    </div>` : '';
+
+  const avis = `
+    <div class="sec">Avis des athlètes${t.nb_avis ? ` (${t.nb_avis})` : ''}</div>
+    ${t.avis.length ? t.avis.map(a => `
+      <article class="avis">
+        <header>
+          ${a.n ? stars(a.n) : ''}
+          <strong>${esc(a.a || 'Anonyme')}</strong>
+          ${a.d ? `<time datetime="${esc(a.d)}">${fmtDate(a.d)}</time>` : ''}
+        </header>
+        <p>${esc(a.t)}</p>
+      </article>`).join('')
+    : `<p class="vide">Personne n’a encore décrit ce site.
+         Vous vous y entraînez&nbsp;? Votre retour aidera les autres.</p>`}
+    <a class="btn" style="margin-top:10px" target="_blank" rel="noopener"
+       href="${ISSUE('avis.yml', { title: `[Avis] ${t.nom} (${t.ville})`, id: t.id })}">
+       ✍️ Donner mon avis</a>`;
 
   $('#sheet-body').innerHTML = `
     <h2>${esc(t.nom || 'Équipement d’athlétisme')}</h2>
     <p class="loc">${esc([t.adresse, [t.cp, t.ville].filter(Boolean).join(' ')].filter(Boolean).join(', '))}${t.dep_nom ? ` · ${esc(t.dep_nom)}` : ''}</p>
+    ${t.note_moyenne ? `<p class="rating big">${stars(t.note_moyenne)}
+       <span>${t.note_moyenne.toFixed(1).replace('.', ',')} sur 5 · ${t.nb_avis} avis</span></p>` : ''}
+
+    ${galerie}
 
     <div class="actions">
       <a class="btn primary" href="${gmaps}" target="_blank" rel="noopener">Itinéraire</a>
@@ -276,6 +331,7 @@ function openSheet(id) {
       ${kv('Horaires', t.horaires)}
     </div>
     ${t.acces_note ? `<p class="note">${esc(t.acces_note)}</p>` : ''}
+    ${avis}
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}
     ${t.url ? `<p><a href="${esc(t.url)}" target="_blank" rel="noopener">Site officiel de l’équipement</a></p>` : ''}
 
@@ -307,6 +363,7 @@ function setHash() {
   const id = state.openId;
   const parts = [];
   if ($('#view-map').classList.contains('is-active')) parts.push('carte');
+  if (state.q.trim()) parts.push('q=' + encodeURIComponent(state.q.trim()));
   if (id) parts.push('site=' + id);
   history.replaceState(null, '', parts.length ? '#' + parts.join('&') : location.pathname);
 }
@@ -314,8 +371,18 @@ function setHash() {
 function readHash() {
   const h = new URLSearchParams(location.hash.replace(/^#/, '').replace(/&/g, '&'));
   if (location.hash.includes('carte')) switchView('map');
+  const q = h.get('q');
+  if (q) { state.q = q; $('#q').value = q; $('#q-clear').hidden = false; apply(); }
   const id = h.get('site');
   if (id) openSheet(id);
+}
+
+function openPhoto(src, alt) {
+  const v = document.createElement('div');
+  v.className = 'viewer';
+  v.innerHTML = `<img src="${esc(src)}" alt="${esc(alt)}"><button aria-label="Fermer">×</button>`;
+  v.addEventListener('click', () => v.remove());
+  document.body.appendChild(v);
 }
 
 /* ----------------------------------------------------------- à propos */
@@ -396,10 +463,10 @@ function init() {
     state.q = e.target.value;
     $('#q-clear').hidden = !state.q;
     clearTimeout(deb);
-    deb = setTimeout(apply, 160);
+    deb = setTimeout(() => { apply(); setHash(); }, 160);
   });
   $('#q-clear').addEventListener('click', () => {
-    $('#q').value = ''; state.q = ''; $('#q-clear').hidden = true; apply();
+    $('#q').value = ''; state.q = ''; $('#q-clear').hidden = true; apply(); setHash();
   });
 
   $('#btn-geo').addEventListener('click', geolocate);
@@ -408,7 +475,11 @@ function init() {
   $('#results').addEventListener('click', e => {
     const c = e.target.closest('.card'); if (c) openSheet(c.dataset.id);
   });
-  $('#sheet').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+  $('#sheet').addEventListener('click', e => {
+    const img = e.target.closest('img[data-full]');
+    if (img) return openPhoto(img.dataset.full, img.alt);
+    if (e.target.closest('[data-close]')) closeSheet();
+  });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   document.addEventListener('click', e => {
     const a = e.target.closest('[data-add-track]');

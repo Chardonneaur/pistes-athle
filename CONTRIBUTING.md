@@ -61,6 +61,61 @@ Choisissez un identifiant qui commence par `c-` (pour « communauté ») :
 Pour les coordonnées : clic droit sur le site dans Google Maps ou OpenStreetMap →
 copier les coordonnées (latitude d'abord).
 
+## Ajouter des photos
+
+Les photos sont ce qui manque le plus : une image du sautoir à la perche vaut
+mieux qu'une ligne « aire de saut ».
+
+```bash
+python3 scripts/optimize_photos.py I441310030 ~/photos/pornic/*.jpg
+```
+
+Le script redimensionne, compresse, **supprime les métadonnées EXIF (dont la
+position GPS de votre téléphone)** et fabrique une vignette. Il écrit dans
+`data/photos/<id>/` et vous affiche le bloc JSON à recopier :
+
+```json
+{
+  "id": "I441310030",
+  "photos": [
+    { "fichier": "01-piste-et-terrain.jpg",
+      "legende": "La piste synthétique et le terrain central engazonné",
+      "credit": "Votre nom" }
+  ]
+}
+```
+
+Règles : JPEG uniquement, 400 Ko maximum par photo (le script s'en charge),
+photos prises par vous, et **pas de personnes reconnaissables**. En les
+proposant, vous acceptez leur publication sous ODbL avec votre crédit.
+
+## Donner son avis
+
+Un avis, c'est le retour de terrain que la donnée publique n'aura jamais :
+l'état réel de la piste, les agrès utilisables, l'ambiance, l'accès.
+
+```json
+{
+  "id": "I441310030",
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-18",
+      "note": 5,
+      "texte": "Très belle piste. Tous les agrès sont là et en état : sautoir en longueur, perche, hauteur, aire de lancer du poids, et une cage pour le disque et le marteau."
+    }
+  ]
+}
+```
+
+`texte` est obligatoire (1 200 caractères maximum), `note` va de 1 à 5, `date`
+est au format `AAAA-MM-JJ`, `auteur` peut être un prénom, un pseudo ou un club —
+laissez-le vide pour rester anonyme. La note affichée sur la fiche est la moyenne
+de tous les avis.
+
+Décrivez l'installation, pas les personnes : pas de nom d'entraîneur, pas de
+règlement de comptes avec le club local.
+
 ## Supprimer un doublon ou un site disparu
 
 ```json
@@ -93,6 +148,8 @@ Expliquez la raison dans la description de la pull request.
 | `scolaire` | booléen | site situé dans une enceinte scolaire |
 | `url` | texte | page officielle, doit commencer par `https://` |
 | `note` | texte | remarque libre affichée sur la fiche |
+| `photos` | liste | objets `{fichier, legende, credit}` — voir plus haut |
+| `avis` | liste | objets `{auteur, date, note, texte}` — voir plus haut |
 | `supprime` | booléen | retire le site de l'annuaire |
 
 ## Vérifier avant d'envoyer
