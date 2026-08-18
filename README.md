@@ -8,7 +8,7 @@ Pas seulement « il y a un stade ici », mais : la piste est-elle en synthétiqu
 en cendrée ? Combien de couloirs ? Y a-t-il un sautoir à la perche ? Une aire de
 lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 
-👉 **[Ouvrir l'application](https://VOTRE-COMPTE.github.io/pistes-athle/)**
+👉 **[Ouvrir l'application](https://chardonneaur.github.io/pistes-athle/)**
 
 ---
 
@@ -74,7 +74,7 @@ autorisées, cohérence géographique) et un résumé lisible est publié dans l
 ## Développement local
 
 ```bash
-git clone https://github.com/VOTRE-COMPTE/pistes-athle.git
+git clone https://github.com/Chardonneaur/pistes-athle.git
 cd pistes-athle
 
 python3 scripts/build_data.py       # télécharge Data ES et génère data/tracks.json
@@ -105,10 +105,9 @@ data/tracks.json            jeu de données publié (généré, non versionné)
 
 1. Créez le dépôt sur GitHub et poussez ce dossier.
 2. *Settings → Pages → Build and deployment → Source :* **GitHub Actions**.
-3. Remplacez `VOTRE-COMPTE/pistes-athle` dans ce README et dans
-   `.github/ISSUE_TEMPLATE/config.yml`. L'application, elle, détecte automatiquement
-   le dépôt depuis l'URL `*.github.io` (constante `REPO_OVERRIDE` dans `assets/app.js`
-   si besoin de forcer).
+3. L'application détecte automatiquement le dépôt depuis l'URL `*.github.io` pour
+   générer les liens de contribution (constante `REPO_OVERRIDE` dans `assets/app.js`
+   si vous renommez le dépôt).
 4. Le premier push sur `main` construit et publie le site.
 
 ## Licences

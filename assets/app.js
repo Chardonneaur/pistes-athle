@@ -11,7 +11,7 @@ const REPO_OVERRIDE = '';
 const REPO = (() => {
   if (REPO_OVERRIDE) return REPO_OVERRIDE;
   const m = location.hostname.match(/^([\w-]+)\.github\.io$/);
-  if (!m) return 'VOTRE-COMPTE/pistes-athle';
+  if (!m) return 'Chardonneaur/pistes-athle';
   const seg = location.pathname.split('/').filter(Boolean)[0];
   return seg ? `${m[1]}/${seg}` : `${m[1]}/${m[1]}.github.io`;
 })();
