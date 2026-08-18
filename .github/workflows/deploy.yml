@@ -1,0 +1,67 @@
+name: Construire et publier le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Rafraîchit les données du ministère le 1er de chaque mois à 4 h UTC
+    - cron: "0 4 1 * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Valider les contributions
+        run: python3 scripts/validate_overrides.py
+
+      - name: Construire data/tracks.json depuis Data ES
+        run: python3 scripts/build_data.py
+
+      - name: Vérifier que le jeu de données est plausible
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("data/tracks.json"))
+          n = len(d["tracks"])
+          print(f"{n} sites generes")
+          if n < 5000:
+              sys.exit(f"ERREUR : seulement {n} sites, l'API a probablement repondu partiellement")
+          PY
+
+      - name: Assembler le site
+        run: |
+          mkdir -p _site/assets _site/data
+          cp index.html sw.js .nojekyll _site/
+          cp assets/* _site/assets/
+          cp data/tracks.json _site/data/
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

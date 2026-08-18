@@ -1,0 +1,17 @@
+{
+  "name": "Où s'entraîner ? — Pistes d'athlétisme",
+  "short_name": "Où s'entraîner",
+  "description": "Trouvez la piste d'athlétisme la plus proche et ses équipements : sautoirs, aires de lancer, revêtement.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f7f9",
+  "theme_color": "#0f172a",
+  "categories": ["sports", "navigation"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

@@ -1,0 +1,4 @@
+data/.res_raw.json
+.DS_Store
+__pycache__/
+data/tracks.json

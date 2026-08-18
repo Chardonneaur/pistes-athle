@@ -1,0 +1,68 @@
+name: "Compléter la fiche d'une piste"
+description: "Préciser les agrès, horaires ou conditions d'accès d'un site existant"
+title: "[Complément] "
+labels: ["complément", "données"]
+body:
+  - type: input
+    id: id
+    attributes:
+      label: "Référence du site"
+      placeholder: "I352380090"
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du stade et commune"
+      placeholder: "Stade Robert Poirier, Rennes (35)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: agres
+    attributes:
+      label: "Agrès réellement présents"
+      options:
+        - label: "Sautoir en longueur"
+        - label: "Sautoir de triple saut"
+        - label: "Sautoir en hauteur"
+        - label: "Sautoir à la perche"
+        - label: "Aire de lancer du poids"
+        - label: "Aire de lancer du disque"
+        - label: "Aire de lancer du marteau"
+        - label: "Couloir de lancer du javelot"
+        - label: "Rivière de steeple"
+  - type: dropdown
+    id: surface
+    attributes:
+      label: "Revêtement de la piste"
+      options:
+        - "Je ne sais pas"
+        - "Synthétique (tartan)"
+        - "Bitume / goudron"
+        - "Cendrée / stabilisé"
+        - "Herbe / terre"
+        - "Il n'y a pas de piste"
+  - type: input
+    id: couloirs
+    attributes:
+      label: "Nombre de couloirs / développement"
+      placeholder: "6 couloirs, 400 m"
+  - type: dropdown
+    id: acces
+    attributes:
+      label: "Conditions d'accès"
+      options:
+        - "Je ne sais pas"
+        - "Accès totalement libre"
+        - "Ouvert au public à certains horaires"
+        - "Réservé aux clubs / licenciés"
+        - "Réservé aux scolaires"
+        - "Fermé au public"
+  - type: input
+    id: horaires
+    attributes:
+      label: "Horaires d'ouverture au public (facultatif)"
+      placeholder: "Lun-ven 8h-22h, week-end 9h-19h"
+  - type: textarea
+    id: note
+    attributes:
+      label: "Bon à savoir (facultatif)"
+      placeholder: "Portail côté nord souvent ouvert, perche uniquement sur réservation au club…"

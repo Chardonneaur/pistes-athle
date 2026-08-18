@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
+<title>Où s'entraîner ? — Pistes d'athlétisme en France</title>
+<meta name="description" content="Trouvez la piste d'athlétisme la plus proche et découvrez ses équipements : sautoirs longueur, hauteur, perche, aires de lancer, revêtement synthétique ou cendrée.">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="assets/manifest.webmanifest">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/icon.svg">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="app-bar">
+  <div class="brand">
+    <svg viewBox="0 0 24 24" aria-hidden="true" class="brand-mark"><path d="M3 17c3.5-8 7-11 11-11 3 0 5 1.6 6 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 21c3-7 6-9.5 9.5-9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".5"/></svg>
+    <h1>Où s'entraîner&nbsp;?</h1>
+  </div>
+  <button id="btn-about" class="icon-btn" aria-label="À propos" title="À propos">?</button>
+</header>
+
+<div class="search-row">
+  <div class="search-field">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16.5 16.5 4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="q" type="search" inputmode="search" autocomplete="off"
+           placeholder="Ville, code postal ou nom du stade" aria-label="Rechercher">
+    <button id="q-clear" class="clear-btn" aria-label="Effacer" hidden>×</button>
+  </div>
+  <button id="btn-geo" class="geo-btn" aria-label="Autour de moi">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="6" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="currentColor"/></svg>
+  </button>
+</div>
+
+<nav class="chips" id="chips" aria-label="Filtres"></nav>
+
+<div class="tabs" role="tablist">
+  <button class="tab is-active" id="tab-list" role="tab" aria-selected="true">Liste</button>
+  <button class="tab" id="tab-map" role="tab" aria-selected="false">Carte</button>
+  <span class="result-count" id="count">—</span>
+</div>
+
+<main>
+  <section id="view-list" class="view is-active">
+    <ul id="results" class="results"></ul>
+    <button id="more" class="more-btn" hidden>Afficher plus de sites</button>
+    <p id="empty" class="empty" hidden>Aucun site ne correspond à ces critères.<br>
+      <span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Ajoutez-la sur GitHub</a>.</span></p>
+  </section>
+  <section id="view-map" class="view">
+    <div id="map"></div>
+  </section>
+</main>
+
+<div id="loader" class="loader"><span class="spinner"></span> Chargement des 7&nbsp;000 sites…</div>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-panel" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+    <button class="sheet-grab" data-close aria-label="Fermer"></button>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

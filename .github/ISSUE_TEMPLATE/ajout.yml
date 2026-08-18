@@ -1,0 +1,58 @@
+name: "Ajouter une piste manquante"
+description: "Un site d'athlétisme n'apparaît pas dans l'annuaire"
+title: "[Ajout] "
+labels: ["ajout", "données"]
+body:
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du site"
+      placeholder: "Stade municipal des Trois Chênes"
+    validations:
+      required: true
+  - type: input
+    id: adresse
+    attributes:
+      label: "Adresse complète"
+      placeholder: "12 rue du Stade, 35000 Rennes"
+    validations:
+      required: true
+  - type: input
+    id: coords
+    attributes:
+      label: "Coordonnées GPS"
+      description: "Sur Google Maps ou OpenStreetMap : clic droit sur le site → copier les coordonnées."
+      placeholder: "48.11982, -1.66423"
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: "Revêtement de la piste"
+      options:
+        - "Synthétique (tartan)"
+        - "Bitume / goudron"
+        - "Cendrée / stabilisé"
+        - "Herbe / terre"
+        - "Pas de piste (aires isolées)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: agres
+    attributes:
+      label: "Agrès présents"
+      options:
+        - label: "Sautoir en longueur"
+        - label: "Sautoir de triple saut"
+        - label: "Sautoir en hauteur"
+        - label: "Sautoir à la perche"
+        - label: "Aire de lancer du poids"
+        - label: "Aire de lancer du disque"
+        - label: "Aire de lancer du marteau"
+        - label: "Couloir de lancer du javelot"
+        - label: "Rivière de steeple"
+  - type: textarea
+    id: note
+    attributes:
+      label: "Autres informations"
+      placeholder: "6 couloirs, éclairé, accès libre hors créneaux club, vestiaires fermés…"

@@ -1,0 +1,38 @@
+name: Vérifier les contributions
+
+on:
+  pull_request:
+    paths:
+      - "data/overrides/**"
+      - "scripts/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Valider la syntaxe et les valeurs
+        run: python3 scripts/validate_overrides.py
+
+      - name: Vérifier que le site se construit
+        run: python3 scripts/build_data.py
+
+      - name: Résumé
+        run: |
+          python3 - <<'PY' >> $GITHUB_STEP_SUMMARY
+          import json
+          d = json.load(open("data/tracks.json"))
+          com = [t for t in d["tracks"] if t.get("sr")]
+          print(f"### Contributions prises en compte\n")
+          print(f"- {len(d['tracks'])} sites au total")
+          print(f"- {len(com)} sites enrichis ou ajoutés par la communauté\n")
+          for t in com[:40]:
+              print(f"- **{t.get('n','?')}** — {t.get('v','?')} (`{t['i']}`)")
+          PY

@@ -1,0 +1,11 @@
+{
+  "id": "I352380090",
+  "surface": "synthetique",
+  "couloirs": 8,
+  "longueur_piste": 400,
+  "agres": ["longueur", "triple", "hauteur", "perche", "poids", "disque", "marteau", "javelot"],
+  "acces_libre": true,
+  "horaires": "Lun-ven 8h-22h, samedi 9h-19h, fermé le dimanche",
+  "acces_note": "Perche et javelot accessibles uniquement avec un encadrant du club.",
+  "eclairage": true
+}

@@ -1,0 +1,38 @@
+name: "Signaler une erreur sur une piste"
+description: "Une information affichée est fausse ou obsolète"
+title: "[Correction] "
+labels: ["correction", "données"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci de nous aider à fiabiliser l'annuaire. Les données de base viennent du
+        recensement du ministère : elles sont déclaratives et parfois périmées.
+  - type: input
+    id: id
+    attributes:
+      label: "Référence du site"
+      description: "Visible en bas de la fiche (ex. I352380090). Laissez vide si vous ne l'avez pas."
+      placeholder: "I352380090"
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du stade et commune"
+      placeholder: "Stade Robert Poirier, Rennes (35)"
+    validations:
+      required: true
+  - type: textarea
+    id: erreur
+    attributes:
+      label: "Qu'est-ce qui est faux ?"
+      description: "Indiquez l'information affichée et l'information correcte."
+      placeholder: |
+        Affiché : revêtement cendrée
+        Réalité : piste refaite en synthétique en 2023
+    validations:
+      required: true
+  - type: textarea
+    id: preuve
+    attributes:
+      label: "Comment le savez-vous ? (facultatif)"
+      placeholder: "Je m'y entraîne chaque semaine / page du site de la mairie : https://…"
