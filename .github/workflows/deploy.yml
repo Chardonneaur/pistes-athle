@@ -43,14 +43,11 @@ jobs:
               sys.exit(f"ERREUR : seulement {n} sites, l'API a probablement repondu partiellement")
           PY
 
-      - name: Assembler le site
+      - name: Assembler le site (application FR/EN + pages statiques)
         run: |
-          mkdir -p _site/assets _site/data
-          cp index.html sw.js .nojekyll _site/
-          cp assets/* _site/assets/
-          cp data/tracks.json _site/data/
-          [ -d data/photos ] && cp -r data/photos _site/data/ || true
+          python3 scripts/build_site.py --out _site
           du -sh _site
+          echo "$(find _site -name index.html | wc -l) pages HTML générées"
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

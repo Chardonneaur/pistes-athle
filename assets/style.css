@@ -49,6 +49,13 @@ a{color:var(--accent)}
 .chip{flex:none;white-space:nowrap;padding:7px 13px;border-radius:999px;cursor:pointer;
   border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13.5px}
 .chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+/* Le sélecteur de département vit dans la même barre que les puces, mais ce n'est
+   pas une puce : il ne se bascule pas, il se choisit. */
+.chip-select{flex:none;max-width:210px;padding:7px 10px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  font-size:13.5px;color-scheme:light dark}
+.chip-select.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chip-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 .tabs{top:calc(var(--bar) + var(--search) + var(--chips));height:var(--tabs);
   display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px solid var(--line)}
@@ -184,3 +191,10 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
   .sheet-panel{left:50%;transform:translateX(-50%);max-width:560px;border-radius:18px;
     bottom:auto;top:50%;margin-top:-44dvh;max-height:88dvh}
 }
+
+/* ---------- bascule de langue & plan du site ---------- */
+.bar-actions{display:flex;align-items:center;gap:8px;flex:none}
+.lang-btn{display:grid;place-items:center;text-decoration:none;font-size:11.5px;letter-spacing:.04em}
+.site-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;
+  padding:4px 24px calc(30px + var(--safe-b));font-size:12.5px}
+.site-links a{color:var(--muted)}

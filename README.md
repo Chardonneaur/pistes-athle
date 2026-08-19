@@ -8,7 +8,8 @@ Pas seulement « il y a un stade ici », mais : la piste est-elle en synthétiqu
 en cendrée ? Combien de couloirs ? Y a-t-il un sautoir à la perche ? Une aire de
 lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 
-👉 **[Ouvrir l'application](https://chardonneaur.github.io/pistes-athle/)**
+👉 **[Ouvrir l'application](https://chardonneaur.github.io/pistes-athle/)** ·
+🇬🇧 **[English version](https://chardonneaur.github.io/pistes-athle/en/)**
 
 ---
 
@@ -18,14 +19,46 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 - Tri **par distance** avec la géolocalisation, ou recherche par ville / code postal
 - **Filtres par agrès** : perche, longueur, hauteur, poids, lancers longs, steeple
 - **Filtres par revêtement** : synthétique (tartan), bitume, cendrée
+- **Filtre par département** : menu déroulant groupé par région, avec le nombre de sites
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
 - **Carte** avec regroupement des marqueurs, et fiche détaillée par site
 - **Installable** sur l'écran d'accueil (PWA) et **consultable hors-ligne** une fois chargée
+- **Bilingue français / anglais** : `/` en français, `/en/` en anglais, avec bascule dans l'en-tête
+- **Une page HTML par site**, lisible sans JavaScript, pour les moteurs de recherche et les agents IA
 - 100 % statique : hébergé gratuitement sur GitHub Pages, aucun serveur, aucun tracker
 
 > 📄 **[Étude préalable](docs/etude-prealable.md)** — pourquoi ce projet n'existe pas
 > déjà, et pourquoi la réutilisation des données du ministère est juridiquement solide.
+
+## Bilingue, et trouvable
+
+L'application est une page unique qui rend 7 100 sites en JavaScript : un moteur de
+recherche ou un agent IA qui n'exécute pas le script n'y voit rien. Le déploiement
+génère donc, à côté de l'application, un site entièrement statique :
+
+| URL | Contenu |
+|---|---|
+| `/` et `/en/` | l'application (carte, filtres, recherche), en français et en anglais |
+| `/site/<ID>/` et `/en/track/<ID>/` | une page HTML complète par installation, avec JSON-LD `SportsActivityLocation` |
+| `/departement/<CODE>/` et `/en/department/<CODE>/` | les installations d'un département, groupées par commune |
+| `/departements/` et `/en/departments/` | l'annuaire des 108 départements, groupés par région |
+| `/sitemap.xml` | index de plan de site (une entrée par langue, ~14 400 URL) |
+| `/robots.txt` | tout ouvert, robots d'IA compris, explicitement |
+| `/llms.txt` | description du site et du jeu de données pour un agent, avec le schéma des clés |
+
+L'application accepte des liens partageables : `#carte` ouvre la carte, `#dep=44`
+filtre sur un département et recadre la carte dessus, `#q=pornic` remplit la recherche
+et `#site=I441310030` ouvre une fiche. Les pages de département pointent vers
+`#carte&dep=<CODE>`.
+
+Chaque page porte son `canonical`, ses alternatives `hreflang` fr / en / x-default et
+son balisage Open Graph. Les fiches de site déclarent leurs équipements, leurs
+coordonnées, leur note et leurs avis en JSON-LD.
+
+Les libellés de l'interface vivent dans `assets/i18n.js` ; `<html lang>` décide de la
+langue servie. Les pages statiques, elles, sont traduites à la génération par
+`scripts/build_site.py`.
 
 ## D'où viennent les données
 
@@ -83,6 +116,16 @@ python3 scripts/build_data.py       # télécharge Data ES et génère data/trac
 python3 -m http.server 8000         # puis ouvrir http://localhost:8000
 ```
 
+Pour vérifier le site tel qu'il sera publié — les deux langues et les pages statiques :
+
+```bash
+python3 scripts/build_site.py --out _site
+cd _site && python3 -m http.server 8000
+```
+
+`build_site.py` déduit l'URL publique de `GITHUB_REPOSITORY` ; `--url https://exemple.org/base`
+la force (utile pour un domaine personnalisé).
+
 `build_data.py --offline` réutilise le cache `data/.res_raw.json` (pratique pour
 itérer sans retélécharger 8 Mo).
 
@@ -92,11 +135,16 @@ framework. Seules Leaflet et Leaflet.markercluster sont chargées depuis un CDN.
 ## Structure du dépôt
 
 ```
-index.html                  coque de l'application
+index.html                  coque de l'application (la version /en/ en est dérivée)
 assets/app.js               logique : chargement, filtres, carte, fiches
+assets/i18n.js              tous les libellés, français et anglais
 assets/style.css            interface mobile-first, thème clair/sombre
+assets/page.css             feuille de style des pages statiques
+assets/manifest*.webmanifest  PWA, une par langue
 sw.js                       service worker (hors-ligne)
 scripts/build_data.py       Data ES + overrides -> data/tracks.json
+scripts/build_site.py       -> _site/ : application FR/EN, pages par site et par
+                            département, sitemaps, robots.txt, llms.txt
 scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
@@ -113,6 +161,9 @@ data/tracks.json            jeu de données publié (généré, non versionné)
    générer les liens de contribution (constante `REPO_OVERRIDE` dans `assets/app.js`
    si vous renommez le dépôt).
 4. Le premier push sur la branche par défaut construit et publie le site.
+5. Si vous utilisez un domaine personnalisé, définissez la variable d'environnement
+   `SITE_URL` dans le workflow : les URL canoniques, le plan de site et le `llms.txt`
+   la reprennent.
 
 ## Licences
 

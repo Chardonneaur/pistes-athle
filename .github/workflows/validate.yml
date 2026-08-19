@@ -22,7 +22,9 @@ jobs:
         run: python3 scripts/validate_overrides.py
 
       - name: Vérifier que le site se construit
-        run: python3 scripts/build_data.py
+        run: |
+          python3 scripts/build_data.py
+          python3 scripts/build_site.py --out _site
 
       - name: Résumé
         run: |

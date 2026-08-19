@@ -1,0 +1,80 @@
+/* Feuille de style des pages statiques (une par site, par département).
+   Ces pages sont du HTML complet, lisible sans JavaScript : c'est ce que
+   voient les moteurs de recherche et les agents IA. */
+:root{
+  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#64748b; --line:#e4e8ee;
+  --accent:#c2410c; --accent-soft:#fff1e9; --ok:#0d7d5a; --ok-soft:#e6f5ef;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
+        --accent:#fb923c;--accent-soft:#3a1f10;--ok:#34d399;--ok-soft:#123328;}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+img{max-width:100%}
+
+.page-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;
+  justify-content:space-between;padding:10px 16px;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.page-bar .home{display:flex;align-items:center;gap:8px;font-weight:700;
+  text-decoration:none;color:var(--ink);font-size:15px}
+.page-bar svg{width:22px;height:22px;color:var(--accent)}
+.page-bar .lang{font-size:12.5px;color:var(--muted);text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 64px}
+.crumb{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.crumb a{color:var(--muted)}
+h1{font-size:26px;line-height:1.25;letter-spacing:-.02em;margin:0 0 6px}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+  margin:30px 0 10px}
+.loc{color:var(--muted);margin:0 0 14px;font-size:15px}
+.lede{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin:0 0 18px}
+.rating{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:0 0 14px}
+.stars{color:#f59e0b;letter-spacing:1px}
+
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);text-decoration:none;
+  color:var(--ink);font-size:14.5px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:0}
+.kv{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.kv dt{font-size:12px;color:var(--muted);margin:0}
+.kv dd{margin:2px 0 0;font-size:15px;font-weight:600}
+
+.eq{display:flex;flex-wrap:wrap;gap:7px;padding:0;margin:0;list-style:none}
+.eq li{font-size:14px;padding:6px 12px;border-radius:8px;background:var(--accent-soft);
+  color:var(--accent);font-weight:600}
+.eq li.maybe{background:var(--surface);color:var(--muted);border:1px dashed var(--line)}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0}
+.gallery figure{margin:0}
+/* Les photos vont du panorama au portrait : on respecte leur cadrage plutot
+   que de recadrer de force. Les attributs width/height du HTML reservent la place. */
+.gallery img{width:100%;height:auto;border-radius:12px;background:var(--surface);display:block}
+.gallery figcaption{font-size:12.5px;color:var(--muted);margin-top:5px}
+
+.avis{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;margin-bottom:9px}
+.avis header{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:4px;font-size:13.5px}
+.avis header time{color:var(--muted);font-size:12.5px;margin-left:auto}
+.avis p{margin:0;font-size:14.5px}
+
+.liste{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.liste a{display:block;background:var(--surface);border:1px solid var(--line);
+  border-radius:11px;padding:11px 13px;text-decoration:none;color:var(--ink)}
+.liste .meta{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.cols{columns:2 220px;gap:18px}
+.cols a{display:block;padding:3px 0;font-size:14.5px}
+.ville{margin:22px 0 8px;font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink)}
+
+.src{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:34px;
+  border-top:1px solid var(--line);padding-top:16px}
+.src a{color:var(--muted)}

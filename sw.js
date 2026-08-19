@@ -6,19 +6,23 @@
  * Seuls les contenus immuables (photos, librairies versionnées) sont servis
  * depuis le cache en priorité.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées
 const ASSETS = [
-  './', './index.html', './assets/style.css?v=4', './assets/app.js?v=4',
-  './assets/icon.svg', './assets/manifest.webmanifest',
+  './', './index.html', './en/', './en/index.html',
+  './assets/style.css?v=5', './assets/i18n.js?v=5', './assets/app.js?v=5',
+  './assets/icon.svg', './assets/manifest.webmanifest', './assets/manifest.en.webmanifest',
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
+    // Un fichier absent (site servi sans la version anglaise, par exemple) ne doit
+    // pas faire echouer toute l'installation : on met en cache ce qui repond.
     caches.open(SHELL)
-      .then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' }))))
+      .then(c => Promise.all(ASSETS.map(u =>
+        c.add(new Request(u, { cache: 'reload' })).catch(() => {}))))
       .then(() => self.skipWaiting())
   );
 });

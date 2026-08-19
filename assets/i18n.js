@@ -1,0 +1,348 @@
+/* Où s'entraîner ? — libellés français et anglais.
+ *
+ * Une seule source de vérité pour tout le texte de l'interface : le HTML porte
+ * des attributs data-i18n, app.js pioche ici pour le reste. La langue est
+ * déterminée par <html lang> : la version française est servie à la racine,
+ * l'anglaise sous /en/.
+ */
+(() => {
+'use strict';
+
+/* Les chaînes injectées via innerHTML proviennent uniquement de ce fichier :
+   les entités et le balisage y sont volontaires. */
+const FR = {
+  code: 'fr',
+  locale: 'fr-FR',
+  autre_langue: { code: 'en', nom: 'English', chemin: 'en/' },
+
+  ui: {
+    titre_page:  "Où s'entraîner ? — Pistes d'athlétisme en France",
+    titre_compte: n => `Où s'entraîner ? — ${n} sites d'athlétisme en France`,
+    marque:      "Où s'entraîner&nbsp;?",
+    a_propos:    'À propos',
+    recherche_ph: 'Ville, code postal ou nom du stade',
+    recherche_al: 'Rechercher',
+    effacer:     'Effacer',
+    autour:      'Autour de moi',
+    filtres:     'Filtres',
+    dep_label:   'Filtrer par département',
+    dep_toutes:  'Tous les départements',
+    onglet_liste: 'Liste',
+    onglet_carte: 'Carte',
+    chargement:  'Chargement des 7&nbsp;000 sites…',
+    erreur_chargement: 'Impossible de charger les données. Rechargez la page.',
+    plus:        'Afficher plus de sites',
+    vide:        'Aucun site ne correspond à ces critères.<br>' +
+                 '<span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Ajoutez-la sur GitHub</a>.</span>',
+    fermer:      'Fermer',
+    changer_langue: 'Read this site in English',
+    nb_sites:    n => `${n} site${n > 1 ? 's' : ''}`,
+    nb_avis:     n => `${n} avis`,
+    aucun:       'aucun résultat',
+    photos_du_site: 'Photos du site',
+    note_sur_5:  n => `${n} sur 5`,
+    sans_nom:    'Équipement d’athlétisme',
+
+    // liens de pied de page (index.html)
+    nav_annuaire: 'Annuaire par département',
+    nav_source:   'Source des données',
+    nav_code:     'Code source',
+
+    // fiche
+    itineraire:  'Itinéraire',
+    voir_carte:  'Voir sur la carte',
+    masquer_carte: 'Masquer la carte',
+    plein_ecran: 'Ouvrir en plein écran',
+    sec_piste:   'Piste',
+    sec_agres:   'Agrès recensés',
+    sec_acces:   'Accès & services',
+    sec_avis:    'Avis des athlètes',
+    kv_revetement: 'Revêtement',
+    kv_developpement: 'Développement',
+    kv_couloirs: 'Couloirs',
+    kv_config:   'Configuration',
+    kv_couverte: 'Couverte / indoor',
+    kv_plein_air: 'Plein air',
+    kv_service:  'Mise en service',
+    kv_renovation: 'Dernière rénovation',
+    kv_acces_libre: 'Accès libre',
+    kv_eclairage: 'Éclairage',
+    kv_vestiaires: 'Vestiaires',
+    kv_douches:  'Douches',
+    kv_sanitaires: 'Sanitaires',
+    kv_tribunes: 'Tribunes',
+    kv_type_site: 'Type de site',
+    kv_horaires: 'Horaires',
+    oui:         'Oui',
+    non:         'Non',
+    non_reserve: 'Non / réservé',
+    ouvert_horaires: 'Ouvert au public (horaires)',
+    places:      n => `${n} places`,
+    enceinte_scolaire: 'Enceinte scolaire',
+    site_officiel: 'Site officiel de l’équipement',
+    page_dediee: 'Page dédiée de ce site',
+    signaler:    'Signaler une erreur',
+    completer:   'Compléter la fiche',
+    donner_avis: '✍️ Donner mon avis',
+    anonyme:     'Anonyme',
+    pas_davis:   'Personne n’a encore décrit ce site. Vous vous y entraînez&nbsp;? Votre retour aidera les autres.',
+    incertain:   lien => `Les mentions en pointillés proviennent d’une fiche ministérielle qui indique
+                  la présence d’une aire sans préciser sa discipline.
+                  <a href="${lien}" target="_blank" rel="noopener">Vous connaissez ce site ? Complétez-le.</a>`,
+    reference:   (id, source) => `Réf. ${id} · Source : ${source} —
+      <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Data ES</a>,
+      Licence Ouverte 2.0. Les données déclaratives peuvent être incomplètes&nbsp;: vérifiez
+      les conditions d’accès avant de vous déplacer.`,
+    avis_titre:  n => `[Avis] ${n}`,
+    correction_titre: n => `[Correction] ${n}`,
+    complement_titre: n => `[Complément] ${n}`,
+
+    // géolocalisation
+    geo_absente: 'Géolocalisation indisponible sur cet appareil.',
+    geo_refusee: 'Autorisez la géolocalisation pour trier les pistes par distance.',
+    geo_echec:   'Position introuvable. Utilisez la recherche par ville.',
+  },
+
+  sol: {
+    synthetique: ['Synthétique (tartan)', 'sol-synthetique'],
+    bitume:      ['Bitume / goudron', ''],
+    cendree:     ['Cendrée / stabilisé', ''],
+    sable:       ['Sable', ''],
+    gazon:       ['Gazon', ''],
+    naturel:     ['Surface naturelle', ''],
+    interieur:   ['Sol intérieur', ''],
+  },
+
+  agres: {
+    longueur: 'Sautoir longueur', triple: 'Triple saut', hauteur: 'Sautoir hauteur',
+    perche: 'Sautoir à la perche', poids: 'Lancer du poids', disque: 'Lancer du disque',
+    marteau: 'Lancer du marteau', javelot: 'Lancer du javelot', steeple: 'Steeple',
+    saut_indetermine: 'Aire de saut (type inconnu)',
+    lancer_indetermine: 'Aire de lancer (type inconnue)',
+  },
+
+  sources: ['Data ES (ministère)', 'Data ES + communauté', 'Contribution communautaire'],
+
+  filtres: {
+    near: '📍 Près de moi', piste: 'Avec piste', synth: 'Synthétique', p400: '400 m',
+    libre: 'Accès libre', perche: 'Perche', long: 'Longueur', haut: 'Hauteur',
+    poids: 'Poids', lancer: 'Lancers longs', sauts: 'Un sautoir', ecl: 'Éclairée',
+    couv: 'Couverte', vest: 'Vestiaires', noeco: 'Hors enceinte scolaire',
+    photo: '📷 Avec photos', avis: '★ Avec avis',
+  },
+
+  tags: {
+    couloirs: n => `${n} couloirs`,
+    acces_libre: 'Accès libre',
+    couverte: 'Couverte',
+    sautoirs: n => `${n} aire${n > 1 ? 's' : ''} de saut`,
+    lancers: n => `${n} aire${n > 1 ? 's' : ''} de lancer`,
+    scolaire: 'Site scolaire',
+  },
+
+  about: ({ repo, issue }) => `
+    <div class="about">
+      <h2>À propos</h2>
+      <p>Un annuaire libre des pistes d’athlétisme françaises et de leurs agrès :
+         sautoirs longueur / hauteur / perche, aires de lancer, revêtement synthétique,
+         cendrée ou bitume, éclairage, vestiaires…</p>
+
+      <h3>D’où viennent les données ?</h3>
+      <p>Du <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Recensement
+         des équipements sportifs (Data ES)</a> du ministère chargé des Sports, publié sous
+         <a href="https://github.com/etalab/licence-ouverte/blob/master/LO.md" target="_blank" rel="noopener">Licence
+         Ouverte 2.0</a>, complété par les contributions de la communauté.</p>
+
+      <h3>Les données sont déclaratives</h3>
+      <p>Elles sont saisies par les propriétaires des installations. Un site peut mentionner
+         une « aire de saut » sans préciser s’il s’agit d’un sautoir en longueur ou d’une perche,
+         et les conditions d’accès réelles changent souvent. Vérifiez avant de vous déplacer.</p>
+
+      <h3>Contribuer</h3>
+      <ul>
+        <li><a href="${issue('correction.yml', {})}" target="_blank" rel="noopener">Signaler une erreur</a> sur une fiche</li>
+        <li><a href="${issue('ajout.yml', {})}" target="_blank" rel="noopener">Ajouter une piste manquante</a></li>
+        <li><a href="https://github.com/${repo}" target="_blank" rel="noopener">Proposer une pull request</a> sur le dépôt</li>
+      </ul>
+
+      <h3>Réutiliser les données</h3>
+      <p>Le jeu complet est un simple fichier JSON : <a href="data/tracks.json">data/tracks.json</a>.
+         Une page HTML par site est publiée sous <code>/site/</code> pour les moteurs de recherche
+         et les agents IA, et <a href="llms.txt">llms.txt</a> décrit l’ensemble.</p>
+
+      <p class="src">Fond de carte © contributeurs
+         <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.
+         Code source&nbsp;: <a href="https://github.com/${repo}" target="_blank" rel="noopener">github.com/${repo}</a></p>
+    </div>`,
+};
+
+const EN = {
+  code: 'en',
+  locale: 'en-GB',
+  autre_langue: { code: 'fr', nom: 'Français', chemin: '' },
+
+  ui: {
+    titre_page:  'Where to train? — Athletics tracks in France',
+    titre_compte: n => `Where to train? — ${n} athletics venues in France`,
+    marque:      'Where to train?',
+    a_propos:    'About',
+    recherche_ph: 'Town, postcode or stadium name',
+    recherche_al: 'Search',
+    effacer:     'Clear',
+    autour:      'Near me',
+    filtres:     'Filters',
+    dep_label:   'Filter by department',
+    dep_toutes:  'All departments',
+    onglet_liste: 'List',
+    onglet_carte: 'Map',
+    chargement:  'Loading 7,000 venues…',
+    erreur_chargement: 'Could not load the data. Please reload the page.',
+    plus:        'Show more venues',
+    vide:        'No venue matches these filters.<br>' +
+                 '<span class="muted">Is a track missing? <a href="#" data-add-track>Add it on GitHub</a>.</span>',
+    fermer:      'Close',
+    changer_langue: 'Lire ce site en français',
+    nb_sites:    n => `${n} venue${n > 1 ? 's' : ''}`,
+    nb_avis:     n => `${n} review${n > 1 ? 's' : ''}`,
+    aucun:       'no results',
+    photos_du_site: 'Photos of the venue',
+    note_sur_5:  n => `${n} out of 5`,
+    sans_nom:    'Athletics facility',
+
+    nav_annuaire: 'Browse by department',
+    nav_source:   'Data source',
+    nav_code:     'Source code',
+
+    itineraire:  'Directions',
+    voir_carte:  'Show on map',
+    masquer_carte: 'Hide map',
+    plein_ecran: 'Open full screen',
+    sec_piste:   'Track',
+    sec_agres:   'Recorded facilities',
+    sec_acces:   'Access & amenities',
+    sec_avis:    'Athlete reviews',
+    kv_revetement: 'Surface',
+    kv_developpement: 'Lap length',
+    kv_couloirs: 'Lanes',
+    kv_config:   'Setting',
+    kv_couverte: 'Covered / indoor',
+    kv_plein_air: 'Outdoor',
+    kv_service:  'Opened',
+    kv_renovation: 'Last refurbished',
+    kv_acces_libre: 'Free access',
+    kv_eclairage: 'Floodlighting',
+    kv_vestiaires: 'Changing rooms',
+    kv_douches:  'Showers',
+    kv_sanitaires: 'Toilets',
+    kv_tribunes: 'Stand',
+    kv_type_site: 'Venue type',
+    kv_horaires: 'Opening hours',
+    oui:         'Yes',
+    non:         'No',
+    non_reserve: 'No / members only',
+    ouvert_horaires: 'Open to the public (set hours)',
+    places:      n => `${n} seats`,
+    enceinte_scolaire: 'School grounds',
+    site_officiel: 'Official website of the venue',
+    page_dediee: 'Permanent page for this venue',
+    signaler:    'Report an error',
+    completer:   'Complete this record',
+    donner_avis: '✍️ Write a review',
+    anonyme:     'Anonymous',
+    pas_davis:   'Nobody has described this venue yet. Do you train here? Your feedback will help others.',
+    incertain:   lien => `Dashed entries come from a ministry record that reports an area without
+                  naming its discipline.
+                  <a href="${lien}" target="_blank" rel="noopener">Know this venue? Fill in the details.</a>`,
+    reference:   (id, source) => `Ref. ${id} · Source: ${source} —
+      <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Data ES</a>,
+      Licence Ouverte 2.0 (French open licence). Records are self-declared and may be incomplete:
+      check access conditions before travelling.`,
+    avis_titre:  n => `[Review] ${n}`,
+    correction_titre: n => `[Correction] ${n}`,
+    complement_titre: n => `[Addition] ${n}`,
+
+    geo_absente: 'Geolocation is not available on this device.',
+    geo_refusee: 'Allow location access to sort venues by distance.',
+    geo_echec:   'Position unavailable. Try searching by town instead.',
+  },
+
+  sol: {
+    synthetique: ['Synthetic (tartan)', 'sol-synthetique'],
+    bitume:      ['Asphalt / tarmac', ''],
+    cendree:     ['Cinder / gravel', ''],
+    sable:       ['Sand', ''],
+    gazon:       ['Grass', ''],
+    naturel:     ['Natural surface', ''],
+    interieur:   ['Indoor flooring', ''],
+  },
+
+  agres: {
+    longueur: 'Long jump pit', triple: 'Triple jump', hauteur: 'High jump area',
+    perche: 'Pole vault', poids: 'Shot put', disque: 'Discus',
+    marteau: 'Hammer throw', javelot: 'Javelin', steeple: 'Steeplechase',
+    saut_indetermine: 'Jump area (type unknown)',
+    lancer_indetermine: 'Throwing area (type unknown)',
+  },
+
+  sources: ['Data ES (French sports ministry)', 'Data ES + community', 'Community contribution'],
+
+  filtres: {
+    near: '📍 Near me', piste: 'With a track', synth: 'Synthetic', p400: '400 m',
+    libre: 'Free access', perche: 'Pole vault', long: 'Long jump', haut: 'High jump',
+    poids: 'Shot put', lancer: 'Long throws', sauts: 'A jump area', ecl: 'Floodlit',
+    couv: 'Indoor', vest: 'Changing rooms', noeco: 'Outside school grounds',
+    photo: '📷 With photos', avis: '★ With reviews',
+  },
+
+  tags: {
+    couloirs: n => `${n} lanes`,
+    acces_libre: 'Free access',
+    couverte: 'Indoor',
+    sautoirs: n => `${n} jump area${n > 1 ? 's' : ''}`,
+    lancers: n => `${n} throwing area${n > 1 ? 's' : ''}`,
+    scolaire: 'School venue',
+  },
+
+  about: ({ repo, issue }) => `
+    <div class="about">
+      <h2>About</h2>
+      <p>An open directory of French athletics tracks and their facilities: long, high and
+         pole vault areas, throwing circles, synthetic, cinder or asphalt surfaces,
+         floodlighting, changing rooms…</p>
+
+      <h3>Where does the data come from?</h3>
+      <p>From <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Data ES</a>,
+         the national census of sports facilities run by the French ministry for sport, published
+         under the <a href="https://github.com/etalab/licence-ouverte/blob/master/LO.md" target="_blank" rel="noopener">Licence
+         Ouverte 2.0</a>, plus contributions from the community.</p>
+
+      <h3>The records are self-declared</h3>
+      <p>They are filled in by the owners of each facility. A venue may report a “jump area”
+         without saying whether it is a long jump runway or a pole vault box, and real access
+         conditions change often. Check before you travel.</p>
+
+      <h3>Contributing</h3>
+      <ul>
+        <li><a href="${issue('correction.yml', {})}" target="_blank" rel="noopener">Report an error</a> on a record</li>
+        <li><a href="${issue('ajout.yml', {})}" target="_blank" rel="noopener">Add a missing track</a></li>
+        <li><a href="https://github.com/${repo}" target="_blank" rel="noopener">Open a pull request</a> on the repository</li>
+      </ul>
+
+      <h3>Reusing the data</h3>
+      <p>The whole dataset is a single JSON file: <a href="../data/tracks.json">data/tracks.json</a>.
+         One HTML page per venue is published under <code>/en/track/</code> for search engines
+         and AI agents, and <a href="../llms.txt">llms.txt</a> describes the whole site.</p>
+
+      <p class="src">Map tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+         contributors. Source code: <a href="https://github.com/${repo}" target="_blank" rel="noopener">github.com/${repo}</a></p>
+    </div>`,
+};
+
+const LANGUES = { fr: FR, en: EN };
+const code = document.documentElement.lang === 'en' ? 'en' : 'fr';
+
+window.I18N = LANGUES[code];
+window.I18N_LANG = code;
+/* Depuis /en/ les données et les médias sont un cran plus haut. */
+window.I18N_BASE = code === 'en' ? '../' : '';
+})();
