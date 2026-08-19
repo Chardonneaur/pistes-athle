@@ -1,0 +1,20 @@
+{
+  "id": "I441060002",
+  "surface": "bitume",
+  "acces_libre": true,
+  "photos": [
+    { "fichier": "01-piste-et-espace-multisports.jpg",
+      "legende": "La piste en enrobé et l'espace multi-sports grillagé qu'elle contourne",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "02-virage-de-la-piste.jpg",
+      "legende": "Le virage, au rayon très serré, et les couloirs peints à même le goudron",
+      "credit": "Ronan Chardonneau" }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-19",
+      "texte": "Une toute petite piste en goudron, tracée autour d'un city-stade. Difficile d'y faire quoi que ce soit : les virages sont trop serrés et le revêtement est de l'enrobé de cour d'école. Aucun agrès. En accès libre, ce qui reste son seul vrai atout."
+    }
+  ]
+}
