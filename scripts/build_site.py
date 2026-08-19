@@ -94,6 +94,11 @@ T = {
         "sec_piste": "Piste", "sec_agres": "Agrès recensés",
         "sec_acces": "Accès & services", "sec_avis": "Avis des athlètes",
         "sec_photos": "Photos", "sec_proches": "Autres sites du département",
+        "sec_aerienne": "Vue aérienne",
+        "aerienne_alt": lambda n: f"Vue aérienne de {n}",
+        "aerienne_legende": "Vue aérienne, à défaut de photo du site.",
+        "aerienne_credit": "L'image peut avoir plusieurs années et ne dit rien de "
+                           "l'état des agrès. © IGN — BD ORTHO®",
         "kv": {"revetement": "Revêtement", "developpement": "Développement",
                "couloirs": "Couloirs", "config": "Configuration",
                "service": "Mise en service", "renovation": "Dernière rénovation",
@@ -146,6 +151,11 @@ T = {
         "sec_piste": "Track", "sec_agres": "Recorded facilities",
         "sec_acces": "Access & amenities", "sec_avis": "Athlete reviews",
         "sec_photos": "Photos", "sec_proches": "Other venues in the department",
+        "sec_aerienne": "Aerial view",
+        "aerienne_alt": lambda n: f"Aerial view of {n}",
+        "aerienne_legende": "Aerial view, in the absence of a photo of the venue.",
+        "aerienne_credit": "The image may be several years old and says nothing about "
+                           "the state of the equipment. © IGN — BD ORTHO®",
         "kv": {"revetement": "Surface", "developpement": "Lap length",
                "couloirs": "Lanes", "config": "Setting",
                "service": "Opened", "renovation": "Last refurbished",
@@ -347,6 +357,31 @@ def etoiles(note, lang):
             + "</span>")
 
 
+
+IGN_WMS = "https://data.geopf.fr/wms-r/wms"
+
+
+def vue_aerienne(t, largeur=960):
+    """URL d'orthophoto IGN centree sur le site (Licence Ouverte 2.0).
+
+    Servie en direct par la Geoplateforme : aucune image n'est stockee dans le
+    depot. Ce n'est pas une photo du site — une orthophoto a souvent plusieurs
+    annees et ne dit rien de l'etat des agres.
+    """
+    lat, lon = t.get("lat"), t.get("lon")
+    if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
+        return None
+    hauteur = round(largeur * 9 / 16)
+    lg = t.get("longueur_piste") or 0
+    champ = 360 if lg >= 400 else (260 if lg else 300)
+    dlat = (champ * hauteur / largeur) / 2 / 111132
+    dlon = champ / 2 / (111320 * math.cos(math.radians(lat)))
+    bbox = f"{lat - dlat},{lon - dlon},{lat + dlat},{lon + dlon}"
+    return (f"{IGN_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap"
+            "&LAYERS=HR.ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326"
+            f"&BBOX={bbox}&WIDTH={largeur}&HEIGHT={hauteur}&FORMAT=image/jpeg")
+
+
 def dimensions_jpeg(chemin):
     """Largeur et hauteur d'un JPEG, lues dans son marqueur SOF.
 
@@ -410,7 +445,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base):
 <meta property="og:url" content="{url_base}/{chemin}">
 <meta name="twitter:card" content="summary">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{r}assets/page.css?v=5">
+<link rel="stylesheet" href="{r}assets/page.css?v=6">
 {blocs}
 </head>
 <body>
@@ -563,6 +598,17 @@ def page_site(t, lang, voisins, url_base, depot, maj):
                     f'alt="{E(p.get("l") or nom)}"{dims}></a>{legende}</figure>')
         figures = "".join(figure(p) for p in t["photos"])
         lignes.append(f'<h2>{E(tr["sec_photos"])}</h2><div class="gallery">{figures}</div>')
+    else:
+        # a defaut de photo de terrain, l'implantation vue du ciel
+        aerienne = vue_aerienne(t)
+        if aerienne:
+            lignes.append(
+                f'<h2>{E(tr["sec_aerienne"])}</h2>'
+                f'<figure class="aerial">'
+                f'<img loading="lazy" src="{E(aerienne)}" width="960" height="540" '
+                f'alt="{E(tr["aerienne_alt"](nom))}">'
+                f'<figcaption>{E(tr["aerienne_legende"])} '
+                f'<span>{E(tr["aerienne_credit"])}</span></figcaption></figure>')
 
     def kv(cle, valeur):
         return (f'<div class="kv"><dt>{E(cle)}</dt><dd>{E(str(valeur))}</dd></div>'
@@ -611,6 +657,12 @@ def page_site(t, lang, voisins, url_base, depot, maj):
                           f'<p>{E(a["t"])}</p></article>')
     else:
         lignes.append(f'<p>{E(tr["pas_davis"])}</p>')
+
+    # Le champ libre 'note' porte les remarques qui ne rentrent dans aucune case :
+    # une correction, une reserve sur la fiche du ministere, l'origine d'une donnee.
+    # L'application l'affiche depuis toujours ; la page statique l'oubliait.
+    if t.get("note"):
+        lignes.append(f'<p class="note">{E(t["note"])}</p>')
 
     if voisins:
         items = "".join(

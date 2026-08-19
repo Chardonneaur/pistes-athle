@@ -40,6 +40,9 @@ const FR = {
     nb_avis:     n => `${n} avis`,
     aucun:       'aucun résultat',
     photos_du_site: 'Photos du site',
+    aerienne_alt: n => `Vue aérienne de ${n}`,
+    aerienne_legende: "Vue aérienne, à défaut de photo du site.",
+    aerienne_credit: "L'image peut avoir plusieurs années et ne dit rien de l'état des agrès. © IGN — BD ORTHO®",
     note_sur_5:  n => `${n} sur 5`,
     sans_nom:    'Équipement d’athlétisme',
 
@@ -187,6 +190,11 @@ const FR = {
          des équipements sportifs (Data ES)</a> du ministère chargé des Sports, publié sous
          <a href="https://github.com/etalab/licence-ouverte/blob/master/LO.md" target="_blank" rel="noopener">Licence
          Ouverte 2.0</a>, complété par les contributions de la communauté.</p>
+      <p>Les sites qui n’ont encore aucune photo affichent une vue aérienne issue de la
+         <a href="https://geoservices.ign.fr/" target="_blank" rel="noopener">BD ORTHO® de l’IGN</a>,
+         elle aussi sous Licence Ouverte 2.0. Elle montre l’implantation, pas l’état des agrès :
+         une orthophoto a souvent plusieurs années, et les tapis de perche ou de hauteur y sont
+         bâchés ou rentrés.</p>
 
       <h3>Les données sont déclaratives</h3>
       <p>Elles sont saisies par les propriétaires des installations. Un site peut mentionner
@@ -244,6 +252,9 @@ const EN = {
     nb_avis:     n => `${n} review${n > 1 ? 's' : ''}`,
     aucun:       'no results',
     photos_du_site: 'Photos of the venue',
+    aerienne_alt: n => `Aerial view of ${n}`,
+    aerienne_legende: 'Aerial view, in the absence of a photo of the venue.',
+    aerienne_credit: 'The image may be several years old and says nothing about the state of the equipment. © IGN — BD ORTHO®',
     note_sur_5:  n => `${n} out of 5`,
     sans_nom:    'Athletics facility',
 
@@ -388,6 +399,11 @@ const EN = {
          the national census of sports facilities run by the French ministry for sport, published
          under the <a href="https://github.com/etalab/licence-ouverte/blob/master/LO.md" target="_blank" rel="noopener">Licence
          Ouverte 2.0</a>, plus contributions from the community.</p>
+      <p>Venues that do not yet have a photo show an aerial view from the
+         <a href="https://geoservices.ign.fr/" target="_blank" rel="noopener">IGN BD ORTHO®</a>,
+         also under Licence Ouverte 2.0. It shows the layout, not the state of the equipment:
+         orthophotos are often several years old, and pole vault or high jump mats are
+         covered or stored away.</p>
 
       <h3>The records are self-declared</h3>
       <p>They are filled in by the owners of each facility. A venue may report a “jump area”

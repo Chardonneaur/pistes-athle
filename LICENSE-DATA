@@ -27,7 +27,20 @@ source et de partager les bases dérivées sous la même licence.
 En proposant une contribution à ce dépôt, vous acceptez qu'elle soit publiée
 sous cette licence.
 
-3. Fond de carte
+3. Vues aériennes (orthophotos)
+--------------------------------
+Producteur : IGN — BD ORTHO®, servie par la Géoplateforme (https://data.geopf.fr/)
+Licence    : Licence Ouverte / Open Licence version 2.0 (Etalab)
+
+Les fiches des sites sans photo de terrain affichent une vue aérienne appelée
+en direct au service WMS de la Géoplateforme : aucune image n'est stockée ni
+redistribuee par ce depot. La mention « © IGN — BD ORTHO® » accompagne chaque
+vue, dans l'application comme sur les pages de site.
+
+Une orthophoto date souvent de plusieurs annees : elle renseigne l'implantation
+(anneau, revetement, aires annexes), jamais l'etat des agres.
+
+4. Fond de carte
 -----------------
 © les contributeurs OpenStreetMap — https://www.openstreetmap.org/copyright
 Tuiles servies par openstreetmap.org, soumises à leur politique d'usage :

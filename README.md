@@ -24,6 +24,8 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
   dans son filtre
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
+- **Vue aérienne** (orthophoto IGN, Licence Ouverte 2.0) sur les sites qui n'ont pas
+  encore de photo : elle montre l'implantation, jamais l'état des agrès
 - **Carte** avec regroupement des marqueurs, et fiche détaillée par site
 - **Installable** sur l'écran d'accueil (PWA) et **consultable hors-ligne** une fois chargée
 - **Bilingue français / anglais** : `/` en français, `/en/` en anglais, avec bascule dans l'en-tête

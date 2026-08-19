@@ -61,8 +61,20 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .gallery img{width:100%;height:auto;border-radius:12px;background:var(--surface);display:block}
 .gallery figcaption{font-size:12.5px;color:var(--muted);margin-top:5px}
 
+/* Vue aerienne : affichee quand le site n'a aucune photo de terrain. La legende
+   la distingue clairement d'une photo contribuee. */
+.aerial{margin:0}
+.aerial img{width:100%;height:auto;border-radius:12px;background:var(--surface);display:block;
+  border:1px solid var(--line)}
+.aerial figcaption{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+.aerial figcaption span{display:block;opacity:.75}
+
 .avis{background:var(--surface);border:1px solid var(--line);border-radius:12px;
   padding:12px 14px;margin-bottom:9px}
+/* Remarque libre sur un site : correction, reserve, origine d'une donnee. */
+.note{background:var(--surface);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+  padding:10px 13px;font-size:14.5px;color:var(--muted);line-height:1.5}
+
 .avis header{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:4px;font-size:13.5px}
 .avis header time{color:var(--muted);font-size:12.5px;margin-left:auto}
 .avis p{margin:0;font-size:14.5px}

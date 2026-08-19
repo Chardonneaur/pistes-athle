@@ -167,6 +167,14 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
   background:var(--bg);cursor:zoom-in;display:block}
 .gallery figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
 .gallery figcaption span{opacity:.7}
+
+/* Vue aérienne : proposée quand le site n'a aucune photo de terrain. Le liseré
+   et la légende la distinguent d'une photo contribuée. */
+.aerial{margin:0 0 4px}
+.aerial img{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:12px;
+  background:var(--line);border:1px solid var(--line)}
+.aerial figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
+.aerial figcaption span{display:block;opacity:.7}
 /* À la souris, un défilement horizontal sans barre visible passe pour un bug :
    la molette ne le déplace pas. Sur grand écran on abandonne donc le carrousel
    pour une grille, et les photos y gardent leur cadrage d'origine. */

@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '5';
+const APP_VERSION = '6';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -227,6 +227,34 @@ function stars(n) {
   return `<span class="stars" aria-label="${esc(U.note_sur_5(n))}">${'★'.repeat(full)}${'☆'.repeat(5 - full)}</span>`;
 }
 
+/* Vue aérienne (orthophoto IGN, Licence Ouverte 2.0).
+ *
+ * L'image est servie en direct par la Géoplateforme : rien n'est stocké ici.
+ * Stocker une vignette pour chacune des 6 500 pistes pèserait des centaines de
+ * mégaoctets, ce qu'un dépôt GitHub Pages ne peut pas porter — et l'application
+ * cesserait d'être installable.
+ *
+ * Ce n'est PAS une photo du site : une orthophoto a souvent plusieurs années et
+ * ne dit rien de l'état des agrès (les tapis de perche et de hauteur sont bâchés
+ * ou rentrés, un bac de sable envahi ne se distingue plus du sol). Elle montre
+ * l'implantation — anneau, couloirs, revêtement — et rien de plus.
+ */
+const IGN_WMS = 'https://data.geopf.fr/wms-r/wms';
+
+function vueAerienne(t, largeur = 960) {
+  if (typeof t.lat !== 'number' || typeof t.lon !== 'number') return null;
+  const hauteur = Math.round(largeur * 9 / 16);
+  /* Cadrage : un anneau de 400 m tient dans 360 m de champ ; une petite piste
+     se contente de moins, sans quoi elle se perd au milieu de l'image. */
+  const champ = t.longueur_piste >= 400 ? 360 : (t.longueur_piste ? 260 : 300);
+  const dlat = (champ * hauteur / largeur) / 2 / 111132;
+  const dlon = champ / 2 / (111320 * Math.cos(t.lat * Math.PI / 180));
+  const bbox = [t.lat - dlat, t.lon - dlon, t.lat + dlat, t.lon + dlon].join(',');
+  return `${IGN_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap` +
+         '&LAYERS=HR.ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326' +
+         `&BBOX=${bbox}&WIDTH=${largeur}&HEIGHT=${hauteur}&FORMAT=image/jpeg`;
+}
+
 function renderList() {
   const list = state.shown.slice(0, state.limit);
   $('#results').innerHTML = list.map(t => {
@@ -334,6 +362,16 @@ function openSheet(id) {
         </figure>`).join('')}
     </div>` : '';
 
+  /* À défaut de photo de terrain, on montre au moins l'implantation vue du ciel.
+     Le bloc reste distinct de la galerie : une orthophoto n'est pas le témoignage
+     de quelqu'un qui est allé courir là. */
+  const aerienneUrl = t.photos.length ? null : vueAerienne(t);
+  const aerienne = aerienneUrl ? `
+    <figure class="aerial">
+      <img loading="lazy" src="${esc(aerienneUrl)}" alt="${esc(U.aerienne_alt(t.nom || U.sans_nom))}">
+      <figcaption>${esc(U.aerienne_legende)} <span>${esc(U.aerienne_credit)}</span></figcaption>
+    </figure>` : '';
+
   const avis = `
     <div class="sec">${esc(U.sec_avis)}${t.nb_avis ? ` (${t.nb_avis})` : ''}</div>
     ${t.avis.length ? t.avis.map(a => `
@@ -356,6 +394,7 @@ function openSheet(id) {
        <span>${esc(U.note_sur_5(fmtNote(t.note_moyenne)))} · ${esc(U.nb_avis(t.nb_avis))}</span></p>` : ''}
 
     ${galerie}
+    ${aerienne}
 
     <div class="actions">
       <a class="btn primary" href="${gmaps}" target="_blank" rel="noopener">${esc(U.itineraire)}</a>
@@ -399,6 +438,15 @@ function openSheet(id) {
 
     <p class="src"><a href="${FICHES}${esc(t.id)}/">${esc(U.page_dediee)}</a><br>
       ${U.reference(esc(t.id), esc(SOURCES[t.source] || SOURCES[0]))}</p>`;
+
+  /* Hors couverture IGN, ou service indisponible : on retire le bloc plutôt que
+     de laisser une image cassée sous le nom du stade. */
+  const imgAerienne = $('#sheet-body .aerial img');
+  if (imgAerienne) imgAerienne.addEventListener('error', () => {
+    const fig = imgAerienne.closest('.aerial');
+    if (fig) fig.remove();
+  });
+
   $('#sheet').hidden = false;
   document.body.style.overflow = 'hidden';
   setHash();
