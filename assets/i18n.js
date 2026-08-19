@@ -43,7 +43,8 @@ const FR = {
     photos_du_site: 'Photos du site',
     aerienne_alt: n => `Vue aérienne de ${n}`,
     aerienne_legende: "Vue aérienne, à défaut de photo du site.",
-    aerienne_credit: "L'image peut avoir plusieurs années et ne dit rien de l'état des agrès. © IGN — BD ORTHO®",
+    aerienne_legende_datee: a => `Vue aérienne de ${a}, à défaut de photo du site.`,
+    aerienne_credit: "Elle montre l'implantation, pas l'état des agrès : les tapis de perche et de hauteur y sont bâchés ou rentrés. © IGN — BD ORTHO®, Licence Ouverte 2.0",
     note_sur_5:  n => `${n} sur 5`,
     sans_nom:    'Équipement d’athlétisme',
 
@@ -256,7 +257,8 @@ const EN = {
     photos_du_site: 'Photos of the venue',
     aerienne_alt: n => `Aerial view of ${n}`,
     aerienne_legende: 'Aerial view, in the absence of a photo of the venue.',
-    aerienne_credit: 'The image may be several years old and says nothing about the state of the equipment. © IGN — BD ORTHO®',
+    aerienne_legende_datee: a => `${a} aerial view, in the absence of a photo of the venue.`,
+    aerienne_credit: 'It shows the layout, not the state of the equipment: pole vault and high jump mats are covered or stored away. © IGN — BD ORTHO®, Licence Ouverte 2.0',
     note_sur_5:  n => `${n} out of 5`,
     sans_nom:    'Athletics facility',
 

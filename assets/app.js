@@ -374,10 +374,12 @@ function openSheet(id) {
      Le bloc reste distinct de la galerie : une orthophoto n'est pas le témoignage
      de quelqu'un qui est allé courir là. */
   const aerienneUrl = t.photos.length ? null : vueAerienne(t);
+  const anneeOrtho = (state.deps[t.dep] || [])[2];
   const aerienne = aerienneUrl ? `
     <figure class="aerial">
       <img loading="lazy" src="${esc(aerienneUrl)}" alt="${esc(U.aerienne_alt(t.nom || U.sans_nom))}">
-      <figcaption>${esc(U.aerienne_legende)} <span>${esc(U.aerienne_credit)}</span></figcaption>
+      <figcaption>${esc(anneeOrtho ? U.aerienne_legende_datee(anneeOrtho) : U.aerienne_legende)}
+        <span>${esc(U.aerienne_credit)}</span></figcaption>
     </figure>` : '';
 
   const avis = `

@@ -16,6 +16,7 @@ import sys
 import unicodedata
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -125,6 +126,81 @@ def as_int(v):
         return int(float(v))
     except (TypeError, ValueError):
         return None
+
+
+
+# --------------------------------------------------------- millesime des orthos
+IGN_WMS = "https://data.geopf.fr/wms-r/wms"
+
+
+def annee_ortho(lat, lon, timeout=20):
+    """Annee de prise de vue de l'orthophoto IGN a ce point, ou None.
+
+    La Licence Ouverte 2.0 demande de citer la source ET la date de derniere
+    mise a jour de l'information reutilisee : c'est cette date-la.
+    """
+    d = 0.0009
+    params = {
+        "SERVICE": "WMS", "VERSION": "1.3.0", "REQUEST": "GetFeatureInfo",
+        "LAYERS": "HR.ORTHOIMAGERY.ORTHOPHOTOS",
+        "QUERY_LAYERS": "HR.ORTHOIMAGERY.ORTHOPHOTOS", "STYLES": "",
+        "CRS": "EPSG:4326", "BBOX": f"{lat-d},{lon-d},{lat+d},{lon+d}",
+        "WIDTH": "101", "HEIGHT": "101", "I": "50", "J": "50",
+        "FORMAT": "image/jpeg", "INFO_FORMAT": "application/json",
+    }
+    url = IGN_WMS + "?" + urllib.parse.urlencode(params)
+    req = urllib.request.Request(url, headers={"User-Agent": "pistes-athle/1.0 (+github pages)"})
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        feats = json.load(r).get("features") or []
+    for f in feats:
+        pva = (f.get("properties") or {}).get("pva")
+        if isinstance(pva, int):
+            return pva
+    return None
+
+
+def millesimes(tracks, deps):
+    """Complete deps avec l'annee de l'ortho, par sondage d'un departement.
+
+    La BD ORTHO est volee par departement : l'annee y est constante, seule la
+    date exacte du vol change d'un chantier a l'autre. Trois sondages suffisent
+    a s'en assurer, la ou interroger les 7 000 sites prendrait une demi-heure.
+
+    Le service IGN n'est pas indispensable a la construction : s'il ne repond
+    pas, on s'en passe et la legende reste generique.
+    """
+    par_dep = {}
+    for t in tracks:
+        d = t.get("d")
+        if d and t.get("y") is not None and len(par_dep.setdefault(d, [])) < 3:
+            par_dep[d].append((t["y"], t["x"]))
+
+    def sonde(args):
+        code, points = args
+        annees = set()
+        for lat, lon in points:
+            try:
+                a = annee_ortho(lat, lon)
+            except Exception:
+                a = None
+            if a:
+                annees.add(a)
+        return code, annees
+
+    # En serie, 300 sondages prennent cinq minutes : trop pour une construction
+    # qui tourne a chaque poussee. Huit requetes concurrentes restent tres en
+    # deca des 40 par seconde et par IP autorisees par la Geoplateforme.
+    trouves = divergents = 0
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for code, annees in pool.map(sonde, sorted(par_dep.items())):
+            if len(annees) == 1 and code in deps:
+                deps[code].append(annees.pop())
+                trouves += 1
+            elif len(annees) > 1:
+                divergents += 1       # chantiers a cheval : on prefere ne rien dire
+    print(f"-> millesimes ortho IGN : {trouves} departement(s)"
+          + (f", {divergents} non homogene(s)" if divergents else ""))
+    return deps
 
 
 def app_version():
@@ -446,6 +522,7 @@ def main():
     installations = aggregate(raw)
     installations = apply_overrides(installations, load_overrides())
     tracks, deps = finalize(installations)
+    deps = millesimes(tracks, deps)
 
     avec_piste = sum(1 for t in tracks if t.get("p"))
     avec_photo = sum(1 for t in tracks if t.get("ph"))

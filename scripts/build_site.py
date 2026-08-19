@@ -98,8 +98,10 @@ T = {
         "sec_aerienne": "Vue aérienne",
         "aerienne_alt": lambda n: f"Vue aérienne de {n}",
         "aerienne_legende": "Vue aérienne, à défaut de photo du site.",
-        "aerienne_credit": "L'image peut avoir plusieurs années et ne dit rien de "
-                           "l'état des agrès. © IGN — BD ORTHO®",
+        "aerienne_legende_datee": lambda a: f"Vue aérienne de {a}, à défaut de photo du site.",
+        "aerienne_credit": "Elle montre l'implantation, pas l'état des agrès : les tapis "
+                           "de perche et de hauteur y sont bâchés ou rentrés. "
+                           "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Revêtement", "developpement": "Développement",
                "couloirs": "Couloirs", "config": "Configuration",
                "service": "Mise en service", "renovation": "Dernière rénovation",
@@ -156,8 +158,10 @@ T = {
         "sec_aerienne": "Aerial view",
         "aerienne_alt": lambda n: f"Aerial view of {n}",
         "aerienne_legende": "Aerial view, in the absence of a photo of the venue.",
-        "aerienne_credit": "The image may be several years old and says nothing about "
-                           "the state of the equipment. © IGN — BD ORTHO®",
+        "aerienne_legende_datee": lambda a: f"{a} aerial view, in the absence of a photo of the venue.",
+        "aerienne_credit": "It shows the layout, not the state of the equipment: pole vault "
+                           "and high jump mats are covered or stored away. "
+                           "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Surface", "developpement": "Lap length",
                "couloirs": "Lanes", "config": "Setting",
                "service": "Opened", "renovation": "Last refurbished",
@@ -237,6 +241,8 @@ def charger():
         t["nb_avis"] = t.get("nb_avis") or 0
         d = deps.get(t.get("dep") or "", ["", ""])
         t["dep_nom"], t["region"] = d[0], d[1]
+        # 3e element eventuel : annee de l'orthophoto IGN du departement
+        t["ortho_annee"] = d[2] if len(d) > 2 else None
         sites.append(t)
     return brut, sites, deps
 
@@ -612,12 +618,15 @@ def page_site(t, lang, voisins, url_base, depot, maj):
         # a defaut de photo de terrain, l'implantation vue du ciel
         aerienne = vue_aerienne(t)
         if aerienne:
+            annee = t.get("ortho_annee")
+            legende = (tr["aerienne_legende_datee"](annee) if annee
+                       else tr["aerienne_legende"])
             lignes.append(
                 f'<h2>{E(tr["sec_aerienne"])}</h2>'
                 f'<figure class="aerial">'
                 f'<img loading="lazy" src="{E(aerienne)}" width="960" height="540" '
                 f'alt="{E(tr["aerienne_alt"](nom))}">'
-                f'<figcaption>{E(tr["aerienne_legende"])} '
+                f'<figcaption>{E(legende)} '
                 f'<span>{E(tr["aerienne_credit"])}</span></figcaption></figure>')
 
     def kv(cle, valeur):

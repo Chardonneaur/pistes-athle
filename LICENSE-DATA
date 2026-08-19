@@ -34,11 +34,19 @@ Licence    : Licence Ouverte / Open Licence version 2.0 (Etalab)
 
 Les fiches des sites sans photo de terrain affichent une vue aérienne appelée
 en direct au service WMS de la Géoplateforme : aucune image n'est stockée ni
-redistribuee par ce depot. La mention « © IGN — BD ORTHO® » accompagne chaque
-vue, dans l'application comme sur les pages de site.
+redistribuee par ce depot. La mention « © IGN — BD ORTHO®, Licence Ouverte 2.0 »
+accompagne chaque vue, dans l'application comme sur les pages de site.
 
-Une orthophoto date souvent de plusieurs annees : elle renseigne l'implantation
-(anneau, revetement, aires annexes), jamais l'etat des agres.
+La Licence Ouverte 2.0 demande de citer la source et la date de derniere mise
+a jour de l'information reutilisee. L'annee de prise de vue est donc affichee
+(« Vue aerienne de 2025 ») : elle est relevee au moment de la construction via
+GetFeatureInfo sur la couche HR.ORTHOIMAGERY.ORTHOPHOTOS, par sondage d'un
+departement, la BD ORTHO etant volee departement par departement.
+
+Le millesime varie fortement : de 2025 pour la Loire-Atlantique a 2004 pour
+Wallis-et-Futuna. Meme recente, une orthophoto renseigne l'implantation
+(anneau, revetement, aires annexes) et jamais l'etat des agres, dont les tapis
+sont baches ou rentres.
 
 4. Fond de carte
 -----------------
