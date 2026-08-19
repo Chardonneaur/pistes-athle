@@ -347,6 +347,14 @@ function openSheet(id) {
   state.openId = id;
   const sol = t.surface ? (SOL[t.surface] || [t.surface])[0] : null;
   const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lon}`;
+  /* Les horaires ne sont dans aucune donnee ouverte : ni le recensement du
+     ministere, qui n'a pas le champ, ni OpenStreetMap, ou aucune piste n'est
+     renseignee. Ils existent en revanche sur les fiches Google des equipements.
+     On y renvoie plutot que de les recopier : les conditions de Google
+     interdisent de stocker et de redistribuer ce contenu, et le lien a
+     l'avantage d'etre toujours a jour. */
+  const gplace = 'https://www.google.com/maps/search/?api=1&query=' +
+    encodeURIComponent([t.nom, t.ville, t.cp].filter(Boolean).join(' '));
 
   const agres = [
     ...trier(t.agres).map(a => `<span>${esc(AGRES[a] || a)}</span>`),
@@ -399,6 +407,7 @@ function openSheet(id) {
     <div class="actions">
       <a class="btn primary" href="${gmaps}" target="_blank" rel="noopener">${esc(U.itineraire)}</a>
       <button class="btn" type="button" id="btn-minimap">${esc(U.voir_carte)}</button>
+      <a class="btn" href="${gplace}" target="_blank" rel="nofollow noopener">${esc(U.horaires_google)}</a>
     </div>
     <div id="minimap" class="minimap" hidden></div>
 

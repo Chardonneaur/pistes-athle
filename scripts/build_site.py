@@ -17,6 +17,7 @@ import html
 import json
 import math
 import os
+from urllib.parse import quote_plus
 import re
 import shutil
 from datetime import date
@@ -112,6 +113,7 @@ T = {
         "places": lambda n: f"{n} places",
         "enceinte_scolaire": "Enceinte scolaire",
         "itineraire": "Itinéraire", "ouvrir_appli": "Ouvrir dans l'application",
+        "horaires_google": "Horaires sur Google Maps",
         "site_officiel": "Site officiel de l'équipement",
         "signaler": "Signaler une erreur ou compléter la fiche",
         "sans_nom": "Équipement d'athlétisme",
@@ -169,6 +171,7 @@ T = {
         "places": lambda n: f"{n} seats",
         "enceinte_scolaire": "School grounds",
         "itineraire": "Directions", "ouvrir_appli": "Open in the app",
+        "horaires_google": "Opening hours on Google Maps",
         "site_officiel": "Official website of the venue",
         "signaler": "Report an error or complete this record",
         "sans_nom": "Athletics facility",
@@ -565,6 +568,12 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     adresse = ", ".join(x for x in [t.get("adresse"),
                                     " ".join(x for x in [t.get("cp"), ville] if x)] if x)
     gmaps = f"https://www.google.com/maps/dir/?api=1&amp;destination={t['lat']},{t['lon']}"
+    # Les horaires ne figurent dans aucune donnee ouverte : le recensement du
+    # ministere n'a pas le champ et OpenStreetMap n'en renseigne aucune piste.
+    # On renvoie vers la fiche Google du site plutot que d'en recopier le
+    # contenu, ce que ses conditions interdisent de stocker et redistribuer.
+    requete = quote_plus(" ".join(x for x in (nom, t.get("ville"), t.get("cp")) if x))
+    gplace = f"https://www.google.com/maps/search/?api=1&amp;query={requete}"
 
     lignes = [entete(lang, titre, desc, chemin, alternatives, [lieu, fil], url_base)]
     lignes.append(f"""
@@ -581,6 +590,7 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     lignes.append(f'<p class="lede">{resume(t, lang)}</p>')
     lignes.append(f"""<div class="actions">
   <a class="btn primary" href="{gmaps}" rel="nofollow noopener">{E(tr['itineraire'])}</a>
+  <a class="btn" href="{gplace}" rel="nofollow noopener">{E(tr['horaires_google'])}</a>
   <a class="btn" href="{r}{url_appli(lang)}#site={E(t['id'])}">{E(tr['ouvrir_appli'])}</a>
 </div>""")
 
