@@ -163,6 +163,22 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
   background:var(--bg);cursor:zoom-in;display:block}
 .gallery figcaption{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4}
 .gallery figcaption span{opacity:.7}
+/* À la souris, un défilement horizontal sans barre visible passe pour un bug :
+   la molette ne le déplace pas. Sur grand écran on abandonne donc le carrousel
+   pour une grille, et les photos y gardent leur cadrage d'origine. */
+@media (min-width:760px){
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:10px;overflow:visible;
+    margin:0 0 16px;padding:0;scroll-snap-type:none}
+  .gallery figure{width:auto;scroll-snap-align:none}
+  .gallery img{aspect-ratio:auto;height:auto}
+}
+/* Fenêtre étroite mais souris présente : au moins une barre pour voir qu'on peut défiler. */
+@media (hover:hover) and (max-width:759px){
+  .gallery{scrollbar-width:thin}
+  .gallery::-webkit-scrollbar{display:block;height:6px}
+  .gallery::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+}
+
 
 /* ---------- avis ---------- */
 .avis{background:var(--bg);border-radius:12px;padding:11px 13px;margin-bottom:8px}
