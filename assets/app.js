@@ -24,6 +24,17 @@ const ISSUE = (tpl, params) =>
   `https://github.com/${REPO}/issues/new?` +
   new URLSearchParams({ template: tpl, ...params }).toString();
 
+/* Tout le monde n'a pas de compte GitHub : une contribution peut aussi partir
+   par e-mail. L'adresse est assemblée à l'exécution et n'apparaît donc nulle
+   part en clair dans le HTML, où les robots collecteurs viendraient la lire. */
+const CONTACT = ['ronanchardonneau', 'gmail.com'];
+const SUJET = '[Piste]';                    // préfixe : un filtre suffit à trier
+
+/* Le jour où le volume justifie un vrai service de formulaire, il suffira de
+   renseigner cette URL : envoyerContribution() postera au lieu d'ouvrir le
+   client mail, sans rien changer au formulaire ni aux appels. */
+const ENVOI_ENDPOINT = '';
+
 /* ------------------------------------------------------------- libellés */
 /* Tout le texte visible vient de assets/i18n.js, choisi d'après <html lang>. */
 const DICO = window.I18N;
@@ -67,8 +78,8 @@ const has = (t, a) => t.agres.includes(a);
 
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
-                q: '', dep: '', me: null, openId: null, map: null, mini: null,
-                cluster: null, mapReady: false };
+                q: '', dep: '', me: null, openId: null, contrib: null, map: null,
+                mini: null, cluster: null, mapReady: false };
 
 const $ = s => document.querySelector(s);
 const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -308,7 +319,6 @@ function openSheet(id) {
   state.openId = id;
   const sol = t.surface ? (SOL[t.surface] || [t.surface])[0] : null;
   const gmaps = `https://www.google.com/maps/dir/?api=1&destination=${t.lat},${t.lon}`;
-  const libelle = `${t.nom} (${t.ville})`;
 
   const agres = [
     ...trier(t.agres).map(a => `<span>${esc(AGRES[a] || a)}</span>`),
@@ -336,9 +346,8 @@ function openSheet(id) {
         <p>${esc(a.t)}</p>
       </article>`).join('')
     : `<p class="vide">${U.pas_davis}</p>`}
-    <a class="btn" style="margin-top:10px" target="_blank" rel="noopener"
-       href="${ISSUE('avis.yml', { title: U.avis_titre(libelle), id: t.id })}">
-       ${esc(U.donner_avis)}</a>`;
+    <button class="btn" type="button" style="margin-top:10px" data-contrib="avis">
+       ${esc(U.donner_avis)}</button>`;
 
   $('#sheet-body').innerHTML = `
     <h2>${esc(t.nom || U.sans_nom)}</h2>
@@ -365,8 +374,7 @@ function openSheet(id) {
     </div>
 
     ${agres ? `<div class="sec">${esc(U.sec_agres)}</div><div class="eq">${agres}</div>` : ''}
-    ${t.agres_probables.length ? `<p class="src">${U.incertain(
-        ISSUE('correction.yml', { title: U.correction_titre(libelle), id: t.id }))}</p>` : ''}
+    ${t.agres_probables.length ? `<p class="src">${U.incertain}</p>` : ''}
 
     <div class="sec">${esc(U.sec_acces)}</div>
     <div class="grid">
@@ -385,10 +393,8 @@ function openSheet(id) {
     ${t.url ? `<p><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(U.site_officiel)}</a></p>` : ''}
 
     <div class="actions" style="margin-top:18px">
-      <a class="btn" target="_blank" rel="noopener"
-         href="${ISSUE('correction.yml', { title: U.correction_titre(libelle), id: t.id })}">${esc(U.signaler)}</a>
-      <a class="btn" target="_blank" rel="noopener"
-         href="${ISSUE('complement.yml', { title: U.complement_titre(libelle), id: t.id })}">${esc(U.completer)}</a>
+      <button class="btn" type="button" data-contrib="correction">${esc(U.signaler)}</button>
+      <button class="btn" type="button" data-contrib="complement">${esc(U.completer)}</button>
     </div>
 
     <p class="src"><a href="${FICHES}${esc(t.id)}/">${esc(U.page_dediee)}</a><br>
@@ -401,6 +407,7 @@ function openSheet(id) {
 function closeSheet() {
   destroyMiniMap();
   state.openId = null;
+  state.contrib = null;
   $('#sheet').hidden = true;
   document.body.style.overflow = '';
   if (location.hash.includes('site=')) history.replaceState(null, '', location.pathname + location.search);
@@ -422,17 +429,15 @@ function readHash() {
   if (location.hash.includes('carte')) switchView('map');
   let filtre = false;
   const dep = h.get('dep');
-  if (dep) {
-    state.dep = dep;
-    const sel = $('#dep');
-    if (sel) { sel.value = dep; sel.classList.toggle('is-on', !!sel.value); }
-    filtre = true;
-  }
+  if (dep) { state.dep = dep; afficherDep(); filtre = true; }
   const q = h.get('q');
   if (q) { state.q = q; $('#q').value = q; $('#q-clear').hidden = false; filtre = true; }
   if (filtre) { apply(); cadrerSurResultats(); }
   const id = h.get('site');
-  if (id) openSheet(id);
+  if (id) return openSheet(id);
+  /* #contribuer ouvre le formulaire sans passer par une fiche : c'est le lien
+     donné aux contributeurs sans compte GitHub, depuis le dépôt notamment. */
+  if (h.has('contribuer')) ouvrirContribution(h.get('contribuer') || 'correction', null);
 }
 
 function destroyMiniMap() {
@@ -449,14 +454,14 @@ function toggleMiniMap() {
     destroyMiniMap();
     box.hidden = true;
     box.innerHTML = '';
-    btn.textContent = 'Voir sur la carte';
+    btn.textContent = U.voir_carte;
     return;
   }
 
   box.hidden = false;
-  btn.textContent = 'Masquer la carte';
+  btn.textContent = U.masquer_carte;
   box.innerHTML = '<div class="minimap-canvas"></div>' +
-    '<button type="button" class="minimap-full" data-full-map>Ouvrir en plein écran</button>';
+    `<button type="button" class="minimap-full" data-full-map>${esc(U.plein_ecran)}</button>`;
 
   destroyMiniMap();
   state.mini = L.map(box.querySelector('.minimap-canvas'), {
@@ -493,10 +498,141 @@ function openPhoto(src, alt) {
   document.body.appendChild(v);
 }
 
+/* ------------------------------------------------------- contribution */
+const TYPES_CONTRIB = ['avis', 'correction', 'complement', 'ajout'];
+const ETIQUETTE = { avis: 'Avis', correction: 'Correction',
+                    complement: 'Complément', ajout: 'Ajout' };
+
+function ouvrirContribution(type, t) {
+  const C = DICO.contrib;
+  if (!TYPES_CONTRIB.includes(type)) type = 'correction';
+  state.contrib = { retour: t ? t.id : null, id: t ? t.id : '' };
+  state.openId = null;
+  const site = t ? [t.nom || U.sans_nom, t.ville].filter(Boolean).join(', ')
+                   + (t.dep ? ` (${t.dep})` : '')
+                 : '';
+
+  $('#sheet-body').innerHTML = `
+    <div class="contrib">
+      ${t ? `<button class="retour" type="button" data-retour>${esc(C.retour)}</button>` : ''}
+      <h2>${esc(C.titre)}</h2>
+      <p class="intro">${esc(C.intro)}</p>
+
+      <label class="champ"><span>${esc(C.type_label)}</span>
+        <select id="c-type">${TYPES_CONTRIB.map(k =>
+          `<option value="${k}"${k === type ? ' selected' : ''}>${esc(C.types[k])}</option>`).join('')}
+        </select></label>
+
+      <label class="champ"><span>${esc(C.site)}</span>
+        <input id="c-site" type="text" value="${esc(site)}" placeholder="${esc(C.site_ph)}"></label>
+
+      <label class="champ" id="c-note-champ"${type === 'avis' ? '' : ' hidden'}>
+        <span>${esc(C.note)}</span>
+        <select id="c-note"><option value="">${esc(C.note_vide)}</option>
+          ${C.notes.map((l, i) => `<option value="${i + 1}">${esc(l)}</option>`).join('')}
+        </select></label>
+
+      <label class="champ"><span>${esc(C.message)}</span>
+        <textarea id="c-message" rows="6" placeholder="${esc(C.message_ph[type])}"></textarea></label>
+
+      <label class="champ"><span>${esc(C.signature)}</span>
+        <input id="c-signature" type="text" placeholder="${esc(C.signature_ph)}"></label>
+
+      <p class="src">${esc(C.photos)}</p>
+      <p class="erreur" id="c-erreur" hidden></p>
+
+      <div class="actions">
+        <button class="btn primary" type="button" data-envoi="mail">${esc(C.mail)}</button>
+        <button class="btn" type="button" data-envoi="github">${esc(C.github)}</button>
+      </div>
+      <p class="src aides"><span>${esc(C.mail_aide)}</span><span>${esc(C.github_aide)}</span></p>
+      <p class="src">${esc(C.licence)}</p>
+    </div>`;
+
+  $('#sheet').hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+/* Le type choisi change l'exemple proposé et l'utilité de la note. */
+function majTypeContribution() {
+  const type = $('#c-type').value;
+  $('#c-message').placeholder = DICO.contrib.message_ph[type] || '';
+  $('#c-note-champ').hidden = type !== 'avis';
+}
+
+function lireContribution() {
+  const C = DICO.contrib;
+  const err = $('#c-erreur');
+  const d = {
+    type: $('#c-type').value,
+    site: $('#c-site').value.trim(),
+    note: $('#c-note-champ').hidden ? '' : $('#c-note').value,
+    message: $('#c-message').value.trim(),
+    signature: $('#c-signature').value.trim(),
+    id: state.contrib ? state.contrib.id : '',
+  };
+  const souci = !d.site ? C.manque_site : !d.message ? C.manque : '';
+  err.textContent = souci;
+  err.hidden = !souci;
+  if (souci) { (souci === C.manque_site ? $('#c-site') : $('#c-message')).focus(); return null; }
+  return d;
+}
+
+/* Renvoie l'adresse publique de la fiche, pour que le message reçu mène au site. */
+function lienFiche(id) {
+  return id ? new URL(FICHES + id + '/', location.href).href : '';
+}
+
+function envoyerContribution(voie) {
+  const d = lireContribution();
+  if (!d) return;
+  const C = DICO.contrib;
+  const titre = `[${ETIQUETTE[d.type]}] ${d.site}`;
+
+  if (voie === 'github') {
+    const params = { title: titre, nom: d.site };
+    if (d.id) params.id = d.id;
+    if (d.type === 'avis') {
+      params.avis = d.message;
+      if (d.signature) params.pseudo = d.signature;
+      if (d.note) params.note = d.note;
+    } else if (d.type === 'correction') {
+      params.erreur = d.message;
+    } else {
+      params.note = d.message;                 // « complement » et « ajout »
+    }
+    return window.open(ISSUE(`${d.type}.yml`, params), '_blank', 'noopener');
+  }
+
+  const corps = [
+    `${C.type_label} : ${C.types[d.type]}`,
+    `${C.site} : ${d.site}`,
+    d.id ? `${U.reference_courte} ${d.id}` : '',
+    d.note ? `${C.note} : ${d.note}/5` : '',
+    d.signature ? `${C.signe} : ${d.signature}` : '',
+    '',
+    d.message,
+    '',
+    lienFiche(d.id),
+  ].filter(Boolean).join('\n');
+
+  /* Un lien cliqué plutôt qu'une navigation : la page reste en place si aucun
+     client mail n'est configuré, et le brouillon s'ouvre à côté. */
+  const lien = document.createElement('a');
+  lien.href = `mailto:${CONTACT.join('@')}` +
+    `?subject=${encodeURIComponent(`${SUJET}${titre}`)}` +
+    `&body=${encodeURIComponent(corps)}`;
+  lien.rel = 'noopener';
+  lien.style.display = 'none';
+  document.body.appendChild(lien);
+  lien.click();
+  lien.remove();
+}
+
 /* ----------------------------------------------------------- à propos */
 function openAbout() {
   state.openId = null;
-  $('#sheet-body').innerHTML = DICO.about({ repo: REPO, issue: ISSUE });
+  $('#sheet-body').innerHTML = DICO.about({ repo: REPO });
   $('#sheet').hidden = false;
   document.body.style.overflow = 'hidden';
 }
@@ -521,38 +657,94 @@ function geolocate() {
 /* -------------------------------------------------------------- interface */
 function buildChips() {
   $('#chips').innerHTML =
-    `<select id="dep" class="chip-select" aria-label="${esc(U.dep_label)}">
-       <option value="">${esc(U.dep_toutes)}</option>
-     </select>` +
+    `<input id="dep" class="chip-select" list="dep-liste" type="text" autocomplete="off"
+            size="12" placeholder="${esc(U.dep_ph)}" aria-label="${esc(U.dep_label)}">
+     <datalist id="dep-liste"></datalist>` +
     FILTERS.map(f =>
       `<button class="chip${state.active.has(f.id) ? ' is-on' : ''}" data-f="${f.id}">${f.label}</button>`
     ).join('');
 }
 
-/* 108 départements : un menu déroulant, groupé par région et compté, plutôt
-   qu'une puce par département qu'il faudrait faire défiler indéfiniment. */
+/* 108 départements : un champ où l'on tape, avec suggestions. On y saisit le
+   numéro (« 44 », « 01 », « 2A »), le nom, ou un code postal — plutôt qu'une
+   puce par département qu'il faudrait faire défiler indéfiniment. */
+const DEPS = [];
+
+/* Les codes de Data ES ne sont pas zéropadés : l'Ain est « 1 ». On affiche
+   « 01 » comme tout le monde, mais on compare sur la forme canonique. */
+const codeCanon = v => {
+  const s = String(v || '').trim().toUpperCase();
+  return /^\d+$/.test(s) ? String(Number(s)) : s;
+};
+const codeAffiche = code => (/^\d$/.test(code) ? '0' + code : code);
+
 function remplirDepartements() {
-  const sel = $('#dep');
-  if (!sel) return;
+  const champ = $('#dep');
+  if (!champ) return;
   const nb = {};
   for (const t of state.all) if (t.dep) nb[t.dep] = (nb[t.dep] || 0) + 1;
 
-  const regions = {};
+  DEPS.length = 0;
   for (const code in nb) {
     const [nom, region] = state.deps[code] || [code, ''];
-    (regions[region] || (regions[region] = [])).push([code, nom || code, nb[code]]);
+    DEPS.push({ code, nom: nom || code, region: region || '', n: nb[code],
+                libelle: `${codeAffiche(code)} · ${nom || code}` });
   }
   const cmp = (a, b) => a.localeCompare(b, DICO.locale);
-  const html = [`<option value="">${esc(U.dep_toutes)}</option>`];
-  for (const region of Object.keys(regions).sort(cmp)) {
-    html.push(`<optgroup label="${esc(region || 'France')}">` +
-      regions[region].sort((a, b) => cmp(a[1], b[1])).map(([code, nom, n]) =>
-        `<option value="${esc(code)}">${esc(code)} · ${esc(nom)} (${n})</option>`).join('') +
-      '</optgroup>');
+  DEPS.sort((a, b) => cmp(a.region, b.region) || cmp(a.nom, b.nom));
+
+  $('#dep-liste').innerHTML = DEPS.map(d =>
+    `<option value="${esc(d.libelle)}">${esc(d.region)} · ${esc(U.nb_sites(d.n))}</option>`
+  ).join('');
+  afficherDep();
+}
+
+/* Remet dans le champ le libellé complet du département retenu. */
+function afficherDep() {
+  const champ = $('#dep');
+  if (!champ) return;
+  const d = DEPS.find(x => x.code === state.dep);
+  champ.value = d ? d.libelle : '';
+  champ.size = Math.max(12, champ.value.length + 1);   // la pastille suit le texte
+  champ.classList.toggle('is-on', !!d);
+}
+
+/* Rend le code du département désigné par une saisie libre.
+   '' = rien de saisi, null = saisie non reconnue (on ne touche à rien). */
+function resoudreDep(saisie, avecCodePostal) {
+  const brut = String(saisie || '').trim();
+  if (!brut) return '';
+
+  // « 44 · Loire-Atlantique (171) » : on ne garde que le numéro de tête
+  const tete = codeCanon(brut.split('·')[0]);
+  const parCode = DEPS.find(d => codeCanon(d.code) === tete);
+  if (parCode) return parCode.code;
+
+  if (avecCodePostal) {
+    const chiffres = brut.replace(/\s/g, '');
+    if (/^\d{5}$/.test(chiffres)) {                  // 44210 -> 44, 97400 -> 974
+      const prefixe = chiffres.startsWith('97') ? chiffres.slice(0, 3) : chiffres.slice(0, 2);
+      const trouve = DEPS.find(d => codeCanon(d.code) === codeCanon(prefixe));
+      if (trouve) return trouve.code;
+    }
   }
-  sel.innerHTML = html.join('');
-  sel.value = state.dep;
-  sel.classList.toggle('is-on', !!state.dep);
+
+  const cle = norm(brut);
+  const exact = DEPS.find(d => norm(d.nom) === cle || norm(d.libelle) === cle);
+  if (exact) return exact.code;
+  const debuts = DEPS.filter(d => norm(d.nom).startsWith(cle));
+  return debuts.length === 1 ? debuts[0].code : null;
+}
+
+/* Applique un département et recadre la carte. */
+function choisirDep(code) {
+  if (code === state.dep) return false;
+  state.dep = code;
+  afficherDep();
+  apply();
+  cadrerSurResultats();
+  setHash();
+  return true;
 }
 
 /* Après un changement de département, on recadre la carte sur les résultats :
@@ -592,13 +784,26 @@ function init() {
   traduire();
   buildChips();
 
+  /* Pendant la frappe on n'agit que sur une saisie reconnue — ou vidée. Les
+     états intermédiaires (« lo », « loi »…) laissent la liste tranquille. */
+  let debDep;
+  $('#chips').addEventListener('input', e => {
+    if (e.target.id !== 'dep') return;
+    clearTimeout(debDep);
+    const saisie = e.target.value;
+    debDep = setTimeout(() => {
+      const code = resoudreDep(saisie, true);
+      if (code !== null) choisirDep(code);
+    }, 200);
+  });
+
+  /* À la sortie du champ (ou après un choix dans la liste), on affiche le
+     libellé complet, et on efface une saisie restée sans correspondance. */
   $('#chips').addEventListener('change', e => {
     if (e.target.id !== 'dep') return;
-    state.dep = e.target.value;
-    e.target.classList.toggle('is-on', !!state.dep);
-    apply();
-    cadrerSurResultats();
-    setHash();
+    clearTimeout(debDep);
+    const code = resoudreDep(e.target.value, true);
+    if (code === null || !choisirDep(code)) afficherDep();
   });
 
   $('#chips').addEventListener('click', e => {
@@ -618,6 +823,22 @@ function init() {
     clearTimeout(deb);
     deb = setTimeout(() => { apply(); setHash(); }, 160);
   });
+  /* « 44 » ou « loire-atlantique » tapé dans la recherche désigne un
+     département : à la validation, on le bascule dans son filtre plutôt que
+     de chercher la chaîne « 44 » dans toutes les fiches du pays. */
+  const rechercheVersDep = () => {
+    const code = resoudreDep(state.q, false);
+    if (!code) return;
+    state.q = '';
+    $('#q').value = '';
+    $('#q-clear').hidden = true;
+    if (!choisirDep(code)) { apply(); setHash(); }   // déjà sur ce département
+  };
+  $('#q').addEventListener('change', rechercheVersDep);
+  $('#q').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); rechercheVersDep(); $('#q').blur(); }
+  });
+
   $('#q-clear').addEventListener('click', () => {
     $('#q').value = ''; state.q = ''; $('#q-clear').hidden = true; apply(); setHash();
   });
@@ -628,7 +849,20 @@ function init() {
   $('#results').addEventListener('click', e => {
     const c = e.target.closest('.card'); if (c) openSheet(c.dataset.id);
   });
+  $('#sheet').addEventListener('change', e => {
+    if (e.target.id === 'c-type') majTypeContribution();
+  });
+
   $('#sheet').addEventListener('click', e => {
+    const contrib = e.target.closest('[data-contrib]');
+    if (contrib) {
+      e.preventDefault();
+      return ouvrirContribution(contrib.dataset.contrib,
+                                state.all.find(x => x.id === state.openId) || null);
+    }
+    const envoi = e.target.closest('[data-envoi]');
+    if (envoi) return envoyerContribution(envoi.dataset.envoi);
+    if (e.target.closest('[data-retour]')) return openSheet(state.contrib.retour);
     const img = e.target.closest('img[data-full]');
     if (img) return openPhoto(img.dataset.full, img.alt);
     if (e.target.closest('#btn-minimap')) return toggleMiniMap();
@@ -638,7 +872,7 @@ function init() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
   document.addEventListener('click', e => {
     const a = e.target.closest('[data-add-track]');
-    if (a) { e.preventDefault(); window.open(ISSUE('ajout.yml', {}), '_blank', 'noopener'); }
+    if (a) { e.preventDefault(); ouvrirContribution('ajout', null); }
   });
 
   $('#tab-list').addEventListener('click', () => switchView('list'));

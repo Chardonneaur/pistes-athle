@@ -1,5 +1,5 @@
-name: "Signaler une erreur sur une piste"
-description: "Une information affichée est fausse ou obsolète"
+name: "Signaler une erreur sur une piste / Report an error"
+description: "Une information affichée est fausse ou obsolète / A displayed detail is wrong or out of date"
 title: "[Correction] "
 labels: ["correction", "données"]
 body:
@@ -8,24 +8,31 @@ body:
       value: |
         Merci de nous aider à fiabiliser l'annuaire. Les données de base viennent du
         recensement du ministère : elles sont déclaratives et parfois périmées.
+
+        *Thank you for helping us keep the directory accurate. The base data comes from
+        the French ministry's census: it is self-declared and sometimes outdated.*
+
+        Pas de compte GitHub ? Le [formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer)
+        envoie la même contribution par e-mail. / *No GitHub account? The
+        [form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) sends the same contribution by email.*
   - type: input
     id: id
     attributes:
-      label: "Référence du site"
-      description: "Visible en bas de la fiche (ex. I352380090). Laissez vide si vous ne l'avez pas."
+      label: "Référence du site / Venue reference"
+      description: "Visible en bas de la fiche (ex. I352380090). Laissez vide si vous ne l'avez pas. / Leave empty if you do not have it."
       placeholder: "I352380090"
   - type: input
     id: nom
     attributes:
-      label: "Nom du stade et commune"
+      label: "Nom du stade et commune / Stadium name and town"
       placeholder: "Stade Robert Poirier, Rennes (35)"
     validations:
       required: true
   - type: textarea
     id: erreur
     attributes:
-      label: "Qu'est-ce qui est faux ?"
-      description: "Indiquez l'information affichée et l'information correcte."
+      label: "Qu'est-ce qui est faux ? / What is wrong?"
+      description: "Indiquez l'information affichée et l'information correcte. / Give the displayed detail and the correct one."
       placeholder: |
         Affiché : revêtement cendrée
         Réalité : piste refaite en synthétique en 2023
@@ -34,5 +41,5 @@ body:
   - type: textarea
     id: preuve
     attributes:
-      label: "Comment le savez-vous ? (facultatif)"
+      label: "Comment le savez-vous ? (facultatif) / How do you know? (optional)"
       placeholder: "Je m'y entraîne chaque semaine / page du site de la mairie : https://…"

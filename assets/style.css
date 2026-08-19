@@ -1,14 +1,14 @@
 :root{
   --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#64748b; --line:#e4e8ee;
   --accent:#c2410c; --accent-soft:#fff1e9; --ring:rgba(194,65,12,.28);
-  --ok:#0d7d5a; --ok-soft:#e6f5ef;
+  --ok:#0d7d5a; --ok-soft:#e6f5ef; --err:#dc2626;
   --safe-b:env(safe-area-inset-bottom,0px);
   --bar:56px; --search:60px; --chips:48px; --tabs:44px;
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
         --accent:#fb923c;--accent-soft:#3a1f10;--ring:rgba(251,146,60,.3);
-        --ok:#34d399;--ok-soft:#123328;}
+        --ok:#34d399;--ok-soft:#123328;--err:#f87171;}
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -51,9 +51,13 @@ a{color:var(--accent)}
 .chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 /* Le sélecteur de département vit dans la même barre que les puces, mais ce n'est
    pas une puce : il ne se bascule pas, il se choisit. */
-.chip-select{flex:none;max-width:210px;padding:7px 10px;border-radius:999px;cursor:pointer;
-  border:1px solid var(--line);background:var(--surface);color:var(--muted);
-  font-size:13.5px;color-scheme:light dark}
+/* La largeur suit le contenu : l'attribut size est posé par afficherDep(),
+   « 44 · Loire-Atlantique » ne doit pas être coupé. */
+.chip-select{flex:none;width:auto;max-width:240px;padding:7px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font-size:13.5px;color-scheme:light dark;outline:none;text-overflow:ellipsis}
+.chip-select::placeholder{color:var(--muted);opacity:1}
+.chip-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 .chip-select.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
 .chip-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
@@ -179,6 +183,20 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
   .gallery::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
 }
 
+/* ---------- formulaire de contribution ---------- */
+.contrib .retour{border:0;background:none;color:var(--accent);font-size:13.5px;
+  padding:0;margin:0 0 6px;cursor:pointer}
+.contrib .intro{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+.champ{display:block;margin:12px 0}
+.champ>span{display:block;font-size:12.5px;color:var(--muted);margin-bottom:5px}
+.champ input,.champ select,.champ textarea{width:100%;padding:10px 12px;border-radius:11px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:15px;
+  font-family:inherit;color-scheme:light dark}
+.champ textarea{resize:vertical;min-height:118px;line-height:1.5}
+.champ input:focus,.champ select:focus,.champ textarea:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--ring);outline:none}
+.erreur{color:var(--err);font-size:13px;margin:10px 0 0}
+.aides{display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:center;margin-top:6px}
 
 /* ---------- avis ---------- */
 .avis{background:var(--bg);border-radius:12px;padding:11px 13px;margin-bottom:8px}

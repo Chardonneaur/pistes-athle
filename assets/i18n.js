@@ -25,15 +25,15 @@ const FR = {
     effacer:     'Effacer',
     autour:      'Autour de moi',
     filtres:     'Filtres',
-    dep_label:   'Filtrer par département',
-    dep_toutes:  'Tous les départements',
+    dep_label:   'Filtrer par département (numéro, nom ou code postal)',
+    dep_ph:      'Département',
     onglet_liste: 'Liste',
     onglet_carte: 'Carte',
     chargement:  'Chargement des 7&nbsp;000 sites…',
     erreur_chargement: 'Impossible de charger les données. Rechargez la page.',
     plus:        'Afficher plus de sites',
     vide:        'Aucun site ne correspond à ces critères.<br>' +
-                 '<span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Ajoutez-la sur GitHub</a>.</span>',
+                 '<span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Signalez-la</a>.</span>',
     fermer:      'Fermer',
     changer_langue: 'Read this site in English',
     nb_sites:    n => `${n} site${n > 1 ? 's' : ''}`,
@@ -81,21 +81,19 @@ const FR = {
     enceinte_scolaire: 'Enceinte scolaire',
     site_officiel: 'Site officiel de l’équipement',
     page_dediee: 'Page dédiée de ce site',
+    reference_courte: 'Réf. :',
     signaler:    'Signaler une erreur',
     completer:   'Compléter la fiche',
     donner_avis: '✍️ Donner mon avis',
     anonyme:     'Anonyme',
     pas_davis:   'Personne n’a encore décrit ce site. Vous vous y entraînez&nbsp;? Votre retour aidera les autres.',
-    incertain:   lien => `Les mentions en pointillés proviennent d’une fiche ministérielle qui indique
+    incertain:   `Les mentions en pointillés proviennent d’une fiche ministérielle qui indique
                   la présence d’une aire sans préciser sa discipline.
-                  <a href="${lien}" target="_blank" rel="noopener">Vous connaissez ce site ? Complétez-le.</a>`,
+                  <a href="#" data-contrib="complement">Vous connaissez ce site ? Complétez-le.</a>`,
     reference:   (id, source) => `Réf. ${id} · Source : ${source} —
       <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Data ES</a>,
       Licence Ouverte 2.0. Les données déclaratives peuvent être incomplètes&nbsp;: vérifiez
       les conditions d’accès avant de vous déplacer.`,
-    avis_titre:  n => `[Avis] ${n}`,
-    correction_titre: n => `[Correction] ${n}`,
-    complement_titre: n => `[Complément] ${n}`,
 
     // géolocalisation
     geo_absente: 'Géolocalisation indisponible sur cet appareil.',
@@ -140,7 +138,44 @@ const FR = {
     scolaire: 'Site scolaire',
   },
 
-  about: ({ repo, issue }) => `
+  contrib: {
+    titre:      'Contribuer',
+    intro:      'Deux façons d’envoyer votre contribution : avec un compte GitHub, ou par e-mail si vous n’en avez pas.',
+    types: {
+      avis:       'Donner mon avis',
+      correction: 'Signaler une erreur',
+      complement: 'Compléter la fiche',
+      ajout:      'Ajouter une piste manquante',
+    },
+    type_label: 'Type de contribution',
+    site:       'Site concerné',
+    site_ph:    'Nom du stade, adresse, commune',
+    note:       'Votre note',
+    note_vide:  'Sans note',
+    notes: ['1 — à éviter', '2 — vétuste ou mal équipée', '3 — correcte, quelques défauts',
+            '4 — très bonne piste', '5 — excellente piste, rien à redire'],
+    message:    'Votre message',
+    message_ph: {
+      avis:       'État de la piste, agrès disponibles, ambiance, accès… Ce que vous auriez aimé savoir avant de venir.',
+      correction: 'Affiché : revêtement cendrée\nRéalité : piste refaite en synthétique en 2023',
+      complement: 'Agrès réellement présents, horaires d’ouverture, conditions d’accès…',
+      ajout:      'Revêtement, nombre de couloirs, agrès, accès. Et les coordonnées GPS si vous les avez.',
+    },
+    signature:    'Votre nom ou pseudo (facultatif)',
+    signe:        'Signé',
+    signature_ph: 'Prénom, pseudo, nom de club…',
+    photos:     'Photos : joignez-les à votre e-mail, ou glissez-les dans le formulaire GitHub. Évitez celles où des personnes sont reconnaissables.',
+    github:     'Envoyer via GitHub',
+    github_aide: 'Demande un compte GitHub',
+    mail:       'Envoyer par e-mail',
+    mail_aide:  'Ouvre votre logiciel de messagerie',
+    manque:     'Décrivez votre contribution avant de l’envoyer.',
+    manque_site: 'Indiquez au moins le nom et la commune du site.',
+    licence:    'En envoyant, vous acceptez que votre contribution et vos photos soient publiées sur le site sous licence ODbL, avec votre crédit.',
+    retour:     '← Retour',
+  },
+
+  about: ({ repo }) => `
     <div class="about">
       <h2>À propos</h2>
       <p>Un annuaire libre des pistes d’athlétisme françaises et de leurs agrès :
@@ -159,9 +194,12 @@ const FR = {
          et les conditions d’accès réelles changent souvent. Vérifiez avant de vous déplacer.</p>
 
       <h3>Contribuer</h3>
+      <p>Avec ou sans compte GitHub : le formulaire propose les deux, l’envoi par
+         e-mail comme le formulaire GitHub.</p>
       <ul>
-        <li><a href="${issue('correction.yml', {})}" target="_blank" rel="noopener">Signaler une erreur</a> sur une fiche</li>
-        <li><a href="${issue('ajout.yml', {})}" target="_blank" rel="noopener">Ajouter une piste manquante</a></li>
+        <li><a href="#" data-contrib="correction">Signaler une erreur</a> sur une fiche</li>
+        <li><a href="#" data-contrib="complement">Compléter une fiche</a> existante</li>
+        <li><a href="#" data-contrib="ajout">Ajouter une piste manquante</a></li>
         <li><a href="https://github.com/${repo}" target="_blank" rel="noopener">Proposer une pull request</a> sur le dépôt</li>
       </ul>
 
@@ -191,15 +229,15 @@ const EN = {
     effacer:     'Clear',
     autour:      'Near me',
     filtres:     'Filters',
-    dep_label:   'Filter by department',
-    dep_toutes:  'All departments',
+    dep_label:   'Filter by department (number, name or postcode)',
+    dep_ph:      'Department',
     onglet_liste: 'List',
     onglet_carte: 'Map',
     chargement:  'Loading 7,000 venues…',
     erreur_chargement: 'Could not load the data. Please reload the page.',
     plus:        'Show more venues',
     vide:        'No venue matches these filters.<br>' +
-                 '<span class="muted">Is a track missing? <a href="#" data-add-track>Add it on GitHub</a>.</span>',
+                 '<span class="muted">Is a track missing? <a href="#" data-add-track>Tell us about it</a>.</span>',
     fermer:      'Close',
     changer_langue: 'Lire ce site en français',
     nb_sites:    n => `${n} venue${n > 1 ? 's' : ''}`,
@@ -245,21 +283,19 @@ const EN = {
     enceinte_scolaire: 'School grounds',
     site_officiel: 'Official website of the venue',
     page_dediee: 'Permanent page for this venue',
+    reference_courte: 'Ref.:',
     signaler:    'Report an error',
     completer:   'Complete this record',
     donner_avis: '✍️ Write a review',
     anonyme:     'Anonymous',
     pas_davis:   'Nobody has described this venue yet. Do you train here? Your feedback will help others.',
-    incertain:   lien => `Dashed entries come from a ministry record that reports an area without
+    incertain:   `Dashed entries come from a ministry record that reports an area without
                   naming its discipline.
-                  <a href="${lien}" target="_blank" rel="noopener">Know this venue? Fill in the details.</a>`,
+                  <a href="#" data-contrib="complement">Know this venue? Fill in the details.</a>`,
     reference:   (id, source) => `Ref. ${id} · Source: ${source} —
       <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener">Data ES</a>,
       Licence Ouverte 2.0 (French open licence). Records are self-declared and may be incomplete:
       check access conditions before travelling.`,
-    avis_titre:  n => `[Review] ${n}`,
-    correction_titre: n => `[Correction] ${n}`,
-    complement_titre: n => `[Addition] ${n}`,
 
     geo_absente: 'Geolocation is not available on this device.',
     geo_refusee: 'Allow location access to sort venues by distance.',
@@ -303,7 +339,44 @@ const EN = {
     scolaire: 'School venue',
   },
 
-  about: ({ repo, issue }) => `
+  contrib: {
+    titre:      'Contribute',
+    intro:      'Two ways to send your contribution: with a GitHub account, or by email if you do not have one.',
+    types: {
+      avis:       'Write a review',
+      correction: 'Report an error',
+      complement: 'Complete this record',
+      ajout:      'Add a missing track',
+    },
+    type_label: 'Type of contribution',
+    site:       'Venue concerned',
+    site_ph:    'Stadium name, address, town',
+    note:       'Your rating',
+    note_vide:  'No rating',
+    notes: ['1 — avoid', '2 — run-down or poorly equipped', '3 — decent, a few flaws',
+            '4 — very good track', '5 — excellent track, nothing to fault'],
+    message:    'Your message',
+    message_ph: {
+      avis:       'Condition of the track, available equipment, atmosphere, access… What you would have liked to know before going.',
+      correction: 'Shown: cinder surface\nReality: resurfaced with synthetic in 2023',
+      complement: 'Equipment actually present, opening hours, access conditions…',
+      ajout:      'Surface, number of lanes, equipment, access. And GPS coordinates if you have them.',
+    },
+    signature:    'Your name or nickname (optional)',
+    signe:        'Signed by',
+    signature_ph: 'First name, nickname, club name…',
+    photos:     'Photos: attach them to your email, or drag them into the GitHub form. Avoid photos where people are recognisable.',
+    github:     'Send via GitHub',
+    github_aide: 'Requires a GitHub account',
+    mail:       'Send by email',
+    mail_aide:  'Opens your email application',
+    manque:     'Describe your contribution before sending it.',
+    manque_site: 'Give at least the name and town of the venue.',
+    licence:    'By sending, you agree that your contribution and photos may be published on the site under the ODbL licence, with your credit.',
+    retour:     '← Back',
+  },
+
+  about: ({ repo }) => `
     <div class="about">
       <h2>About</h2>
       <p>An open directory of French athletics tracks and their facilities: long, high and
@@ -322,9 +395,12 @@ const EN = {
          conditions change often. Check before you travel.</p>
 
       <h3>Contributing</h3>
+      <p>With or without a GitHub account: the form offers both, sending by email
+         as well as the GitHub form.</p>
       <ul>
-        <li><a href="${issue('correction.yml', {})}" target="_blank" rel="noopener">Report an error</a> on a record</li>
-        <li><a href="${issue('ajout.yml', {})}" target="_blank" rel="noopener">Add a missing track</a></li>
+        <li><a href="#" data-contrib="correction">Report an error</a> on a record</li>
+        <li><a href="#" data-contrib="complement">Complete an existing record</a></li>
+        <li><a href="#" data-contrib="ajout">Add a missing track</a></li>
         <li><a href="https://github.com/${repo}" target="_blank" rel="noopener">Open a pull request</a> on the repository</li>
       </ul>
 

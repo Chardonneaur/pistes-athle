@@ -3,6 +3,18 @@
 Merci ! Les données du ministère sont une base solide mais incomplète : ce sont les
 gens qui s'entraînent sur ces pistes qui savent vraiment ce qu'il y a dessus.
 
+## Sans compte GitHub
+
+Vous n'êtes pas obligé d'avoir un compte : le
+[formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer) propose
+d'envoyer la même contribution **par e-mail**, photos en pièces jointes. Le reste de
+cette page décrit la voie GitHub, pour qui veut préparer directement le fichier de
+données.
+
+*You do not need a GitHub account: the
+[form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) can send
+the same contribution by email instead.*
+
 ## Le principe
 
 `data/tracks.json` est **généré** : on ne le modifie jamais à la main. À chaque

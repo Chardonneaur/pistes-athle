@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
-  - name: "Proposer directement une modification (pull request)"
+  - name: "Pas de compte GitHub ? / No GitHub account?"
+    url: https://chardonneaur.github.io/pistes-athle/#contribuer
+    about: "Le formulaire du site envoie votre contribution par e-mail. / The form on the site sends your contribution by email."
+  - name: "Proposer directement une modification (pull request) / Submit a pull request"
     url: https://github.com/Chardonneaur/pistes-athle/blob/master/CONTRIBUTING.md
-    about: "Vous êtes à l'aise avec GitHub ? Éditez un fichier dans data/overrides/."
+    about: "Vous êtes à l'aise avec GitHub ? Éditez un fichier dans data/overrides/. / Comfortable with GitHub? Edit a file in data/overrides/."

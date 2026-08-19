@@ -1,5 +1,5 @@
-name: "Donner mon avis sur une piste"
-description: "Raconter comment ça se passe sur place, et envoyer des photos"
+name: "Donner mon avis sur une piste / Review a track"
+description: "Raconter comment ça se passe sur place, et envoyer des photos / Tell us what it is like on the ground, and send photos"
 title: "[Avis] "
 labels: ["avis", "données"]
 body:
@@ -8,36 +8,39 @@ body:
       value: |
         Votre retour de terrain vaut mieux que n'importe quelle base de données.
         Dites ce qui est vraiment là, dans quel état, et si on peut y entrer.
+
+        *Your feedback from the ground beats any database. Tell us what is really
+        there, in what condition, and whether you can get in.*
+
+        Pas de compte GitHub ? Le [formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer)
+        envoie la même contribution par e-mail. / *No GitHub account? The
+        [form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) sends the same contribution by email.*
   - type: input
     id: id
     attributes:
-      label: "Référence du site"
-      description: "Affichée en bas de la fiche (ex. I441310030)."
+      label: "Référence du site / Venue reference"
+      description: "Affichée en bas de la fiche (ex. I441310030). / Shown at the bottom of the venue page."
       placeholder: "I441310030"
   - type: input
     id: nom
     attributes:
-      label: "Nom du stade et commune"
+      label: "Nom du stade et commune / Stadium name and town"
       placeholder: "Centre Sportif du Val Saint Martin, Pornic (44)"
     validations:
       required: true
   - type: dropdown
     id: note
     attributes:
-      label: "Votre note"
-      options:
-        - "5 — excellente piste, rien à redire"
-        - "4 — très bonne piste"
-        - "3 — correcte, quelques défauts"
-        - "2 — vétuste ou mal équipée"
-        - "1 — à éviter"
+      label: "Votre note / Your rating"
+      description: "5 = excellente piste, rien à redire · 1 = à éviter. / 5 = excellent, nothing to fault · 1 = avoid."
+      options: ["5", "4", "3", "2", "1"]
     validations:
       required: true
   - type: textarea
     id: avis
     attributes:
-      label: "Votre avis"
-      description: "État de la piste, agrès disponibles, ambiance, fréquentation, accès…"
+      label: "Votre avis / Your review"
+      description: "État de la piste, agrès disponibles, ambiance, fréquentation, accès… / Condition, available equipment, atmosphere, access…"
       placeholder: |
         Très belle piste. Tous les agrès sont là et en état : sautoir en longueur,
         perche, hauteur, aire de poids, cage disque/marteau. Anneau synthétique 400 m.
@@ -46,8 +49,8 @@ body:
   - type: input
     id: pseudo
     attributes:
-      label: "Sous quel nom signer ?"
-      description: "Prénom, pseudo, nom de club… Laissez vide pour rester anonyme."
+      label: "Sous quel nom signer ? / What name should we credit?"
+      description: "Prénom, pseudo, nom de club… Laissez vide pour rester anonyme. / Leave empty to stay anonymous."
       placeholder: "Ronan"
   - type: textarea
     id: photos
@@ -58,10 +61,14 @@ body:
         Photographiez la piste, mais aussi les sautoirs et les aires de lancer :
         c'est ce qui manque le plus dans la donnée publique.
         ⚠️ Évitez les photos où des personnes sont reconnaissables.
+
+        *Drag and drop your photos here. Shoot the track, but also the jump and
+        throwing areas — that is what public data lacks most. Avoid photos where
+        people are recognisable.*
   - type: checkboxes
     id: droits
     attributes:
-      label: "Droits sur les photos"
+      label: "Droits sur les photos / Photo rights"
       options:
-        - label: "Ces photos sont les miennes et j'accepte qu'elles soient publiées sur le site sous licence ODbL, avec mon crédit."
+        - label: "Ces photos sont les miennes et j'accepte qu'elles soient publiées sur le site sous licence ODbL, avec mon crédit. / These photos are mine and I agree to their publication on the site under the ODbL licence, with my credit."
           required: false

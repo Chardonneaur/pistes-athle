@@ -19,7 +19,9 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 - Tri **par distance** avec la géolocalisation, ou recherche par ville / code postal
 - **Filtres par agrès** : perche, longueur, hauteur, poids, lancers longs, steeple
 - **Filtres par revêtement** : synthétique (tartan), bitume, cendrée
-- **Filtre par département** : menu déroulant groupé par région, avec le nombre de sites
+- **Filtre par département** : on y tape le numéro (`44`, `01`, `2A`), le nom ou un code
+  postal (`44210`) ; la barre de recherche reconnaît aussi un département et le bascule
+  dans son filtre
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
 - **Carte** avec regroupement des marqueurs, et fiche détaillée par site
@@ -94,10 +96,17 @@ accessible en semaine ».
 
 Trois portes d'entrée, de la plus simple à la plus technique :
 
-1. **Sans rien connaître à GitHub** — depuis une fiche de l'application, cliquez sur
-   *Donner mon avis*, *Signaler une erreur* ou *Compléter la fiche* : un formulaire
-   GitHub pré-rempli s'ouvre, et les photos se glissent-déposent directement dedans.
-   [Voir les formulaires](../../issues/new/choose).
+1. **Depuis l'application** — sur une fiche, *Donner mon avis*, *Signaler une erreur*
+   ou *Compléter la fiche* ouvrent un formulaire pré-rempli avec le site concerné.
+   Au moment d'envoyer, deux boutons, **et aucun compte n'est obligatoire** :
+   - *Envoyer via GitHub* → ouvre le formulaire GitHub pré-rempli, où les photos se
+     glissent-déposent directement ;
+   - *Envoyer par e-mail* → compose un message pour le mainteneur, à envoyer depuis
+     sa propre messagerie, photos en pièces jointes.
+
+   Le formulaire est aussi accessible directement :
+   [`/#contribuer`](https://chardonneaur.github.io/pistes-athle/#contribuer) — c'est le
+   lien proposé dans les gabarits d'issues à qui n'a pas de compte GitHub.
 2. **En modifiant un fichier depuis le navigateur** — ajoutez un petit fichier JSON
    dans `data/overrides/`. Voir **[CONTRIBUTING.md](CONTRIBUTING.md)**.
 3. **En pull request classique** — clonez, éditez, `python3 scripts/validate_overrides.py`,
@@ -105,6 +114,23 @@ Trois portes d'entrée, de la plus simple à la plus technique :
 
 Toute PR touchant `data/overrides/` est validée automatiquement (syntaxe, valeurs
 autorisées, cohérence géographique) et un résumé lisible est publié dans la PR.
+
+### Recevoir les contributions par e-mail sans être noyé
+
+Les messages envoyés depuis le formulaire portent un sujet préfixé `[Piste][Avis]`,
+`[Piste][Correction]`, `[Piste][Complément]` ou `[Piste][Ajout]`, et un corps
+structuré (type, site, référence, note, signature). Un filtre suffit à les ranger —
+sous Gmail, `Paramètres → Filtres → Créer un filtre`, objet contenant `[Piste]`,
+action « Appliquer le libellé » et « Ne jamais envoyer dans les spams ».
+
+L'adresse n'apparaît nulle part en clair dans les pages : elle est assemblée à
+l'exécution par `assets/app.js`, ce qui la met hors de portée des robots qui
+moissonnent le HTML. Elle n'est pas non plus dans le dépôt : les gabarits d'issues
+renvoient vers `/#contribuer`, pas vers une adresse.
+
+Si le volume devenait ingérable, `ENVOI_ENDPOINT` dans `assets/app.js` est le point
+d'accroche prévu pour basculer vers un service de formulaire (Formspree, Web3Forms)
+sans toucher au reste du code.
 
 ## Développement local
 

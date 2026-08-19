@@ -1,34 +1,40 @@
-name: "Ajouter une piste manquante"
-description: "Un site d'athlétisme n'apparaît pas dans l'annuaire"
+name: "Ajouter une piste manquante / Add a missing track"
+description: "Un site d'athlétisme n'apparaît pas dans l'annuaire / An athletics venue is missing from the directory"
 title: "[Ajout] "
 labels: ["ajout", "données"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Pas de compte GitHub ? Le [formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer)
+        envoie la même contribution par e-mail. / *No GitHub account? The
+        [form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) sends the same contribution by email.*
   - type: input
     id: nom
     attributes:
-      label: "Nom du site"
+      label: "Nom du site / Venue name"
       placeholder: "Stade municipal des Trois Chênes"
     validations:
       required: true
   - type: input
     id: adresse
     attributes:
-      label: "Adresse complète"
+      label: "Adresse complète / Full address"
       placeholder: "12 rue du Stade, 35000 Rennes"
     validations:
       required: true
   - type: input
     id: coords
     attributes:
-      label: "Coordonnées GPS"
-      description: "Sur Google Maps ou OpenStreetMap : clic droit sur le site → copier les coordonnées."
+      label: "Coordonnées GPS / GPS coordinates"
+      description: "Sur Google Maps ou OpenStreetMap : clic droit → copier les coordonnées. / Right-click the spot and copy the coordinates."
       placeholder: "48.11982, -1.66423"
     validations:
       required: true
   - type: dropdown
     id: surface
     attributes:
-      label: "Revêtement de la piste"
+      label: "Revêtement de la piste / Track surface"
       options:
         - "Synthétique (tartan)"
         - "Bitume / goudron"
@@ -40,7 +46,7 @@ body:
   - type: checkboxes
     id: agres
     attributes:
-      label: "Agrès présents"
+      label: "Agrès présents / Equipment present"
       options:
         - label: "Sautoir en longueur"
         - label: "Sautoir de triple saut"
@@ -54,5 +60,5 @@ body:
   - type: textarea
     id: note
     attributes:
-      label: "Autres informations"
+      label: "Autres informations / Anything else"
       placeholder: "6 couloirs, éclairé, accès libre hors créneaux club, vestiaires fermés…"

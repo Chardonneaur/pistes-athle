@@ -1,24 +1,30 @@
-name: "Compléter la fiche d'une piste"
-description: "Préciser les agrès, horaires ou conditions d'accès d'un site existant"
+name: "Compléter la fiche d'une piste / Complete a venue record"
+description: "Préciser les agrès, horaires ou conditions d'accès / Add equipment, opening hours or access conditions"
 title: "[Complément] "
 labels: ["complément", "données"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Pas de compte GitHub ? Le [formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer)
+        envoie la même contribution par e-mail. / *No GitHub account? The
+        [form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) sends the same contribution by email.*
   - type: input
     id: id
     attributes:
-      label: "Référence du site"
+      label: "Référence du site / Venue reference"
       placeholder: "I352380090"
   - type: input
     id: nom
     attributes:
-      label: "Nom du stade et commune"
+      label: "Nom du stade et commune / Stadium name and town"
       placeholder: "Stade Robert Poirier, Rennes (35)"
     validations:
       required: true
   - type: checkboxes
     id: agres
     attributes:
-      label: "Agrès réellement présents"
+      label: "Agrès réellement présents / Equipment actually present"
       options:
         - label: "Sautoir en longueur"
         - label: "Sautoir de triple saut"
@@ -32,7 +38,7 @@ body:
   - type: dropdown
     id: surface
     attributes:
-      label: "Revêtement de la piste"
+      label: "Revêtement de la piste / Track surface"
       options:
         - "Je ne sais pas"
         - "Synthétique (tartan)"
@@ -43,12 +49,12 @@ body:
   - type: input
     id: couloirs
     attributes:
-      label: "Nombre de couloirs / développement"
+      label: "Couloirs et développement / Lanes and lap length"
       placeholder: "6 couloirs, 400 m"
   - type: dropdown
     id: acces
     attributes:
-      label: "Conditions d'accès"
+      label: "Conditions d'accès / Access conditions"
       options:
         - "Je ne sais pas"
         - "Accès totalement libre"
@@ -59,10 +65,10 @@ body:
   - type: input
     id: horaires
     attributes:
-      label: "Horaires d'ouverture au public (facultatif)"
+      label: "Horaires d'ouverture (facultatif) / Opening hours (optional)"
       placeholder: "Lun-ven 8h-22h, week-end 9h-19h"
   - type: textarea
     id: note
     attributes:
-      label: "Bon à savoir (facultatif)"
+      label: "Bon à savoir (facultatif) / Good to know (optional)"
       placeholder: "Portail côté nord souvent ouvert, perche uniquement sur réservation au club…"
