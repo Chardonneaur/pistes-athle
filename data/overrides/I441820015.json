@@ -1,0 +1,28 @@
+{
+  "id": "I441820015",
+  "agres": ["longueur", "poids"],
+  "photos": [
+    { "fichier": "01-piste-en-cendree.jpg",
+      "legende": "La piste en cendrée et le plateau multisports attenant",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "02-ligne-droite.jpg",
+      "legende": "La ligne droite en cendrée, sans marquage de couloirs",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "03-sautoir-longueur.jpg",
+      "legende": "Le bac du sautoir en longueur, envahi de terre",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "04-aire-de-poids.jpg",
+      "legende": "L'aire de lancer du poids : cercle peint sur le bitume",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "05-plots-beton.jpg",
+      "legende": "Deux plots en béton en bordure de piste, vestiges d'un ancien agrès",
+      "credit": "Ronan Chardonneau" }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-19",
+      "texte": "Piste d'athlétisme de 200 m en cendrée. Mieux que rien, mais on est sur une très vieille installation qui n'a pas été rénovée depuis bien longtemps. Il y a une aire de lancer du poids, un sautoir en longueur, et probablement une ligne droite de 100 m."
+    }
+  ]
+}
