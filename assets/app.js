@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '6';
+const APP_VERSION = '7';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -47,6 +47,7 @@ const BASE = window.I18N_BASE;
 // /en/track/<id>/ en anglais. C'est elle que voient les moteurs et les agents IA.
 const FICHES = BASE + (LANG === 'en' ? 'en/track/' : 'site/');
 
+const V = DICO.vitrine;
 const SOL = DICO.sol;
 const AGRES = DICO.agres;
 const SOURCES = DICO.sources;
@@ -79,7 +80,7 @@ const has = (t, a) => t.agres.includes(a);
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
                 q: '', dep: '', me: null, openId: null, contrib: null, map: null,
-                mini: null, cluster: null, mapReady: false };
+                mini: null, cluster: null, mapReady: false, communaute: null };
 
 const $ = s => document.querySelector(s);
 const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -130,6 +131,7 @@ async function load() {
   if (await reparerCachePerime(raw.app_version)) return;
   const map = raw.keymap;
   state.deps = raw.deps || {};
+  state.communaute = raw.communaute || null;
   state.all = raw.tracks.map(rec => {
     const t = {};
     for (const k in rec) t[map[k] || k] = rec[k];
@@ -149,6 +151,7 @@ async function load() {
   });
   $('#loader').hidden = true;
   remplirDepartements();
+  renderVitrine();
   document.title = U.titre_compte(state.all.length);
   apply();
   readHash();
@@ -199,6 +202,7 @@ function apply() {
   state.limit = 40;
   $('#count').textContent = out.length ? U.nb_sites(out.length) : U.aucun;
   renderList();
+  renderVitrine();
   if (state.mapReady) renderMap();
 }
 
@@ -253,6 +257,80 @@ function vueAerienne(t, largeur = 960) {
   return `${IGN_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap` +
          '&LAYERS=HR.ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326' +
          `&BBOX=${bbox}&WIDTH=${largeur}&HEIGHT=${hauteur}&FORMAT=image/jpeg`;
+}
+
+/* --------------------------------------------------- vitrine d'accueil
+   Les dernières contributions, le classement des contributeurs et l'appel à
+   contribuer. Les deux premiers blocs sont calculés à la construction du jeu
+   de données (scripts/build_data.py) : le navigateur n'a qu'à les afficher.
+
+   L'encart ne s'affiche qu'en vue neutre. Dès qu'une recherche, un filtre ou
+   un département est actif, l'utilisateur a posé une question : la réponse
+   doit arriver en haut de l'écran, pas sous une vitrine. */
+const VITRINE_MAX = 3;
+
+function vitrineVisible() {
+  const filtresParDefaut = state.active.size === 1 && state.active.has('piste');
+  return !state.q.trim() && !state.dep && filtresParDefaut;
+}
+
+function carteContribution(c) {
+  const t = state.all.find(x => x.id === c.i);
+  if (!t || !t.photos.length) return '';
+  const p = t.photos[0];
+  const auteur = p.c || (t.avis[0] && t.avis[0].a) || '';
+  const lieu = [t.ville, t.dep && `(${t.dep})`].filter(Boolean).join(' ');
+  return `
+    <a class="vit-card" href="${esc(FICHES + t.id + '/')}" data-site="${esc(t.id)}">
+      <img loading="lazy" src="${esc(BASE + (p.t || p.f))}"
+           alt="${esc(p.l || t.nom)}" width="480" height="270">
+      <span class="vit-body">
+        <strong>${esc(t.nom || U.sans_nom)}</strong>
+        <span class="loc">${esc(lieu)}</span>
+        <span class="meta">${esc(V.photos(t.photos.length))}${
+          auteur ? ' · ' + esc(V.par(auteur)) : ''}</span>
+      </span>
+    </a>`;
+}
+
+function carteContributeur(c, rang) {
+  const detail = [V.top_sites(c.s), c.p && V.top_photos(c.p), c.a && V.top_avis(c.a)]
+                 .filter(Boolean).join(' · ');
+  return `
+    <li class="vit-top">
+      <span class="rang" aria-hidden="true">${rang}</span>
+      <span class="qui"><strong>${esc(c.n)}</strong><span class="meta">${esc(detail)}</span></span>
+    </li>`;
+}
+
+function renderVitrine() {
+  const el = $('#vitrine');
+  if (!el) return;
+  const c = state.communaute;
+  if (!c || !vitrineVisible()) { el.hidden = true; return; }
+
+  const cartes = (c.recentes || []).map(carteContribution).filter(Boolean).slice(0, VITRINE_MAX);
+  const top = (c.top || []).slice(0, VITRINE_MAX);
+
+  el.innerHTML = `
+    ${cartes.length ? `
+      <h2 id="vitrine-titre">${esc(V.titre)}</h2>
+      <p class="vit-intro">${esc(V.intro)}</p>
+      <div class="vit-grid">${cartes.join('')}</div>`
+    : `<h2 id="vitrine-titre" class="sr-only">${esc(V.cta_titre)}</h2>`}
+
+    ${top.length ? `
+      <h2>${esc(V.top_titre)}</h2>
+      <p class="vit-intro">${esc(V.top_intro)}</p>
+      <ol class="vit-tops">${top.map((x, i) => carteContributeur(x, i + 1)).join('')}</ol>` : ''}
+
+    <div class="vit-cta">
+      <strong>${esc(V.cta_titre)}</strong>
+      <p>${esc(V.cta_texte)}</p>
+      <button class="btn primary" type="button" data-contrib="avis">${esc(V.cta_bouton)}</button>
+      <span class="src">${esc(V.cta_aide)}</span>
+    </div>`;
+  el.hidden = false;
 }
 
 function renderList() {
@@ -932,6 +1010,19 @@ function init() {
   document.addEventListener('click', e => {
     const a = e.target.closest('[data-add-track]');
     if (a) { e.preventDefault(); ouvrirContribution('ajout', null); }
+  });
+
+  $('#vitrine').addEventListener('click', e => {
+    const contrib = e.target.closest('[data-contrib]');
+    if (contrib) {
+      e.preventDefault();
+      return ouvrirContribution(contrib.dataset.contrib, null);
+    }
+    const carte = e.target.closest('[data-site]');
+    if (carte && !e.metaKey && !e.ctrlKey && e.button === 0) {
+      e.preventDefault();
+      openSheet(carte.dataset.site);
+    }
   });
 
   $('#tab-list').addEventListener('click', () => switchView('list'));

@@ -23,7 +23,7 @@
 <link rel="apple-touch-icon" href="assets/icon.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="assets/style.css?v=6">
+<link rel="stylesheet" href="assets/style.css?v=7">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -96,6 +96,9 @@
 
 <main>
   <section id="view-list" class="view is-active">
+    <!-- Vitrine des contributions : masquee des qu'une recherche ou un filtre
+         est actif, pour ne pas s'interposer entre la question et sa reponse. -->
+    <section id="vitrine" class="vitrine" hidden aria-labelledby="vitrine-titre"></section>
     <ul id="results" class="results"></ul>
     <button id="more" class="more-btn" data-i18n="plus" hidden>Afficher plus de sites</button>
     <p id="empty" class="empty" data-i18n="vide" hidden>Aucun site ne correspond à ces critères.<br>
@@ -131,7 +134,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="assets/i18n.js?v=6"></script>
-<script src="assets/app.js?v=6"></script>
+<script src="assets/i18n.js?v=7"></script>
+<script src="assets/app.js?v=7"></script>
 </body>
 </html>

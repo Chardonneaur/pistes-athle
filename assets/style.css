@@ -240,3 +240,48 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .site-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;
   padding:4px 24px calc(30px + var(--safe-b));font-size:12.5px}
 .site-links a{color:var(--muted)}
+
+/* ---------- vitrine des contributions ---------- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.vitrine{padding:14px 12px 4px}
+.vitrine h2{margin:18px 0 2px;font-size:15px;letter-spacing:-.01em}
+.vitrine h2:first-child{margin-top:0}
+.vit-intro{margin:0 0 10px;color:var(--muted);font-size:13px}
+
+.vit-grid{display:grid;gap:8px;grid-template-columns:1fr}
+
+/* Sur mobile la carte est couchee : la vitrine ne doit pas repousser les
+   resultats sous la ligne de flottaison. Trois vignettes a gauche tiennent
+   dans la hauteur qu'une seule photo pleine largeur occuperait. */
+.vit-card{display:flex;gap:11px;align-items:center;overflow:hidden;text-decoration:none;
+  color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+.vit-card img{display:block;flex:none;width:104px;height:84px;object-fit:cover;background:var(--line)}
+.vit-body{display:block;min-width:0;padding:8px 11px 8px 0}
+
+@media (min-width:560px){
+  .vit-grid{grid-template-columns:repeat(3,1fr);gap:10px}
+  .vit-card{display:block}
+  .vit-card img{width:100%;height:126px}
+  .vit-body{padding:9px 11px 11px}
+}
+.vit-body strong{display:block;font-size:14px;line-height:1.25;letter-spacing:-.01em}
+.vit-body .loc{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+.vit-body .meta{display:block;color:var(--accent);font-size:12px;margin-top:5px;font-weight:600}
+
+.vit-tops{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.vit-top{display:flex;align-items:center;gap:11px;padding:9px 12px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.vit-top .rang{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;
+  background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12.5px}
+.vit-top .qui{min-width:0}
+.vit-top strong{display:block;font-size:14px}
+.vit-top .meta{display:block;color:var(--muted);font-size:12.5px}
+
+.vit-cta{margin:16px 0 4px;padding:14px;border-radius:14px;
+  background:var(--accent-soft);border:1px solid var(--ring)}
+.vit-cta strong{display:block;font-size:15px;letter-spacing:-.01em}
+.vit-cta p{margin:5px 0 11px;font-size:13.5px;color:var(--ink);opacity:.85}
+.vit-cta .btn{width:100%}
+.vit-cta .src{display:block;margin-top:8px;color:var(--muted);font-size:12px;text-align:center}

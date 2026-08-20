@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import unicodedata
 import urllib.parse
@@ -512,6 +513,95 @@ def finalize(installations):
     return tracks, deps
 
 
+# --- vitrine des contributions ----------------------------------------------
+def date_contribution(site_id):
+    """Date du dernier commit qui a touche la contribution de ce site.
+
+    C'est la seule date de contribution dont on dispose : les avis portent la
+    date de la visite, pas celle de l'envoi, et une photo n'en porte aucune.
+    Hors depot git (archive telechargee, CI sans historique), on retombe sur la
+    date de modification du fichier."""
+    chemin = os.path.join(OVERRIDES_DIR, f"{site_id}.json")
+    if not os.path.exists(chemin):
+        return None
+    try:
+        out = subprocess.run(["git", "log", "-1", "--format=%cs", "--", chemin],
+                             cwd=ROOT, capture_output=True, text=True, timeout=10)
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return date.fromtimestamp(os.path.getmtime(chemin)).isoformat()
+
+
+def fusionne_noms(noms):
+    """« Ronan » et « Ronan Chardonneau » sont la meme personne.
+
+    Les credits de photo portent souvent le nom complet et les avis le prenom
+    seul. On rattache un nom court a un nom long qui commence pareil, et on
+    garde le plus long comme forme canonique. Deux homonymes distincts qui
+    signeraient l'un « Marie » et l'autre « Marie Dupont » seraient fusionnes a
+    tort : c'est le prix a payer, et il reste tres inferieur a celui d'un
+    classement ou la meme personne apparait deux fois."""
+    longs = sorted(noms, key=lambda n: -len(n))
+    canon = {}
+    for n in longs:
+        cle = deaccent(n).lower()
+        for autre in longs:
+            if autre is n:
+                continue
+            a = deaccent(autre).lower()
+            if len(a) > len(cle) and (a == cle or a.startswith(cle + " ")):
+                canon[n] = canon.get(autre, autre)
+                break
+        canon.setdefault(n, n)
+    return canon
+
+
+def communaute(tracks, recentes=6, top=10):
+    """Les dernieres contributions et le classement des contributeurs.
+
+    Calcule ici plutot que dans l'application : le classement demande de
+    parcourir les 7 100 sites et de reconcilier les noms, ce qui n'a aucune
+    raison d'etre refait dans chaque navigateur a chaque chargement."""
+    ph, av = KEYMAP["photos"], KEYMAP["avis"]
+    brut = {}                                   # nom tel qu'ecrit -> compteurs
+    sites = {}                                  # nom -> ids distincts
+
+    for t in tracks:
+        for p in t.get(ph) or []:
+            nom = (p.get("c") or "").strip()
+            if not nom:
+                continue
+            brut.setdefault(nom, {"p": 0, "a": 0})["p"] += 1
+            sites.setdefault(nom, set()).add(t["i"])
+        for a in t.get(av) or []:
+            nom = (a.get("a") or "").strip()
+            if not nom:
+                continue
+            brut.setdefault(nom, {"p": 0, "a": 0})["a"] += 1
+            sites.setdefault(nom, set()).add(t["i"])
+
+    canon = fusionne_noms(list(brut))
+    fusion = {}
+    for nom, c in brut.items():
+        cible = fusion.setdefault(canon[nom], {"n": canon[nom], "s": set(), "p": 0, "a": 0})
+        cible["p"] += c["p"]
+        cible["a"] += c["a"]
+        cible["s"] |= sites[nom]
+    classement = sorted(fusion.values(),
+                        key=lambda c: (-len(c["s"]), -c["p"], -c["a"], c["n"]))
+    classement = [{"n": c["n"], "s": len(c["s"]), "p": c["p"], "a": c["a"]}
+                  for c in classement[:top]]
+
+    # les dernieres contributions : celles qui ont une photo a montrer
+    avec_photo = [t for t in tracks if t.get(ph)]
+    datees = [{"i": t["i"], "d": date_contribution(t["i"])} for t in avec_photo]
+    datees = [d for d in datees if d["d"]]
+    datees.sort(key=lambda d: d["d"], reverse=True)
+    return {"recentes": datees[:recentes], "top": classement}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--offline", action="store_true",
@@ -539,6 +629,7 @@ def main():
         },
         "keymap": {v: k for k, v in KEYMAP.items()},
         "deps": deps,
+        "communaute": communaute(tracks),
         "tracks": tracks,
     }
     with open(OUT, "w", encoding="utf-8") as f:

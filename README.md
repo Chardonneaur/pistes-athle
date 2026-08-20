@@ -24,6 +24,9 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
   dans son filtre
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
+- **Vitrine en page d'accueil** : les trois dernières contributions en photos, le
+  classement des contributeurs, et un appel à contribuer — masqués dès qu'une
+  recherche ou un filtre est actif
 - **Photos indexables** : nom de fichier descriptif, `alt` situé, `ImageObject`
   JSON-LD avec auteur et licence ODbL, `og:image`, et déclaration au plan de site
   via l'extension `image:`

@@ -143,6 +143,24 @@ const FR = {
     scolaire: 'Site scolaire',
   },
 
+  vitrine: {
+    titre:        'Les dernières contributions',
+    intro:        'Des photos prises sur place, par des gens qui s’y sont entraînés.',
+    photos:       n => `${n} photo${n > 1 ? 's' : ''}`,
+    par:          a => `par ${a}`,
+    le:           d => `le ${d}`,
+    top_titre:    'Les contributeurs',
+    top_intro:    'Merci à eux : sans photo ni avis, une fiche reste une ligne de tableau.',
+    top_sites:    n => `${n} site${n > 1 ? 's' : ''}`,
+    top_photos:   n => `${n} photo${n > 1 ? 's' : ''}`,
+    top_avis:     n => `${n} avis`,
+    cta_titre:    'Vous vous entraînez quelque part ?',
+    cta_texte:    'Une photo du sautoir, une note sur l’état de la piste, un horaire : ' +
+                  'c’est ce que les données publiques n’auront jamais. Cinq minutes suffisent.',
+    cta_bouton:   'Ajouter mes photos et mon avis',
+    cta_aide:     'Par e-mail ou via GitHub, au choix — aucun compte obligatoire.',
+  },
+
   contrib: {
     titre:      'Contribuer',
     intro:      'Deux façons d’envoyer votre contribution : avec un compte GitHub, ou par e-mail si vous n’en avez pas.',
@@ -352,6 +370,24 @@ const EN = {
     sautoirs: n => `${n} jump area${n > 1 ? 's' : ''}`,
     lancers: n => `${n} throwing area${n > 1 ? 's' : ''}`,
     scolaire: 'School venue',
+  },
+
+  vitrine: {
+    titre:        'Latest contributions',
+    intro:        'Photos taken on site, by people who trained there.',
+    photos:       n => `${n} photo${n > 1 ? 's' : ''}`,
+    par:          a => `by ${a}`,
+    le:           d => `on ${d}`,
+    top_titre:    'Contributors',
+    top_intro:    'Thanks to them: without a photo or a review, a venue is just a row in a table.',
+    top_sites:    n => `${n} venue${n > 1 ? 's' : ''}`,
+    top_photos:   n => `${n} photo${n > 1 ? 's' : ''}`,
+    top_avis:     n => `${n} review${n > 1 ? 's' : ''}`,
+    cta_titre:    'Do you train somewhere?',
+    cta_texte:    'A photo of the pole vault pit, a note on the state of the track, an opening time: ' +
+                  'that is what open data will never hold. Five minutes is enough.',
+    cta_bouton:   'Add my photos and review',
+    cta_aide:     'By email or through GitHub — no account required.',
   },
 
   contrib: {
