@@ -19,6 +19,7 @@ import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from functools import lru_cache
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RAW_CACHE = os.path.join(ROOT, "data", ".res_raw.json")
@@ -514,21 +515,57 @@ def finalize(installations):
 
 
 # --- vitrine des contributions ----------------------------------------------
-def date_contribution(site_id):
-    """Date du dernier commit qui a touche la contribution de ce site.
+@lru_cache(maxsize=1)
+def depot_complet():
+    """Vrai si l'historique git est la, faux sur un clone superficiel.
 
-    C'est la seule date de contribution dont on dispose : les avis portent la
-    date de la visite, pas celle de l'envoi, et une photo n'en porte aucune.
-    Hors depot git (archive telechargee, CI sans historique), on retombe sur la
+    On le verifie une fois plutot que de decouvrir apres coup que toutes les
+    contributions portent la meme date."""
+    try:
+        out = subprocess.run(["git", "rev-parse", "--is-shallow-repository"],
+                             cwd=ROOT, capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if out.returncode != 0:
+        return False                                     # pas un depot git
+    if out.stdout.strip() == "true":
+        print("-> historique git superficiel : les dates de contribution "
+              "retombent sur la date des fichiers (voir fetch-depth dans deploy.yml)")
+        return False
+    return True
+
+
+def date_contribution(site_id):
+    """Date du commit qui a *cree* la contribution de ce site.
+
+    C'est la seule date dont on dispose : les avis portent la date de la
+    visite, pas celle de l'envoi, et une photo n'en porte aucune.
+
+    La creation, et non la derniere modification : un commit de maintenance qui
+    passe sur tous les fichiers d'override — un renommage de photos, une
+    migration de champ — redaterait sinon toutes les contributions du meme
+    jour, et « les dernieres contributions » ne voudrait plus rien dire. Le
+    prix est qu'une fiche enrichie des mois plus tard ne remonte pas ; c'est
+    voulu, la vitrine annonce des contributions nouvelles.
+
+    Hors depot git (archive telechargee, clone superficiel), on retombe sur la
     date de modification du fichier."""
     chemin = os.path.join(OVERRIDES_DIR, f"{site_id}.json")
     if not os.path.exists(chemin):
         return None
+    if not depot_complet():
+        # Un clone superficiel ne connait qu'un commit : git repondrait la date
+        # du deploiement pour toutes les contributions, ce qui est pire qu'une
+        # date de fichier. La CI doit demander fetch-depth: 0.
+        return date.fromtimestamp(os.path.getmtime(chemin)).isoformat()
     try:
-        out = subprocess.run(["git", "log", "-1", "--format=%cs", "--", chemin],
-                             cwd=ROOT, capture_output=True, text=True, timeout=10)
-        if out.returncode == 0 and out.stdout.strip():
-            return out.stdout.strip()
+        out = subprocess.run(
+            ["git", "log", "--follow", "--diff-filter=A", "--format=%cs", "--", chemin],
+            cwd=ROOT, capture_output=True, text=True, timeout=10)
+        # --follow suit les renommages ; le dernier ajout listé est le plus ancien
+        lignes = [l for l in out.stdout.splitlines() if l.strip()]
+        if out.returncode == 0 and lignes:
+            return lignes[-1].strip()
     except (OSError, subprocess.SubprocessError):
         pass
     return date.fromtimestamp(os.path.getmtime(chemin)).isoformat()

@@ -22,6 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Historique complet : build_data.py date chaque contribution d'apres
+          # le dernier commit qui a touche son fichier d'override. Avec le
+          # checkout superficiel par defaut, git ne connait qu'un seul commit
+          # et toutes les contributions paraissent dater du jour du deploiement.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
