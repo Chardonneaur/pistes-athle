@@ -18,13 +18,20 @@
 <meta property="og:title" content="Où s'entraîner ? — Pistes d'athlétisme en France">
 <meta property="og:description" content="7 100 sites d'athlétisme en France : revêtement, couloirs, sautoirs, aires de lancer, éclairage, accès libre.">
 <meta property="og:url" content="https://chardonneaur.github.io/pistes-athle/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://chardonneaur.github.io/pistes-athle/assets/og.png">
+<meta property="og:image:alt" content="Où s'entraîner ? — 7 100 pistes et équipements d'athlétisme en France">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="assets/manifest.webmanifest">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon.svg">
+<!-- Leaflet arrive d'un autre domaine : ouvrir DNS et TLS des maintenant evite
+     d'attendre trois allers-retours quand la feuille de style est demandee. -->
+<link rel="preconnect" href="https://unpkg.com">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="assets/style.css?v=8">
+<link rel="stylesheet" href="assets/style.css?v=9">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -34,8 +41,16 @@
       "@id": "https://chardonneaur.github.io/pistes-athle/#site",
       "url": "https://chardonneaur.github.io/pistes-athle/",
       "name": "Où s'entraîner ?",
+      "alternateName": "Where to train?",
       "inLanguage": ["fr", "en"],
-      "description": "Annuaire libre des pistes d'athlétisme françaises et de leurs agrès."
+      "description": "Annuaire libre des pistes d'athlétisme françaises et de leurs agrès.",
+      "publisher": { "@id": "https://chardonneaur.github.io/pistes-athle/#auteur" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://chardonneaur.github.io/pistes-athle/#auteur",
+      "name": "Ronan Chardonneau",
+      "url": "https://github.com/Chardonneaur"
     },
     {
       "@type": "Dataset",
@@ -46,14 +61,71 @@
       "keywords": ["athlétisme", "piste d'athlétisme", "stade", "athletics track", "France", "équipements sportifs"],
       "license": "https://github.com/etalab/licence-ouverte/blob/master/LO.md",
       "isAccessibleForFree": true,
+      "inLanguage": ["fr", "en"],
+      "dateModified": "__MAJ__",
       "spatialCoverage": { "@type": "Place", "name": "France" },
-      "creator": { "@type": "Person", "name": "Ronan Chardonneau" },
+      "creator": { "@id": "https://chardonneaur.github.io/pistes-athle/#auteur" },
+      "publisher": { "@id": "https://chardonneaur.github.io/pistes-athle/#auteur" },
       "isBasedOn": "https://equipements.sports.gouv.fr/",
+      "measurementTechnique": "Recensement déclaratif des équipements sportifs, corrigé par relevés de terrain",
+      "variableMeasured": [
+        { "@type": "PropertyValue", "name": "Revêtement", "description": "Synthétique (tartan), cendrée, sable, gazon, bitume ou autre" },
+        { "@type": "PropertyValue", "name": "Développement de la piste", "description": "Longueur d'un tour en mètres : 400, 333, 300, 250, 200 ou ligne droite" },
+        { "@type": "PropertyValue", "name": "Couloirs", "description": "Nombre de couloirs de l'anneau" },
+        { "@type": "PropertyValue", "name": "Agrès", "description": "Sautoirs longueur, hauteur, perche, aires de poids, disque, marteau, javelot" },
+        { "@type": "PropertyValue", "name": "Accès", "description": "Accès libre, ouverture au public, éclairage, vestiaires, douches, sanitaires" },
+        { "@type": "PropertyValue", "name": "Localisation", "description": "Adresse, commune, département, région et coordonnées géographiques" }
+      ],
       "distribution": [{
         "@type": "DataDownload",
+        "name": "tracks.json",
         "encodingFormat": "application/json",
         "contentUrl": "https://chardonneaur.github.io/pistes-athle/data/tracks.json"
       }]
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://chardonneaur.github.io/pistes-athle/#page",
+      "url": "https://chardonneaur.github.io/pistes-athle/",
+      "name": "Où s'entraîner ? — Pistes d'athlétisme en France",
+      "isPartOf": { "@id": "https://chardonneaur.github.io/pistes-athle/#site" },
+      "inLanguage": "fr",
+      "dateModified": "__MAJ__",
+      "primaryImageOfPage": "https://chardonneaur.github.io/pistes-athle/assets/og.png",
+      "mainEntity": { "@id": "https://chardonneaur.github.io/pistes-athle/#dataset" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://chardonneaur.github.io/pistes-athle/#faq",
+      "isPartOf": { "@id": "https://chardonneaur.github.io/pistes-athle/#page" },
+      "inLanguage": "fr",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Peut-on s'entraîner librement sur une piste d'athlétisme ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Cela dépend de l'installation. Une partie des stades est en accès libre permanent ; d'autres n'ouvrent au public qu'à certaines heures, en dehors des créneaux réservés aux clubs et aux scolaires ; d'autres encore restent fermés hors licence. Chaque fiche indique ce que déclare le gestionnaire, et le filtre « accès libre » ne garde que les sites ouverts. Cette information étant déclarative et rarement mise à jour, mieux vaut la vérifier auprès de la mairie ou du club avant de se déplacer." }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment trouver la piste d'athlétisme la plus proche de chez moi ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Tapez une ville, un code postal ou le nom d'un stade dans la recherche, ou touchez le bouton de géolocalisation pour classer les installations par distance depuis votre position. La vue carte affiche les mêmes résultats géographiquement, et l'annuaire par département permet de parcourir les installations sans JavaScript." }
+        },
+        {
+          "@type": "Question",
+          "name": "Quelle est la longueur d'une piste d'athlétisme ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "La piste de référence, celle des compétitions officielles, fait 400 mètres au couloir 1. Beaucoup d'équipements français sont plus courts : on trouve couramment des anneaux de 333 m, 300 m, 250 m ou 200 m, ainsi que des lignes droites isolées de 100 ou 120 m. Le développement réel est indiqué sur chaque fiche quand il est connu, ce qui change le calcul d'une séance fractionnée." }
+        },
+        {
+          "@type": "Question",
+          "name": "Quelle différence entre une piste en tartan et une piste en cendrée ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Le tartan, nom courant des revêtements synthétiques en polyuréthane, est amortissant, praticable par tous les temps et compatible avec les pointes de compétition. La cendrée, surface en mâchefer damé, devient lourde sous la pluie et se déforme, mais reste plus douce pour l'appareil locomoteur. Le site distingue aussi les pistes en sable, en gazon, en bitume et les anneaux couverts." }
+        },
+        {
+          "@type": "Question",
+          "name": "D'où viennent ces données, et peut-on les réutiliser ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "La base est le recensement des équipements sportifs (Data ES) du ministère chargé des Sports, sous Licence Ouverte 2.0. Les corrections, les photos prises sur place et les avis viennent de contributeurs. Le jeu de données complet est téléchargeable en un seul fichier JSON et réutilisable librement, y compris commercialement, avec mention de la source." }
+        }
+      ]
     }
   ]
 }
@@ -118,6 +190,65 @@
       <a href="https://equipements.sports.gouv.fr/" target="_blank" rel="noopener" data-i18n="nav_source">Source des données</a>
       <a href="https://github.com/Chardonneaur/pistes-athle" target="_blank" rel="noopener" data-i18n="nav_code">Code source</a>
     </nav>
+
+    <!-- Contenu statique de l'accueil. L'application est peinte par
+         assets/app.js : sans ce bloc, la page la mieux classee du site ne
+         presente a un moteur ou a un agent qu'une coquille vide, sans une
+         phrase decrivant ce qu'il y a dedans. Le texte est ecrit une fois ici
+         plutot que dans i18n.js, parce qu'il doit exister dans le HTML servi,
+         avant tout JavaScript ; la coquille anglaise le traduit a la
+         construction (COQUILLE_EN dans scripts/build_site.py). -->
+    <section class="seo" aria-labelledby="seo-titre">
+      <h2 id="seo-titre">L'annuaire des pistes d'athlétisme françaises</h2>
+      <p><strong>Où s'entraîner&nbsp;?</strong> recense les 7&nbsp;100 installations d'athlétisme
+        de France métropolitaine et d'outre-mer, dont environ 6&nbsp;500 disposent d'une piste.
+        Pour chacune&nbsp;: le revêtement, le développement de la piste et son nombre de couloirs,
+        les sautoirs en longueur, hauteur et perche, les aires de lancer, l'éclairage, les
+        vestiaires et les conditions d'accès. Les données proviennent du recensement des
+        équipements sportifs du ministère chargé des Sports, sous Licence Ouverte&nbsp;2.0, et
+        sont complétées par les athlètes eux-mêmes.</p>
+
+      <h3>Peut-on s'entraîner librement sur une piste d'athlétisme&nbsp;?</h3>
+      <p>Cela dépend de l'installation. Une partie des stades est en accès libre permanent&nbsp;;
+        d'autres n'ouvrent au public qu'à certaines heures, en dehors des créneaux réservés aux
+        clubs et aux scolaires&nbsp;; d'autres encore restent fermés hors licence. Chaque fiche
+        indique ce que déclare le gestionnaire, et le filtre «&nbsp;accès libre&nbsp;» ne garde
+        que les sites ouverts. Cette information étant déclarative et rarement mise à jour,
+        mieux vaut la vérifier auprès de la mairie ou du club avant de se déplacer.</p>
+
+      <h3>Comment trouver la piste la plus proche de chez moi&nbsp;?</h3>
+      <p>Tapez une ville, un code postal ou le nom d'un stade dans la recherche, ou touchez le
+        bouton de géolocalisation pour classer les installations par distance depuis votre
+        position. La vue carte affiche les mêmes résultats géographiquement, et l'annuaire par
+        département permet de parcourir les installations sans JavaScript.</p>
+
+      <h3>Quelle est la longueur d'une piste d'athlétisme&nbsp;?</h3>
+      <p>La piste de référence, celle des compétitions officielles, fait 400&nbsp;mètres au
+        couloir&nbsp;1. Beaucoup d'équipements français sont plus courts&nbsp;: on trouve
+        couramment des anneaux de 333&nbsp;m, 300&nbsp;m, 250&nbsp;m ou 200&nbsp;m, ainsi que des
+        lignes droites isolées de 100&nbsp;ou 120&nbsp;m. Le développement réel est indiqué sur
+        chaque fiche quand il est connu, ce qui change le calcul d'une séance fractionnée.</p>
+
+      <h3>Quelle différence entre une piste en tartan et une piste en cendrée&nbsp;?</h3>
+      <p>Le tartan — nom courant des revêtements synthétiques en polyuréthane — est amortissant,
+        praticable par tous les temps et compatible avec les pointes de compétition. La cendrée,
+        surface en mâchefer damé, devient lourde sous la pluie et se déforme, mais reste plus
+        douce pour l'appareil locomoteur. Le site distingue aussi les pistes en sable, en gazon,
+        en bitume et les anneaux couverts.</p>
+
+      <h3>D'où viennent ces données, et peut-on les réutiliser&nbsp;?</h3>
+      <p>La base est le recensement des équipements sportifs (Data&nbsp;ES) du ministère chargé
+        des Sports, sous Licence Ouverte&nbsp;2.0. Les corrections, les photos prises sur place
+        et les avis viennent de contributeurs. Le jeu de données complet est téléchargeable en
+        un seul fichier JSON et réutilisable librement, y compris commercialement, avec mention
+        de la source.</p>
+
+      <p class="seo-liens">
+        <a href="data/tracks.json">Télécharger le jeu de données (JSON)</a> ·
+        <a href="llms.txt">Description lisible par un agent</a> ·
+        <a href="departements/">Parcourir par département</a>
+      </p>
+    </section>
   </section>
   <section id="view-map" class="view">
     <div id="map"></div>
@@ -136,7 +267,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="assets/i18n.js?v=8"></script>
-<script src="assets/app.js?v=8"></script>
+<script src="assets/i18n.js?v=9"></script>
+<script src="assets/app.js?v=9"></script>
 </body>
 </html>

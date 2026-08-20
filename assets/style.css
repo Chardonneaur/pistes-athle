@@ -288,3 +288,17 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .vit-cta p{margin:5px 0 11px;font-size:13.5px;color:var(--ink);opacity:.85}
 .vit-cta .btn{width:100%}
 .vit-cta .src{display:block;margin-top:8px;color:var(--muted);font-size:12px;text-align:center}
+
+/* Contenu statique de l'accueil (index.html). L'application etant peinte par
+   JavaScript, ce bloc est le seul texte qu'un moteur ou un agent lit dans le
+   HTML servi. Il vit sous le plan du site, donc sous les resultats : il
+   informe qui descend, sans jamais s'interposer entre la recherche et sa
+   reponse. */
+.seo{max-width:44rem;margin:0 auto;padding:8px 24px calc(40px + var(--safe-b));
+  color:var(--muted);font-size:13.5px;line-height:1.65}
+.seo h2{margin:0 0 8px;font-size:15px;letter-spacing:-.01em;color:var(--ink)}
+.seo h3{margin:20px 0 4px;font-size:13.5px;color:var(--ink)}
+.seo p{margin:0}
+.seo strong{color:var(--ink)}
+.seo-liens{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
+.seo-liens a{color:var(--muted)}

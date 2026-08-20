@@ -540,25 +540,35 @@ def image_ld(p, t, lang, url_base):
 
 
 # ------------------------------------------------------------------- gabarits
-def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base, image=None):
+def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
+           image=None, preconnect=()):
     """<head> commun : canonique, alternatives de langue, Open Graph, JSON-LD.
 
     `image` est la photo de couverture de la page, si elle en a une : une URL
     absolue, sa description et ses dimensions. Sans elle, un partage de la
     fiche ne montre rien, et l'image n'a aucune chance d'etre reprise en
-    vignette par un moteur ou un agent."""
+    vignette par un moteur ou un agent ; on retombe alors sur la vignette de
+    marque, qui vaut toujours mieux qu'un rectangle vide.
+
+    `preconnect` liste les origines dont la page tire une image : ouvrir la
+    connexion des la lecture du <head> evite d'attendre DNS et TLS au moment
+    ou l'image, le plus gros element affiche, est enfin demandee."""
     r = rel(chemin)
     autre = T[lang]["autre"]
     blocs = "\n".join(
         f'<script type="application/ld+json">{json.dumps(j, ensure_ascii=False).replace("</", "<\\/")}</script>'
         for j in jsonld)
-    og_image = ""
-    if image:
-        og_image = (f'<meta property="og:image" content="{E(image["url"])}">\n'
-                    f'<meta property="og:image:alt" content="{E(image["alt"])}">\n')
-        if image.get("w") and image.get("h"):
-            og_image += (f'<meta property="og:image:width" content="{image["w"]}">\n'
-                         f'<meta property="og:image:height" content="{image["h"]}">\n')
+    if not image:
+        image = {"url": f"{url_base}/assets/og.png", "alt": T[lang]["marque"],
+                 "w": 1200, "h": 630}
+    og_image = (f'<meta property="og:image" content="{E(image["url"])}">\n'
+                f'<meta property="og:image:alt" content="{E(image["alt"])}">\n')
+    if image.get("w") and image.get("h"):
+        og_image += (f'<meta property="og:image:width" content="{image["w"]}">\n'
+                     f'<meta property="og:image:height" content="{image["h"]}">\n')
+    # sans crossorigin : une image et une feuille de style sont demandees
+    # hors CORS, et une connexion CORS preouverte ne leur servirait pas.
+    liens = "".join(f'<link rel="preconnect" href="{o}">\n' for o in preconnect)
     return f"""<!DOCTYPE html>
 <html lang="{T[lang]['html_lang']}">
 <head>
@@ -572,13 +582,15 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base, image=None
 <link rel="alternate" hreflang="en" href="{url_base}/{alternatives['en']}">
 <link rel="alternate" hreflang="x-default" href="{url_base}/{alternatives['fr']}">
 <meta property="og:type" content="website">
+<meta property="og:site_name" content="{E(T[lang]['marque'])}">
 <meta property="og:locale" content="{T[lang]['og_locale']}">
+<meta property="og:locale:alternate" content="{T[autre]['og_locale']}">
 <meta property="og:title" content="{E(titre)}">
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{url_base}/{chemin}">
-{og_image}<meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
+{og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{r}assets/page.css?v=8">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=9">
 {blocs}
 </head>
 <body>
@@ -638,6 +650,10 @@ def page_site(t, lang, voisins, url_base, depot, maj):
         "isAccessibleForFree": bool(t["acces_libre"]),
         "publicAccess": bool(t["acces_libre"] or t["ouvert_public"]),
         "inLanguage": lang,
+        # la date de mise a jour decrit la page, pas le stade : schema.org ne
+        # definit dateModified que sur une oeuvre, d'ou ce noeud WebPage.
+        "mainEntityOfPage": {"@type": "WebPage", "@id": url_absolue,
+                             "dateModified": maj, "inLanguage": lang},
     }
     equipements = [{"@type": "LocationFeatureSpecification",
                     "name": AGRES[lang].get(a, a), "value": True}
@@ -712,13 +728,24 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     gplace = f"https://www.google.com/maps/search/?api=1&amp;query={requete}"
 
     couverture = None
+    origines = []
     if t["photos"]:
         p0 = t["photos"][0]
         taille = dimensions_jpeg(os.path.join(ROOT, p0["f"])) or (None, None)
         couverture = {"url": f"{url_base}/{p0['f']}", "alt": alt_photo(p0, t, lang),
                       "w": taille[0], "h": taille[1]}
+    else:
+        # sans photo de terrain, l'orthophoto reste une vue du lieu : elle vaut
+        # mieux que la vignette de marque, identique sur les 7 000 fiches.
+        aerienne = vue_aerienne(t)
+        if aerienne:
+            couverture = {"url": aerienne, "alt": tr["aerienne_alt"](nom),
+                          "w": 960, "h": 540}
+            origines = [IGN_WMS.split("/wms")[0]]
+    if couverture:
+        lieu["image"] = couverture["url"]
     lignes = [entete(lang, titre, desc, chemin, alternatives, [lieu, fil], url_base,
-                     image=couverture)]
+                     image=couverture, preconnect=origines)]
     lignes.append(f"""
 <nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr['accueil'])}</a> ›
   <a href="{r}{url_dep(lang, t['dep'])}">{E(t.get('dep_nom') or t.get('dep') or '')}</a> ›
@@ -756,8 +783,8 @@ def page_site(t, lang, voisins, url_base, depot, maj):
         figures = "".join(figure(p, i == 0) for i, p in enumerate(t["photos"]))
         lignes.append(f'<h2>{E(tr["sec_photos"])}</h2><div class="gallery">{figures}</div>')
     else:
-        # a defaut de photo de terrain, l'implantation vue du ciel
-        aerienne = vue_aerienne(t)
+        # a defaut de photo de terrain, l'implantation vue du ciel (calculee
+        # plus haut : c'est aussi la vignette de partage de la fiche)
         if aerienne:
             annee = t.get("ortho_annee")
             legende = (tr["aerienne_legende_datee"](annee) if annee
@@ -765,7 +792,8 @@ def page_site(t, lang, voisins, url_base, depot, maj):
             lignes.append(
                 f'<h2>{E(tr["sec_aerienne"])}</h2>'
                 f'<figure class="aerial">'
-                f'<img loading="lazy" src="{E(aerienne)}" width="960" height="540" '
+                f'<img loading="eager" fetchpriority="high" src="{E(aerienne)}" '
+                f'width="960" height="540" '
                 f'alt="{E(tr["aerienne_alt"](nom))}">'
                 f'<figcaption>{E(legende)} '
                 f'<span>{E(tr["aerienne_credit"])}</span></figcaption></figure>')
@@ -853,13 +881,30 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot):
     desc = tr["dep_desc"].format(n=len(sites), dep=nom_dep or code, reg=region or "France")
     alternatives = {l: url_dep(l, code) for l in T}
 
+    # Chaque entree porte le lieu lui-meme, pas seulement son lien : un agent
+    # qui lit la page du departement y trouve deja commune, revetement et
+    # coordonnees, sans avoir a ouvrir les 200 fiches une par une.
+    def entree(i, s):
+        lieu = {"@type": "SportsActivityLocation", "@id": f"{url_base}/{url_site(lang, s['id'])}#place",
+                "name": nom_de(s, lang), "url": f"{url_base}/{url_site(lang, s['id'])}",
+                "sport": "Athletics", "identifier": s["id"]}
+        if s.get("ville"):
+            lieu["address"] = {"@type": "PostalAddress", "addressLocality": s["ville"],
+                               "addressRegion": nom_dep or code, "addressCountry": "FR"}
+        if s.get("lat") is not None and s.get("lon") is not None:
+            lieu["geo"] = {"@type": "GeoCoordinates",
+                           "latitude": s["lat"], "longitude": s["lon"]}
+        if s.get("surface"):
+            lieu["additionalProperty"] = [{"@type": "PropertyValue",
+                                           "name": tr["kv"]["revetement"],
+                                           "value": SOL[lang].get(s["surface"], s["surface"])}]
+        return {"@type": "ListItem", "position": i + 1, "item": lieu}
+
     liste_ld = {
         "@context": "https://schema.org", "@type": "ItemList",
         "name": titre, "numberOfItems": len(sites),
-        "itemListElement": [
-            {"@type": "ListItem", "position": i + 1, "name": nom_de(s, lang),
-             "url": f"{url_base}/{url_site(lang, s['id'])}"}
-            for i, s in enumerate(sites)],
+        "itemListOrder": "https://schema.org/ItemListUnordered",
+        "itemListElement": [entree(i, s) for i, s in enumerate(sites)],
     }
     fil = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
@@ -1096,10 +1141,205 @@ COQUILLE_EN = [
      """<p class="empty">This app needs JavaScript for the map and the filters.
         The full directory is also available as plain HTML pages:
         <a href="departments/">every athletics venue, department by department</a>.</p>"""),
+    # Les noeuds de page du graphe JSON-LD : la description de la page et sa
+    # FAQ n'ont de sens que dans la langue de la page qui les porte. Le reste
+    # du graphe (site, auteur, jeu de donnees) vaut pour les deux langues et
+    # reste tel quel.
+    ("""    {
+      "@type": "WebPage",
+      "@id": "{BASE}/#page",
+      "url": "{BASE}/",
+      "name": "Où s'entraîner ? — Pistes d'athlétisme en France",
+      "isPartOf": { "@id": "{BASE}/#site" },
+      "inLanguage": "fr",
+      "dateModified": "__MAJ__",
+      "primaryImageOfPage": "{BASE}/assets/og.png",
+      "mainEntity": { "@id": "{BASE}/#dataset" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "{BASE}/#faq",
+      "isPartOf": { "@id": "{BASE}/#page" },
+      "inLanguage": "fr",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Peut-on s'entraîner librement sur une piste d'athlétisme ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Cela dépend de l'installation. Une partie des stades est en accès libre permanent ; d'autres n'ouvrent au public qu'à certaines heures, en dehors des créneaux réservés aux clubs et aux scolaires ; d'autres encore restent fermés hors licence. Chaque fiche indique ce que déclare le gestionnaire, et le filtre « accès libre » ne garde que les sites ouverts. Cette information étant déclarative et rarement mise à jour, mieux vaut la vérifier auprès de la mairie ou du club avant de se déplacer." }
+        },
+        {
+          "@type": "Question",
+          "name": "Comment trouver la piste d'athlétisme la plus proche de chez moi ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Tapez une ville, un code postal ou le nom d'un stade dans la recherche, ou touchez le bouton de géolocalisation pour classer les installations par distance depuis votre position. La vue carte affiche les mêmes résultats géographiquement, et l'annuaire par département permet de parcourir les installations sans JavaScript." }
+        },
+        {
+          "@type": "Question",
+          "name": "Quelle est la longueur d'une piste d'athlétisme ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "La piste de référence, celle des compétitions officielles, fait 400 mètres au couloir 1. Beaucoup d'équipements français sont plus courts : on trouve couramment des anneaux de 333 m, 300 m, 250 m ou 200 m, ainsi que des lignes droites isolées de 100 ou 120 m. Le développement réel est indiqué sur chaque fiche quand il est connu, ce qui change le calcul d'une séance fractionnée." }
+        },
+        {
+          "@type": "Question",
+          "name": "Quelle différence entre une piste en tartan et une piste en cendrée ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Le tartan, nom courant des revêtements synthétiques en polyuréthane, est amortissant, praticable par tous les temps et compatible avec les pointes de compétition. La cendrée, surface en mâchefer damé, devient lourde sous la pluie et se déforme, mais reste plus douce pour l'appareil locomoteur. Le site distingue aussi les pistes en sable, en gazon, en bitume et les anneaux couverts." }
+        },
+        {
+          "@type": "Question",
+          "name": "D'où viennent ces données, et peut-on les réutiliser ?",
+          "acceptedAnswer": { "@type": "Answer", "text": "La base est le recensement des équipements sportifs (Data ES) du ministère chargé des Sports, sous Licence Ouverte 2.0. Les corrections, les photos prises sur place et les avis viennent de contributeurs. Le jeu de données complet est téléchargeable en un seul fichier JSON et réutilisable librement, y compris commercialement, avec mention de la source." }
+        }
+      ]
+    }
+""",
+     """    {
+      "@type": "WebPage",
+      "@id": "{BASE}/en/#page",
+      "url": "{BASE}/en/",
+      "name": "Where to train? — Athletics tracks in France",
+      "isPartOf": { "@id": "{BASE}/#site" },
+      "inLanguage": "en",
+      "dateModified": "__MAJ__",
+      "primaryImageOfPage": "{BASE}/assets/og.png",
+      "mainEntity": { "@id": "{BASE}/#dataset" }
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "{BASE}/en/#faq",
+      "isPartOf": { "@id": "{BASE}/en/#page" },
+      "inLanguage": "en",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can anyone train on a French athletics track?",
+          "acceptedAnswer": { "@type": "Answer", "text": "It depends on the venue. Some stadiums are open to all at any time; others open to the public only outside the slots booked by clubs and schools; others stay closed to non-members. Every page states what the operator declared, and the \u00ab free access \u00bb filter keeps only the open venues. Because that information is self-declared and rarely refreshed, check with the town hall or the local club before travelling." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I find the nearest athletics track?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Type a town, a postcode or a stadium name in the search box, or tap the location button to sort venues by distance from where you are. The map view shows the same results geographically, and the directory by department lets you browse every venue without JavaScript." }
+        },
+        {
+          "@type": "Question",
+          "name": "How long is an athletics track?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The reference track used in official competition is 400 metres in lane 1. Many French venues are shorter: loops of 333 m, 300 m, 250 m or 200 m are common, as are standalone straights of 100 or 120 m. Each page gives the actual lap length when it is known, which changes how you plan an interval session." }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between a tartan track and a cinder track?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Tartan, the common name for polyurethane synthetic surfaces, is cushioned, usable in any weather and takes competition spikes. Cinder, a rolled clinker surface, turns heavy in the rain and deforms, but is gentler on the joints. The directory also distinguishes sand, grass and asphalt tracks, and indoor loops." }
+        },
+        {
+          "@type": "Question",
+          "name": "Where does this data come from, and may I reuse it?",
+          "acceptedAnswer": { "@type": "Answer", "text": "The base is the French sports ministry's census of sports facilities (Data ES), under Licence Ouverte 2.0. Corrections, on-site photos and reviews come from contributors. The whole dataset can be downloaded as a single JSON file and reused freely, including commercially, as long as the source is credited." }
+        }
+      ]
+    }
+"""),
+    # Le contenu statique de l'accueil : sans lui, la coquille anglaise n'offre
+    # a un moteur qu'une page vide, et sa FAQ ne correspondrait pas au balisage
+    # FAQPage servi juste au-dessus.
+    ("""    <section class="seo" aria-labelledby="seo-titre">
+      <h2 id="seo-titre">L'annuaire des pistes d'athlétisme françaises</h2>
+      <p><strong>Où s'entraîner&nbsp;?</strong> recense les 7&nbsp;100 installations d'athlétisme
+        de France métropolitaine et d'outre-mer, dont environ 6&nbsp;500 disposent d'une piste.
+        Pour chacune&nbsp;: le revêtement, le développement de la piste et son nombre de couloirs,
+        les sautoirs en longueur, hauteur et perche, les aires de lancer, l'éclairage, les
+        vestiaires et les conditions d'accès. Les données proviennent du recensement des
+        équipements sportifs du ministère chargé des Sports, sous Licence Ouverte&nbsp;2.0, et
+        sont complétées par les athlètes eux-mêmes.</p>
+
+      <h3>Peut-on s'entraîner librement sur une piste d'athlétisme&nbsp;?</h3>
+      <p>Cela dépend de l'installation. Une partie des stades est en accès libre permanent&nbsp;;
+        d'autres n'ouvrent au public qu'à certaines heures, en dehors des créneaux réservés aux
+        clubs et aux scolaires&nbsp;; d'autres encore restent fermés hors licence. Chaque fiche
+        indique ce que déclare le gestionnaire, et le filtre «&nbsp;accès libre&nbsp;» ne garde
+        que les sites ouverts. Cette information étant déclarative et rarement mise à jour,
+        mieux vaut la vérifier auprès de la mairie ou du club avant de se déplacer.</p>
+
+      <h3>Comment trouver la piste la plus proche de chez moi&nbsp;?</h3>
+      <p>Tapez une ville, un code postal ou le nom d'un stade dans la recherche, ou touchez le
+        bouton de géolocalisation pour classer les installations par distance depuis votre
+        position. La vue carte affiche les mêmes résultats géographiquement, et l'annuaire par
+        département permet de parcourir les installations sans JavaScript.</p>
+
+      <h3>Quelle est la longueur d'une piste d'athlétisme&nbsp;?</h3>
+      <p>La piste de référence, celle des compétitions officielles, fait 400&nbsp;mètres au
+        couloir&nbsp;1. Beaucoup d'équipements français sont plus courts&nbsp;: on trouve
+        couramment des anneaux de 333&nbsp;m, 300&nbsp;m, 250&nbsp;m ou 200&nbsp;m, ainsi que des
+        lignes droites isolées de 100&nbsp;ou 120&nbsp;m. Le développement réel est indiqué sur
+        chaque fiche quand il est connu, ce qui change le calcul d'une séance fractionnée.</p>
+
+      <h3>Quelle différence entre une piste en tartan et une piste en cendrée&nbsp;?</h3>
+      <p>Le tartan — nom courant des revêtements synthétiques en polyuréthane — est amortissant,
+        praticable par tous les temps et compatible avec les pointes de compétition. La cendrée,
+        surface en mâchefer damé, devient lourde sous la pluie et se déforme, mais reste plus
+        douce pour l'appareil locomoteur. Le site distingue aussi les pistes en sable, en gazon,
+        en bitume et les anneaux couverts.</p>
+
+      <h3>D'où viennent ces données, et peut-on les réutiliser&nbsp;?</h3>
+      <p>La base est le recensement des équipements sportifs (Data&nbsp;ES) du ministère chargé
+        des Sports, sous Licence Ouverte&nbsp;2.0. Les corrections, les photos prises sur place
+        et les avis viennent de contributeurs. Le jeu de données complet est téléchargeable en
+        un seul fichier JSON et réutilisable librement, y compris commercialement, avec mention
+        de la source.</p>
+
+      <p class="seo-liens">
+        <a href="data/tracks.json">Télécharger le jeu de données (JSON)</a> ·
+        <a href="llms.txt">Description lisible par un agent</a> ·
+        <a href="departments/">Parcourir par département</a>
+      </p>
+    </section>""",
+     """    <section class="seo" aria-labelledby="seo-titre">
+      <h2 id="seo-titre">The directory of French athletics tracks</h2>
+      <p><strong>Where to train?</strong> lists the 7,100 athletics venues of mainland and
+        overseas France, about 6,500 of which have a running track. For each one: the surface,
+        the lap length and the number of lanes, the long jump, high jump and pole vault areas,
+        the throwing circles, floodlighting, changing rooms and access conditions. The data comes
+        from the French sports ministry's census of sports facilities, under Licence Ouverte&nbsp;2.0,
+        and is corrected by the athletes who train there.</p>
+
+      <h3>Can anyone train on a French athletics track?</h3>
+      <p>It depends on the venue. Some stadiums are open to all at any time; others open to the
+        public only outside the slots booked by clubs and schools; others stay closed to
+        non-members. Every page states what the operator declared, and the
+        &laquo;&nbsp;free access&nbsp;&raquo; filter keeps only the open venues. Because that
+        information is self-declared and rarely refreshed, check with the town hall or the local
+        club before travelling.</p>
+
+      <h3>How do I find the nearest athletics track?</h3>
+      <p>Type a town, a postcode or a stadium name in the search box, or tap the location button
+        to sort venues by distance from where you are. The map view shows the same results
+        geographically, and the directory by department lets you browse every venue without
+        JavaScript.</p>
+
+      <h3>How long is an athletics track?</h3>
+      <p>The reference track used in official competition is 400&nbsp;metres in lane&nbsp;1. Many
+        French venues are shorter: loops of 333&nbsp;m, 300&nbsp;m, 250&nbsp;m or 200&nbsp;m are
+        common, as are standalone straights of 100&nbsp;or 120&nbsp;m. Each page gives the actual
+        lap length when it is known, which changes how you plan an interval session.</p>
+
+      <h3>What is the difference between a tartan track and a cinder track?</h3>
+      <p>Tartan — the common name for polyurethane synthetic surfaces — is cushioned, usable in
+        any weather and takes competition spikes. Cinder, a rolled clinker surface, turns heavy in
+        the rain and deforms, but is gentler on the joints. The directory also distinguishes sand,
+        grass and asphalt tracks, and indoor loops.</p>
+
+      <h3>Where does this data come from, and may I reuse it?</h3>
+      <p>The base is the French sports ministry's census of sports facilities (Data&nbsp;ES),
+        under Licence Ouverte&nbsp;2.0. Corrections, on-site photos and reviews come from
+        contributors. The whole dataset can be downloaded as a single JSON file and reused freely,
+        including commercially, as long as the source is credited.</p>
+
+      <p class="seo-liens">
+        <a href="../data/tracks.json">Download the dataset (JSON)</a> ·
+        <a href="../llms.txt">Agent-readable description</a> ·
+        <a href="departments/">Browse by department</a>
+      </p>
+    </section>"""),
 ]
 
 
-def coquilles(html_fr, url_base):
+def coquilles(html_fr, url_base, maj):
     """Retourne (index.html francais, en/index.html anglais)."""
     fr = html_fr.replace(URL_DEFAUT, url_base)
     en = fr
@@ -1109,6 +1349,10 @@ def coquilles(html_fr, url_base):
         if avant not in en:
             raise SystemExit(f"[ERREUR] index.html ne contient plus : {avant[:70]}…")
         en = en.replace(avant, apres)          # toutes les occurrences
+    # La date de derniere generation, apres les substitutions : elle apparait
+    # dans les deux coquilles. Un jeu de donnees dont la fraicheur n'est pas
+    # datee est un jeu de donnees qu'un moteur suppose perime.
+    fr, en = (h.replace("__MAJ__", maj) for h in (fr, en))
     # l'ordre des alternatives hreflang reste correct : elles sont absolues
     return fr, en
 
@@ -1151,6 +1395,49 @@ def sitemap_index(fichiers, url_base, maj):
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             f"{corps}</sitemapindex>\n")
+
+
+def page_404(url_base, total):
+    """Page servie par GitHub Pages pour toute URL inconnue.
+
+    Sans elle, une fiche renommee ou un lien mal recopie tombe sur la page
+    d'erreur nue de GitHub : ni marque, ni chemin de retour, et un robot qui
+    n'y trouve aucun lien arrete de parcourir cette branche du site. Les URL
+    y sont absolues, parce que le fichier est servi tel quel sous n'importe
+    quel chemin, aussi profond soit-il."""
+    return f"""<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Page introuvable — Où s'entraîner ?</title>
+<meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=9">
+</head>
+<body>
+<header class="page-bar">
+  <a class="home" href="{url_base}/">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c3.5-8 7-11 11-11 3 0 5 1.6 6 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 21c3-7 6-9.5 9.5-9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".5"/></svg>
+    Où s'entraîner ?</a>
+</header>
+<main class="wrap">
+<h1>Cette page n'existe pas</h1>
+<p class="lede">L'adresse demandée ne correspond à aucune installation du site. Une fiche a pu
+changer d'identifiant, ou le lien être incomplet. <span lang="en">This page does not exist.</span></p>
+<h2>Où aller</h2>
+<ul class="liste">
+  <li><a href="{url_base}/">Chercher une piste sur la carte<span class="meta">{total} installations, recherche par ville ou code postal</span></a></li>
+  <li><a href="{url_base}/departements/">Annuaire par département<span class="meta">Toutes les installations, département par département</span></a></li>
+  <li><a href="{url_base}/en/" hreflang="en" lang="en">Read this site in English<span class="meta">Same directory, English pages</span></a></li>
+</ul>
+<p class="src">Un lien du site vous a mené ici&nbsp;?
+<a href="https://github.com/Chardonneaur/pistes-athle/issues/new?template=correction.yml" rel="nofollow noopener">Signalez-le</a>.</p>
+</main>
+</body>
+</html>
+"""
 
 
 def robots(url_base):
@@ -1200,6 +1487,9 @@ enriched by community contributions. Dernière génération / last build: {maj}.
 
 - [Application française]({url_base}/) — carte, filtres et recherche (nécessite JavaScript).
 - [English app]({url_base}/en/) — same application in English.
+- Les deux pages d'accueil portent une FAQ (accès libre, longueur d'un tour de piste,
+  revêtements, provenance des données), balisée en JSON-LD `FAQPage`.
+  / Both home pages carry a JSON-LD `FAQPage` covering access, lap length, surfaces and sourcing.
 - [Annuaire par département]({url_base}/departements/) — les {len(deps)} départements.
 - [Directory by department]({url_base}/en/departments/) — English version.
 - Une page par installation / one page per venue:
@@ -1258,7 +1548,7 @@ def main():
 
     # --- fichiers de l'application
     with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
-        fr, en = coquilles(f.read(), url_base)
+        fr, en = coquilles(f.read(), url_base, maj)
     ecrire(os.path.join(out, "index.html"), fr)
     ecrire(os.path.join(out, "en", "index.html"), en)
     for nom_fichier in ("sw.js", ".nojekyll"):
@@ -1336,6 +1626,7 @@ def main():
     ecrire(os.path.join(out, "sitemap.xml"),
            sitemap_index([f"sitemap-{l}.xml" for l in T], url_base, maj))
     ecrire(os.path.join(out, "robots.txt"), robots(url_base))
+    ecrire(os.path.join(out, "404.html"), page_404(url_base, len(publiables)))
     avec_piste = sum(1 for t in publiables if t["piste"])
     ecrire(os.path.join(out, "llms.txt"),
            llms_txt(url_base, len(publiables), avec_piste, par_dep, maj, depot))
