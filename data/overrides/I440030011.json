@@ -1,5 +1,5 @@
 {
   "id": "I440030011",
-  "agres_probables": ["longueur", "disque", "marteau"],
-  "note": "Le recensement du ministère ne déclare aucun agrès pour ce site. L'orthophoto IGN montre pourtant une cage de lancer, sa dalle bétonnée et des tapis de réception en place. Non vérifié sur place."
+  "agres_probables": ["hauteur", "perche", "disque", "marteau"],
+  "note": "Le recensement du ministère ne déclare aucun agrès pour ce site. Agrès déduits de l'orthophoto IGN, non vérifiés sur place : cage de lancer grillagée turquoise au nord de l'anneau, ouverte vers le terrain, avec son cercle et une grande dalle bétonnée de réception ; deux aires de réception bâchées de bleu d'environ 8 × 12 m aux deux extrémités d'un couloir d'élan dédié le long de la ligne droite ouest, dimensions et implantation d'un sautoir à la perche praticable dans les deux sens ; deux matelas bâchés plus petits, environ 7 × 5 m sur le tablier de la ligne droite est et 6 × 3 m dans le virage sud, aux dimensions d'un sautoir en hauteur. Aucune fosse de sable n'est visible sur l'image : la présence d'un sautoir en longueur reste à confirmer sur place."
 }
