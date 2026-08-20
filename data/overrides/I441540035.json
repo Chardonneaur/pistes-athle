@@ -1,0 +1,45 @@
+{
+  "id": "I441540035",
+  "surface": "cendree",
+  "longueur_piste": 400,
+  "agres": ["longueur", "triple", "perche", "poids", "disque", "marteau", "javelot"],
+  "agres_probables": ["hauteur"],
+  "note": "Le ministère déclare un revêtement synthétique : l'anneau de 400 m est en réalité en cendrée, et ses couloirs, tracés à la chaux, sont à peine lisibles. Les lignes droites, elles, sont bien en synthétique et en bon état — ce sont elles qui portent les élans de longueur et de triple saut. Des mini-haies de steeple sont entreposées sur le site, mais il n'y a pas de rivière : le steeple n'y est pas praticable. Visité le 20 août 2026.",
+  "photos": [
+    { "fichier": "01-piste-en-cendree-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "L'anneau de 400 m en cendrée : les couloirs, tracés à la chaux, se devinent à peine",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "02-virage-et-main-courante-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "Le virage en cendrée et sa main courante, le long du club-house",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "03-ligne-droite-en-tartan-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "La ligne droite en synthétique, avec les tapis de réception rangés au bout, contre le gymnase",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "04-revetement-de-la-ligne-droite-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "Le synthétique de la ligne droite, en bon état, en bordure de la cendrée",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "05-dalle-d-elan-betonnee-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "La dalle d'élan bétonnée qui borde l'aire de lancer, côté cendrée",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "06-aire-de-lancer-du-poids-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "Une des aires de lancer du poids : cercle bétonné et secteur de chute gravillonné",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "07-cage-de-lancer-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "La cage de lancer du disque et du marteau, filets en place",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "08-cercle-de-lancer-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "Un cercle de lancer en terre battue posé sur le gazon, la cage en arrière-plan",
+      "credit": "Ronan Chardonneau" },
+    { "fichier": "09-aire-de-reception-stade-jean-vincent-saint-brevin-les-pins.jpg",
+      "legende": "L'aire de réception engazonnée des lancers, entre la piste et le terrain de football",
+      "credit": "Ronan Chardonneau" }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-20",
+      "note": 4,
+      "texte": "Un bon vieux stade comme je les aime. La piste est en cendrée et les couloirs n'y sont pas très bien définis, mais tout le reste est là : de bonnes lignes droites en synthétique pour la longueur et le triple saut, un sautoir à la perche, une cage pour le disque et le marteau, une aire de javelot et beaucoup d'aires de lancer du poids. Des mini-haies de steeple traînent sur place, mais sans rivière. Un anneau de 400 m, et un endroit vraiment agréable."
+    }
+  ]
+}
