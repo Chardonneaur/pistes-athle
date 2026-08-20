@@ -179,7 +179,8 @@ Expliquez la raison dans la description de la pull request.
 | `piste` | booléen | présence d'une piste de course |
 | `surface` | texte | `synthetique`, `bitume`, `cendree`, `sable`, `gazon`, `naturel`, `interieur` |
 | `couloirs` | entier | nombre de couloirs |
-| `longueur_piste` | entier | développement en mètres (`400`, `333`, `200`…) |
+| `longueur_piste` | entier | développement en mètres (`400`, `333`, `250`, `200`…) — **mesuré ou déclaré** |
+| `longueur_probable` | entier | même chose, mais **estimé** (OpenStreetMap, vue aérienne) : affiché suivi d'un « ? » et effacé dès que `longueur_piste` est renseigné |
 | `couvert` | booléen | piste indoor ou couverte |
 | `agres` | liste | `longueur`, `triple`, `hauteur`, `perche`, `poids`, `disque`, `marteau`, `javelot`, `steeple` |
 | `agres_probables` | liste | mêmes valeurs — agrès *supposés*, affichés en grisé et suivis d'une mention d'incertitude |

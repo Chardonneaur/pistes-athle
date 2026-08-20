@@ -279,6 +279,9 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .vit-top strong{display:block;font-size:14px}
 .vit-top .meta{display:block;color:var(--muted);font-size:12.5px}
 
+.vit-plus{margin:8px 0 0;font-size:13px}
+.vit-plus a{text-decoration:none;font-weight:600}
+
 .vit-cta{margin:16px 0 4px;padding:14px;border-radius:14px;
   background:var(--accent-soft);border:1px solid var(--ring)}
 .vit-cta strong{display:block;font-size:15px;letter-spacing:-.01em}

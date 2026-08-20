@@ -280,6 +280,7 @@ def aggregate(raw):
                 "piste": False,
                 "couloirs": None,
                 "longueur_piste": None,
+                "longueur_probable": None,
                 "surface": None,
                 "couvert": False,
                 "eclairage": False,
@@ -383,7 +384,8 @@ def load_overrides():
 LIST_FIELDS = {"agres", "agres_probables"}
 ALLOWED_OVERRIDE_KEYS = {
     "id", "nom", "adresse", "cp", "ville", "dep", "lat", "lon", "piste", "couloirs",
-    "longueur_piste", "surface", "couvert", "eclairage", "acces_libre", "ouvert_public",
+    "longueur_piste", "longueur_probable", "surface", "couvert", "eclairage",
+    "acces_libre", "ouvert_public",
     "horaires", "acces_note", "vestiaires", "douches", "sanitaires", "tribunes",
     "agres", "agres_probables", "url", "annee", "renovation", "photos", "avis", "note",
     "supprime", "scolaire", "region", "dep_nom", "proprietaire", "gestionnaire",
@@ -405,7 +407,8 @@ def apply_overrides(installations, overrides):
                 "id": oid, "nom": "", "adresse": "", "cp": None, "ville": "",
                 "insee": None, "dep": None, "dep_nom": None, "region": None,
                 "scolaire": False, "lat": None, "lon": None, "piste": True,
-                "couloirs": None, "longueur_piste": None, "surface": None,
+                "couloirs": None, "longueur_piste": None, "longueur_probable": None,
+                "surface": None,
                 "couvert": False, "eclairage": False, "acces_libre": False,
                 "ouvert_public": False, "vestiaires": False, "douches": False,
                 "sanitaires": False, "tribunes": None, "agres": set(),
@@ -427,6 +430,9 @@ def apply_overrides(installations, overrides):
         # une correction communautaire leve l'incertitude sur les agres
         if "agres" in ov and "agres_probables" not in ov:
             inst["agres_probables"] = set()
+        # de meme, un developpement releve sur place chasse celui estime par OSM
+        if "longueur_piste" in ov and "longueur_probable" not in ov:
+            inst["longueur_probable"] = None
     return {k: v for k, v in installations.items() if not v.get("supprime")}
 
 
@@ -434,7 +440,7 @@ def apply_overrides(installations, overrides):
 KEYMAP = {
     "id": "i", "nom": "n", "adresse": "a", "cp": "cp", "ville": "v",
     "dep": "d", "lat": "y", "lon": "x", "piste": "p", "couloirs": "cl",
-    "longueur_piste": "lp", "surface": "s", "couvert": "cv", "eclairage": "ec",
+    "longueur_piste": "lp", "longueur_probable": "lpp", "surface": "s", "couvert": "cv", "eclairage": "ec",
     "acces_libre": "al", "ouvert_public": "op", "vestiaires": "ve", "douches": "du",
     "sanitaires": "wc", "tribunes": "tr", "agres": "g", "agres_probables": "gp",
     "nb_sautoirs": "ns", "nb_aires_lancer": "nl", "annee": "an", "renovation": "rn",
@@ -595,12 +601,16 @@ def fusionne_noms(noms):
     return canon
 
 
-def communaute(tracks, recentes=6, top=10):
+def communaute(tracks, recentes=200, top=200):
     """Les dernieres contributions et le classement des contributeurs.
 
     Calcule ici plutot que dans l'application : le classement demande de
     parcourir les 7 100 sites et de reconcilier les noms, ce qui n'a aucune
-    raison d'etre refait dans chaque navigateur a chaque chargement."""
+    raison d'etre refait dans chaque navigateur a chaque chargement.
+
+    Les listes sont completes, pas tronquees a ce qu'affiche la vitrine : la
+    page /contributeurs/ les rend toutes. Une entree pese une trentaine
+    d'octets, le plafond n'est la que pour borner un futur lointain."""
     ph, av = KEYMAP["photos"], KEYMAP["avis"]
     brut = {}                                   # nom tel qu'ecrit -> compteurs
     sites = {}                                  # nom -> ids distincts

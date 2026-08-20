@@ -1,5 +1,6 @@
 {
   "id": "I440090012",
   "surface": "synthetique",
-  "note": "Le ministère déclare une cendrée ; l'orthophoto IGN montre un anneau synthétique rouge, marquages nets, autour d'un plateau multisports bleu."
+  "note": "Le ministère déclare une cendrée ; l'orthophoto IGN montre un anneau synthétique rouge, marquages nets, autour d'un plateau multisports bleu. Développement estimé à 250 m d'après le tracé de l'anneau dans OpenStreetMap (w1162536797), non mesuré sur place.",
+  "longueur_probable": 250
 }

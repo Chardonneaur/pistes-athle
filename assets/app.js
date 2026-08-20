@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '7';
+const APP_VERSION = '8';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -46,6 +46,8 @@ const BASE = window.I18N_BASE;
 // Une page HTML par site est publiée au déploiement : /site/<id>/ en français,
 // /en/track/<id>/ en anglais. C'est elle que voient les moteurs et les agents IA.
 const FICHES = BASE + (LANG === 'en' ? 'en/track/' : 'site/');
+// Page statique qui liste tous les contributeurs et toutes leurs contributions.
+const PAGE_CONTRIB = LANG === 'en' ? 'en/contributors/' : 'contributeurs/';
 
 const V = DICO.vitrine;
 const SOL = DICO.sol;
@@ -59,7 +61,6 @@ const FILTERS = [
   { id: 'near',   test: null },
   { id: 'piste',  test: t => t.piste },
   { id: 'synth',  test: t => t.surface === 'synthetique' },
-  { id: 'p400',   test: t => t.longueur_piste === 400 },
   { id: 'libre',  test: t => t.acces_libre },
   { id: 'perche', test: t => has(t, 'perche') },
   { id: 'long',   test: t => has(t, 'longueur') || has(t, 'triple') },
@@ -80,7 +81,14 @@ const has = (t, a) => t.agres.includes(a);
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
                 q: '', dep: '', me: null, openId: null, contrib: null, map: null,
-                mini: null, cluster: null, mapReady: false, communaute: null };
+                mini: null, cluster: null, mapReady: false, communaute: null, lp: '' };
+
+/* Developpement de l'anneau : le tour de piste. Une puce « 400 m » ne servait
+   que les grands stades ; on cherche aussi un 250 m pres de chez soi, et la
+   plupart des sites n'ont aucun developpement declare — d'ou `lpp`, estime
+   d'apres OpenStreetMap. Le filtre accepte l'un ou l'autre. */
+const DEVELOPPEMENTS = [400, 333, 300, 250, 200];
+const tourDePiste = t => t.longueur_piste || t.longueur_probable || null;
 
 const $ = s => document.querySelector(s);
 const norm = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -178,6 +186,7 @@ function apply() {
 
   let out = state.all.filter(t => {
     if (state.dep && t.dep !== state.dep) return false;
+    if (state.lp && tourDePiste(t) !== Number(state.lp)) return false;
     for (const fn of tests) if (!fn(t)) return false;
     for (const w of words) if (!t._s.includes(w)) return false;
     return true;
@@ -213,7 +222,12 @@ function tagsOf(t) {
     const [lab, cls] = SOL[t.surface] || [t.surface, ''];
     tags.push(`<span class="tag sol ${cls}">${esc(lab)}</span>`);
   }
-  if (t.longueur_piste) tags.push(`<span class="tag">${t.longueur_piste} m${t.couloirs ? ` · ${DICO.tags.couloirs(t.couloirs)}` : ''}</span>`);
+  const tour = tourDePiste(t);
+  if (tour) {
+    const sur = !t.longueur_piste;            // valeur estimee, pas declaree
+    tags.push(`<span class="tag${sur ? ' maybe' : ''}"${sur ? ` title="${esc(U.lp_estime)}"` : ''}>` +
+              `${tour} m${sur ? ' ?' : ''}${t.couloirs ? ` · ${DICO.tags.couloirs(t.couloirs)}` : ''}</span>`);
+  }
   else if (t.couloirs) tags.push(`<span class="tag">${DICO.tags.couloirs(t.couloirs)}</span>`);
   if (t.acces_libre) tags.push(`<span class="tag free">${DICO.tags.acces_libre}</span>`);
   if (t.couvert) tags.push(`<span class="tag">${DICO.tags.couverte}</span>`);
@@ -250,7 +264,8 @@ function vueAerienne(t, largeur = 960) {
   const hauteur = Math.round(largeur * 9 / 16);
   /* Cadrage : un anneau de 400 m tient dans 360 m de champ ; une petite piste
      se contente de moins, sans quoi elle se perd au milieu de l'image. */
-  const champ = t.longueur_piste >= 400 ? 360 : (t.longueur_piste ? 260 : 300);
+  const tour = tourDePiste(t);
+  const champ = tour >= 400 ? 360 : (tour ? 260 : 300);
   const dlat = (champ * hauteur / largeur) / 2 / 111132;
   const dlon = champ / 2 / (111320 * Math.cos(t.lat * Math.PI / 180));
   const bbox = [t.lat - dlat, t.lon - dlon, t.lat + dlat, t.lon + dlon].join(',');
@@ -271,7 +286,7 @@ const VITRINE_MAX = 3;
 
 function vitrineVisible() {
   const filtresParDefaut = state.active.size === 1 && state.active.has('piste');
-  return !state.q.trim() && !state.dep && filtresParDefaut;
+  return !state.q.trim() && !state.dep && !state.lp && filtresParDefaut;
 }
 
 function carteContribution(c) {
@@ -322,7 +337,8 @@ function renderVitrine() {
     ${top.length ? `
       <h2>${esc(V.top_titre)}</h2>
       <p class="vit-intro">${esc(V.top_intro)}</p>
-      <ol class="vit-tops">${top.map((x, i) => carteContributeur(x, i + 1)).join('')}</ol>` : ''}
+      <ol class="vit-tops">${top.map((x, i) => carteContributeur(x, i + 1)).join('')}</ol>
+      <p class="vit-plus"><a href="${esc(BASE + PAGE_CONTRIB)}">${esc(V.top_lien)} →</a></p>` : ''}
 
     <div class="vit-cta">
       <strong>${esc(V.cta_titre)}</strong>
@@ -494,7 +510,8 @@ function openSheet(id) {
     <div class="sec">${esc(U.sec_piste)}</div>
     <div class="grid">
       ${kv(U.kv_revetement, sol)}
-      ${kv(U.kv_developpement, t.longueur_piste ? t.longueur_piste + ' m' : null)}
+      ${kv(U.kv_developpement, t.longueur_piste ? t.longueur_piste + ' m'
+            : (t.longueur_probable ? `${t.longueur_probable} m — ${U.lp_estime}` : null))}
       ${kv(U.kv_couloirs, t.couloirs)}
       ${kv(U.kv_config, t.couvert ? U.kv_couverte : (t.piste ? U.kv_plein_air : null))}
       ${kv(U.kv_service, t.annee)}
@@ -556,6 +573,7 @@ function setHash() {
   const parts = [];
   if ($('#view-map').classList.contains('is-active')) parts.push('carte');
   if (state.dep) parts.push('dep=' + encodeURIComponent(state.dep));
+  if (state.lp) parts.push('lp=' + encodeURIComponent(state.lp));
   if (state.q.trim()) parts.push('q=' + encodeURIComponent(state.q.trim()));
   if (id) parts.push('site=' + id);
   history.replaceState(null, '', parts.length ? '#' + parts.join('&') : location.pathname);
@@ -567,6 +585,12 @@ function readHash() {
   let filtre = false;
   const dep = h.get('dep');
   if (dep) { state.dep = dep; afficherDep(); filtre = true; }
+  const lp = h.get('lp');
+  if (lp && DEVELOPPEMENTS.includes(Number(lp))) {
+    state.lp = String(Number(lp));
+    const sel = $('#lp'); if (sel) sel.value = state.lp;
+    filtre = true;
+  }
   const q = h.get('q');
   if (q) { state.q = q; $('#q').value = q; $('#q-clear').hidden = false; filtre = true; }
   if (filtre) { apply(); cadrerSurResultats(); }
@@ -796,7 +820,11 @@ function buildChips() {
   $('#chips').innerHTML =
     `<input id="dep" class="chip-select" list="dep-liste" type="text" autocomplete="off"
             size="12" placeholder="${esc(U.dep_ph)}" aria-label="${esc(U.dep_label)}">
-     <datalist id="dep-liste"></datalist>` +
+     <datalist id="dep-liste"></datalist>
+     <select id="lp" class="chip-select" aria-label="${esc(U.lp_label)}">
+       <option value="">${esc(U.lp_tous)}</option>
+       ${DEVELOPPEMENTS.map(m => `<option value="${m}">${esc(U.lp_option(m))}</option>`).join('')}
+     </select>` +
     FILTERS.map(f =>
       `<button class="chip${state.active.has(f.id) ? ' is-on' : ''}" data-f="${f.id}">${f.label}</button>`
     ).join('');
@@ -937,6 +965,13 @@ function init() {
   /* À la sortie du champ (ou après un choix dans la liste), on affiche le
      libellé complet, et on efface une saisie restée sans correspondance. */
   $('#chips').addEventListener('change', e => {
+    if (e.target.id === 'lp') {
+      state.lp = e.target.value;
+      e.target.classList.toggle('is-on', !!state.lp);
+      apply();
+      setHash();
+      return;
+    }
     if (e.target.id !== 'dep') return;
     clearTimeout(debDep);
     const code = resoudreDep(e.target.value, true);

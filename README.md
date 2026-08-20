@@ -24,6 +24,12 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
   dans son filtre
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
+- **Filtre par tour de piste** : 400 m, 333 m, 300 m, 250 m, 200 m — sur le
+  développement déclaré par le ministère ou, à défaut, sur celui **estimé d'après
+  le tracé OpenStreetMap de l'anneau** (`scripts/osm_longueurs.py`), affiché avec
+  un « ? » et jamais présenté comme une mesure
+- **Page contributeurs** (`/contributeurs/`, `/en/contributors/`) : le classement
+  et toutes les contributions, avec leurs photos
 - **Vitrine en page d'accueil** : les trois dernières contributions en photos, le
   classement des contributeurs, et un appel à contribuer — masqués dès qu'une
   recherche ou un filtre est actif
@@ -58,6 +64,7 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/site/<ID>/` et `/en/track/<ID>/` | une page HTML complète par installation, avec JSON-LD `SportsActivityLocation` |
 | `/departement/<CODE>/` et `/en/department/<CODE>/` | les installations d'un département, groupées par commune |
 | `/departements/` et `/en/departments/` | l'annuaire des 108 départements, groupés par région |
+| `/contributeurs/` et `/en/contributors/` | le classement des contributeurs et toutes leurs contributions |
 | `/sitemap.xml` | index de plan de site (une entrée par langue, ~14 400 URL) |
 | `/robots.txt` | tout ouvert, robots d'IA compris, explicitement |
 | `/llms.txt` | description du site et du jeu de données pour un agent, avec le schéma des clés |

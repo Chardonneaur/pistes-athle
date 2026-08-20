@@ -90,3 +90,31 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .src{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:34px;
   border-top:1px solid var(--line);padding-top:16px}
 .src a{color:var(--muted)}
+
+/* ---------- page contributeurs ---------- */
+.palmares{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:7px;counter-reset:none}
+.palmares li{display:flex;align-items:center;gap:12px;padding:11px 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.palmares .rang{flex:none;width:26px;height:26px;border-radius:50%;display:grid;
+  place-items:center;background:var(--accent-soft);color:var(--accent);
+  font-weight:700;font-size:13px}
+.palmares strong{display:block}
+.palmares .meta{display:block;font-size:12.5px;color:var(--muted)}
+
+.contributions{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.contributions li{display:flex;align-items:center;gap:12px;padding:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.contributions img{flex:none;width:96px;height:72px;object-fit:cover;border-radius:8px;
+  background:var(--line)}
+.contributions .quoi{min-width:0}
+.contributions a{font-weight:600;text-decoration:none}
+.contributions .loc,.contributions .meta{display:block;font-size:12.5px;color:var(--muted)}
+
+.appel{margin:26px 0 8px;padding:16px;border-radius:14px;
+  background:var(--accent-soft);border:1px solid var(--line)}
+.appel strong{display:block;font-size:16px}
+.appel p{margin:6px 0 12px;font-size:14.5px;color:var(--muted)}
+.appel .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;
+  border-radius:11px;text-decoration:none;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font-weight:600}
+.appel .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}

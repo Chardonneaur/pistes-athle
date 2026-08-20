@@ -27,6 +27,10 @@ const FR = {
     filtres:     'Filtres',
     dep_label:   'Filtrer par département (numéro, nom ou code postal)',
     dep_ph:      'Département',
+    lp_label:    'Filtrer par développement de la piste',
+    lp_tous:     'Tour de piste',
+    lp_option:   m => `${m} m`,
+    lp_estime:   'développement estimé d’après OpenStreetMap, non mesuré sur place',
     onglet_liste: 'Liste',
     onglet_carte: 'Carte',
     chargement:  'Chargement des 7&nbsp;000 sites…',
@@ -44,12 +48,13 @@ const FR = {
     aerienne_alt: n => `Vue aérienne de ${n}`,
     aerienne_legende: "Vue aérienne, à défaut de photo du site.",
     aerienne_legende_datee: a => `Vue aérienne de ${a}, à défaut de photo du site.`,
-    aerienne_credit: "Elle montre l'implantation, pas l'état des agrès : les tapis de perche et de hauteur y sont bâchés ou rentrés. © IGN — BD ORTHO®, Licence Ouverte 2.0",
+    aerienne_credit: "Elle montre l'implantation, pas l'état des agrès : une bâche signale bien un sautoir, mais pas s'il est praticable, et un tapis rentré ne laisse rien voir. © IGN — BD ORTHO®, Licence Ouverte 2.0",
     note_sur_5:  n => `${n} sur 5`,
     sans_nom:    'Équipement d’athlétisme',
 
     // liens de pied de page (index.html)
     nav_annuaire: 'Annuaire par département',
+    nav_contributeurs: 'Les contributeurs',
     nav_source:   'Source des données',
     nav_code:     'Code source',
 
@@ -127,7 +132,7 @@ const FR = {
   sources: ['Data ES (ministère)', 'Data ES + communauté', 'Contribution communautaire'],
 
   filtres: {
-    near: '📍 Près de moi', piste: 'Avec piste', synth: 'Synthétique', p400: '400 m',
+    near: '📍 Près de moi', piste: 'Avec piste', synth: 'Synthétique',
     libre: 'Accès libre', perche: 'Perche', long: 'Longueur', haut: 'Hauteur',
     poids: 'Poids', lancer: 'Lancers longs', sauts: 'Un sautoir', ecl: 'Éclairée',
     couv: 'Couverte', vest: 'Vestiaires', noeco: 'Hors enceinte scolaire',
@@ -151,6 +156,7 @@ const FR = {
     le:           d => `le ${d}`,
     top_titre:    'Les contributeurs',
     top_intro:    'Merci à eux : sans photo ni avis, une fiche reste une ligne de tableau.',
+    top_lien:     'Voir toutes les contributions',
     top_sites:    n => `${n} site${n > 1 ? 's' : ''}`,
     top_photos:   n => `${n} photo${n > 1 ? 's' : ''}`,
     top_avis:     n => `${n} avis`,
@@ -213,8 +219,8 @@ const FR = {
       <p>Les sites qui n’ont encore aucune photo affichent une vue aérienne issue de la
          <a href="https://geoservices.ign.fr/" target="_blank" rel="noopener">BD ORTHO® de l’IGN</a>,
          elle aussi sous Licence Ouverte 2.0. Elle montre l’implantation, pas l’état des agrès :
-         une orthophoto a souvent plusieurs années, et les tapis de perche ou de hauteur y sont
-         bâchés ou rentrés.</p>
+         une orthophoto a souvent plusieurs années, et une bâche de sautoir, très visible du ciel,
+         dit qu’un tapis est là sans rien dire de son état — rentré, il ne laisse rien voir du tout.</p>
 
       <h3>Les données sont déclaratives</h3>
       <p>Elles sont saisies par les propriétaires des installations. Un site peut mentionner
@@ -259,6 +265,10 @@ const EN = {
     filtres:     'Filters',
     dep_label:   'Filter by department (number, name or postcode)',
     dep_ph:      'Department',
+    lp_label:    'Filter by lap length',
+    lp_tous:     'Lap length',
+    lp_option:   m => `${m} m`,
+    lp_estime:   'lap length estimated from OpenStreetMap, not measured on site',
     onglet_liste: 'List',
     onglet_carte: 'Map',
     chargement:  'Loading 7,000 venues…',
@@ -276,11 +286,12 @@ const EN = {
     aerienne_alt: n => `Aerial view of ${n}`,
     aerienne_legende: 'Aerial view, in the absence of a photo of the venue.',
     aerienne_legende_datee: a => `${a} aerial view, in the absence of a photo of the venue.`,
-    aerienne_credit: 'It shows the layout, not the state of the equipment: pole vault and high jump mats are covered or stored away. © IGN — BD ORTHO®, Licence Ouverte 2.0',
+    aerienne_credit: 'It shows the layout, not the state of the equipment: a cover marks a landing mat without saying whether it is usable, and a mat put away leaves nothing to see. © IGN — BD ORTHO®, Licence Ouverte 2.0',
     note_sur_5:  n => `${n} out of 5`,
     sans_nom:    'Athletics facility',
 
     nav_annuaire: 'Browse by department',
+    nav_contributeurs: 'Contributors',
     nav_source:   'Data source',
     nav_code:     'Source code',
 
@@ -356,7 +367,7 @@ const EN = {
   sources: ['Data ES (French sports ministry)', 'Data ES + community', 'Community contribution'],
 
   filtres: {
-    near: '📍 Near me', piste: 'With a track', synth: 'Synthetic', p400: '400 m',
+    near: '📍 Near me', piste: 'With a track', synth: 'Synthetic',
     libre: 'Free access', perche: 'Pole vault', long: 'Long jump', haut: 'High jump',
     poids: 'Shot put', lancer: 'Long throws', sauts: 'A jump area', ecl: 'Floodlit',
     couv: 'Indoor', vest: 'Changing rooms', noeco: 'Outside school grounds',
@@ -380,6 +391,7 @@ const EN = {
     le:           d => `on ${d}`,
     top_titre:    'Contributors',
     top_intro:    'Thanks to them: without a photo or a review, a venue is just a row in a table.',
+    top_lien:     'See all contributions',
     top_sites:    n => `${n} venue${n > 1 ? 's' : ''}`,
     top_photos:   n => `${n} photo${n > 1 ? 's' : ''}`,
     top_avis:     n => `${n} review${n > 1 ? 's' : ''}`,
@@ -442,8 +454,9 @@ const EN = {
       <p>Venues that do not yet have a photo show an aerial view from the
          <a href="https://geoservices.ign.fr/" target="_blank" rel="noopener">IGN BD ORTHO®</a>,
          also under Licence Ouverte 2.0. It shows the layout, not the state of the equipment:
-         orthophotos are often several years old, and pole vault or high jump mats are
-         covered or stored away.</p>
+         orthophotos are often several years old, and a landing mat’s cover — very visible from
+         above — says a mat is there without saying anything about its condition; put away, it
+         leaves nothing to see at all.</p>
 
       <h3>The records are self-declared</h3>
       <p>They are filled in by the owners of each facility. A venue may report a “jump area”

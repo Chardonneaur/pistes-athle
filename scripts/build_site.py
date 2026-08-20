@@ -79,7 +79,7 @@ T = {
     "fr": {
         "html_lang": "fr", "og_locale": "fr_FR", "autre": "en",
         "prefixe": "", "seg_site": "site", "seg_dep": "departement",
-        "seg_index": "departements",
+        "seg_index": "departements", "seg_contrib": "contributeurs",
         "marque": "Où s'entraîner ?",
         "bascule": "English", "bascule_code": "EN",
         "accueil": "Accueil",
@@ -99,8 +99,10 @@ T = {
         "aerienne_alt": lambda n: f"Vue aérienne de {n}",
         "aerienne_legende": "Vue aérienne, à défaut de photo du site.",
         "aerienne_legende_datee": lambda a: f"Vue aérienne de {a}, à défaut de photo du site.",
-        "aerienne_credit": "Elle montre l'implantation, pas l'état des agrès : les tapis "
-                           "de perche et de hauteur y sont bâchés ou rentrés. "
+        "lp_estime": "estimé d'après OpenStreetMap, non mesuré sur place",
+        "aerienne_credit": "Elle montre l'implantation, pas l'état des agrès : une bâche "
+                           "signale bien un sautoir, mais pas s'il est praticable, et un "
+                           "tapis rentré ne laisse rien voir. "
                            "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Revêtement", "developpement": "Développement",
                "couloirs": "Couloirs", "config": "Configuration",
@@ -134,12 +136,30 @@ T = {
         "voir_carte": "Voir la carte interactive",
         "voir_dep_carte": "Voir ces sites sur la carte",
         "annuaire": "Annuaire par département",
+        "contrib_titre": "Les contributeurs",
+        "contrib_desc": "Qui a photographié, noté et corrigé les pistes d'athlétisme "
+                        "françaises, et ce que chacun a apporté.",
+        "contrib_intro": "Les données du ministère disent qu'un stade existe. Elles ne "
+                         "disent pas si le sautoir tient encore debout. Tout ce qui suit "
+                         "vient de gens qui sont allés voir.",
+        "contrib_classement": "Classement",
+        "contrib_toutes": "Toutes les contributions",
+        "contrib_sites": lambda n: f"{n} site{'s' if n > 1 else ''}",
+        "contrib_photos": lambda n: f"{n} photo{'s' if n > 1 else ''}",
+        "contrib_avis": lambda n: f"{n} avis",
+        "contrib_le": lambda d: f"le {d}",
+        "contrib_par": lambda a: f"par {a}",
+        "contrib_vide": "Aucune contribution pour l'instant. La première est à écrire.",
+        "contrib_appel": "Vous vous entraînez quelque part ?",
+        "contrib_appel_texte": "Une photo du sautoir, une note sur l'état de la piste, un "
+                               "horaire : c'est ce que les données publiques n'auront jamais.",
+        "contrib_appel_lien": "Comment contribuer",
         "code_source": "Code source",
     },
     "en": {
         "html_lang": "en", "og_locale": "en_GB", "autre": "fr",
         "prefixe": "en/", "seg_site": "track", "seg_dep": "department",
-        "seg_index": "departments",
+        "seg_index": "departments", "seg_contrib": "contributors",
         "marque": "Where to train?",
         "bascule": "Français", "bascule_code": "FR",
         "accueil": "Home",
@@ -159,8 +179,10 @@ T = {
         "aerienne_alt": lambda n: f"Aerial view of {n}",
         "aerienne_legende": "Aerial view, in the absence of a photo of the venue.",
         "aerienne_legende_datee": lambda a: f"{a} aerial view, in the absence of a photo of the venue.",
-        "aerienne_credit": "It shows the layout, not the state of the equipment: pole vault "
-                           "and high jump mats are covered or stored away. "
+        "lp_estime": "estimated from OpenStreetMap, not measured on site",
+        "aerienne_credit": "It shows the layout, not the state of the equipment: a cover "
+                           "marks a landing mat without saying whether it is usable, and a "
+                           "mat put away leaves nothing to see. "
                            "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Surface", "developpement": "Lap length",
                "couloirs": "Lanes", "config": "Setting",
@@ -194,6 +216,24 @@ T = {
         "voir_carte": "Open the interactive map",
         "voir_dep_carte": "Show these venues on the map",
         "annuaire": "Browse by department",
+        "contrib_titre": "Contributors",
+        "contrib_desc": "Who photographed, rated and corrected France's athletics tracks, "
+                        "and what each of them added.",
+        "contrib_intro": "Ministry records say a stadium exists. They do not say whether the "
+                         "pole vault pit is still standing. Everything below comes from "
+                         "people who went and looked.",
+        "contrib_classement": "Ranking",
+        "contrib_toutes": "All contributions",
+        "contrib_sites": lambda n: f"{n} venue{'s' if n > 1 else ''}",
+        "contrib_photos": lambda n: f"{n} photo{'s' if n > 1 else ''}",
+        "contrib_avis": lambda n: f"{n} review{'s' if n > 1 else ''}",
+        "contrib_le": lambda d: f"on {d}",
+        "contrib_par": lambda a: f"by {a}",
+        "contrib_vide": "No contributions yet. The first one is waiting to be written.",
+        "contrib_appel": "Do you train somewhere?",
+        "contrib_appel_texte": "A photo of the pole vault pit, a note on the state of the "
+                               "track, an opening time: that is what open data will never hold.",
+        "contrib_appel_lien": "How to contribute",
         "code_source": "Source code",
     },
 }
@@ -222,6 +262,10 @@ def url_appli(lang):
     return T[lang]["prefixe"]
 
 
+def url_contrib(lang):
+    return f"{T[lang]['prefixe']}{T[lang]['seg_contrib']}/"
+
+
 # ---------------------------------------------------------------------- donnees
 def charger():
     with open(TRACKS, encoding="utf-8") as f:
@@ -237,6 +281,7 @@ def charger():
         t["agres"] = t.get("agres") or []
         t["agres_probables"] = t.get("agres_probables") or []
         t["photos"] = t.get("photos") or []
+        t["longueur_probable"] = t.get("longueur_probable") or None
         t["avis"] = t.get("avis") or []
         t["nb_avis"] = t.get("nb_avis") or 0
         d = deps.get(t.get("dep") or "", ["", ""])
@@ -278,7 +323,8 @@ def resume(t, lang):
 
     if t["piste"]:
         sol = SOL[lang].get(t.get("surface"), t.get("surface"))
-        longueur = f"{t['longueur_piste']} m" if t.get("longueur_piste") else ""
+        tour, _sur = tour_de_piste(t)
+        longueur = f"{tour} m" if tour else ""
         if lang == "fr":
             bout = "Il dispose d'une piste"
             if longueur:
@@ -328,8 +374,9 @@ def description(t, lang):
     faits = []
     if t["piste"]:
         bout = []
-        if t.get("longueur_piste"):
-            bout.append(f"{t['longueur_piste']} m")
+        tour, sur = tour_de_piste(t)
+        if tour:
+            bout.append(f"{tour} m" if sur else f"{tour} m ?")
         if t.get("surface"):
             bout.append(SOL[lang].get(t["surface"], t["surface"]))
         if t.get("couloirs"):
@@ -381,7 +428,7 @@ def vue_aerienne(t, largeur=960):
     if not isinstance(lat, (int, float)) or not isinstance(lon, (int, float)):
         return None
     hauteur = round(largeur * 9 / 16)
-    lg = t.get("longueur_piste") or 0
+    lg = tour_de_piste(t)[0] or 0
     champ = 360 if lg >= 400 else (260 if lg else 300)
     dlat = (champ * hauteur / largeur) / 2 / 111132
     dlon = champ / 2 / (111320 * math.cos(math.radians(lat)))
@@ -425,6 +472,26 @@ def distance(a, b, c, d):
     dlat, dlon = (c - a) * r, (d - b) * r
     h = math.sin(dlat / 2) ** 2 + math.cos(a * r) * math.cos(c * r) * math.sin(dlon / 2) ** 2
     return 2 * 6371 * math.asin(math.sqrt(h))
+
+
+def tour_de_piste(t):
+    """Developpement de l'anneau, et s'il est declare ou seulement estime.
+
+    Le ministere ne renseigne le developpement que d'une minorite de sites.
+    Quand OpenStreetMap permet de l'estimer, on l'affiche — en disant que c'est
+    une estimation, jamais en le faisant passer pour une mesure."""
+    if t.get("longueur_piste"):
+        return t["longueur_piste"], True
+    if t.get("longueur_probable"):
+        return t["longueur_probable"], False
+    return None, True
+
+
+def developpement_affiche(t, lang):
+    tour, sur = tour_de_piste(t)
+    if not tour:
+        return None
+    return f"{tour} m" if sur else f"{tour} m — {T[lang]['lp_estime']}"
 
 
 def alt_photo(p, t, lang):
@@ -511,7 +578,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base, image=None
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{r}assets/page.css?v=7">
+<link rel="stylesheet" href="{r}assets/page.css?v=8">
 {blocs}
 </head>
 <body>
@@ -590,6 +657,8 @@ def page_site(t, lang, voisins, url_base, depot, maj):
         proprietes.append({"@type": "PropertyValue", "name": tr["kv"]["revetement"],
                            "value": SOL[lang].get(t["surface"], t["surface"])})
     if t.get("longueur_piste"):
+        # seul le declare part en donnee structuree : une estimation OSM n'a
+        # rien a faire dans ce qu'un agent recopiera comme un fait.
         proprietes.append({"@type": "PropertyValue", "name": tr["kv"]["developpement"],
                            "value": f"{t['longueur_piste']} m"})
     if t.get("couloirs"):
@@ -707,7 +776,7 @@ def page_site(t, lang, voisins, url_base, depot, maj):
 
     piste = "".join([
         kv(tr["kv"]["revetement"], SOL[lang].get(t.get("surface")) if t.get("surface") else None),
-        kv(tr["kv"]["developpement"], f"{t['longueur_piste']} m" if t.get("longueur_piste") else None),
+        kv(tr["kv"]["developpement"], developpement_affiche(t, lang)),
         kv(tr["kv"]["couloirs"], t.get("couloirs")),
         kv(tr["kv"]["config"], tr["couverte"] if t["couvert"] else (tr["plein_air"] if t["piste"] else None)),
         kv(tr["kv"]["service"], t.get("annee")),
@@ -822,8 +891,9 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot):
             ville_courante = s.get("ville")
             lignes.append(f'<h2 class="ville">{E(ville_courante or "")}</h2><ul class="liste">')
         details = []
-        if s.get("longueur_piste"):
-            details.append(f"{s['longueur_piste']} m")
+        tour, sur = tour_de_piste(s)
+        if tour:
+            details.append(f"{tour} m" if sur else f"{tour} m ?")
         if s.get("surface"):
             details.append(SOL[lang].get(s["surface"], s["surface"]))
         if s.get("couloirs"):
@@ -836,6 +906,95 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot):
         lignes.append("</ul>")
     lignes.append(pied(lang, chemin, url_base, depot))
     return "".join(lignes)
+
+
+def page_contributeurs(communaute, par_id, lang, url_base, depot, maj):
+    """La page qui rend visible qui tient ce jeu de donnees a jour.
+
+    Un annuaire derive de donnees publiques ne coute rien a personne ; les
+    photos et les avis, si. Les nommer et compter ce que chacun a apporte est
+    la seule monnaie que ce projet puisse rendre — et la meilleure raison, pour
+    le lecteur suivant, d'y ajouter la sienne."""
+    chemin = url_contrib(lang)
+    r = rel(chemin)
+    tr = T[lang]
+    alternatives = {l: url_contrib(l) for l in T}
+    titre = f"{tr['contrib_titre']} — {tr['marque']}"
+    top = communaute.get("top") or []
+    recentes = communaute.get("recentes") or []
+    # build_data.py a deja reconcilie les noms pour le classement ; on reprend
+    # sa table plutot que de refaire — et de refaire differemment — la fusion.
+    canon = {}
+    for c in top:
+        plein = c["n"]
+        canon[plein.lower()] = plein
+        for i in range(1, len(plein.split())):
+            canon.setdefault(" ".join(plein.split()[:i]).lower(), plein)
+
+    fil = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+           "itemListElement": [
+               {"@type": "ListItem", "position": 1, "name": tr["accueil"],
+                "item": f"{url_base}/{url_appli(lang)}"},
+               {"@type": "ListItem", "position": 2, "name": tr["contrib_titre"],
+                "item": f"{url_base}/{chemin}"}]}
+
+    lignes = [entete(lang, titre, tr["contrib_desc"], chemin, alternatives, [fil], url_base)]
+    lignes.append(f"<h1>{E(tr['contrib_titre'])}</h1>")
+    lignes.append(f'<p class="lede">{E(tr["contrib_intro"])}</p>')
+
+    if not top and not recentes:
+        lignes.append(f'<p class="empty">{E(tr["contrib_vide"])}</p>')
+
+    if top:
+        lignes.append(f"<h2>{E(tr['contrib_classement'])}</h2>")
+        lignes.append('<ol class="palmares">')
+        for i, c in enumerate(top, 1):
+            detail = " · ".join(filter(None, [
+                tr["contrib_sites"](c["s"]),
+                tr["contrib_photos"](c["p"]) if c.get("p") else "",
+                tr["contrib_avis"](c["a"]) if c.get("a") else ""]))
+            lignes.append(f'<li><span class="rang">{i}</span>'
+                          f'<span><strong>{E(c["n"])}</strong>'
+                          f'<span class="meta">{E(detail)}</span></span></li>')
+        lignes.append("</ol>")
+
+    if recentes:
+        lignes.append(f"<h2>{E(tr['contrib_toutes'])}</h2>")
+        lignes.append('<ul class="contributions">')
+        for c in recentes:
+            t = par_id.get(c["i"])
+            if not t:
+                continue
+            nom = nom_de(t, lang)
+            lieu = ", ".join(x for x in (t.get("ville"), t.get("dep_nom")) if x)
+            bruts = ({p["c"] for p in t["photos"] if p.get("c")}
+                     | {a["a"] for a in t["avis"] if a.get("a")})
+            auteurs = sorted({canon.get(x.lower(), x) for x in bruts})
+            detail = " · ".join(filter(None, [
+                tr["contrib_photos"](len(t["photos"])) if t["photos"] else "",
+                tr["contrib_avis"](len(t["avis"])) if t["avis"] else "",
+                tr["contrib_par"](", ".join(auteurs)) if auteurs else "",
+                tr["contrib_le"](fmt_date(c["d"], lang)) if c.get("d") else ""]))
+            vignette = ""
+            if t["photos"]:
+                p = t["photos"][0]
+                taille = dimensions_jpeg(os.path.join(ROOT, p.get("t") or p["f"]))
+                dims = f' width="{taille[0]}" height="{taille[1]}"' if taille else ""
+                vignette = (f'<img loading="lazy" src="{r}{E(p.get("t") or p["f"])}" '
+                            f'alt="{E(alt_photo(p, t, lang))}"{dims}>')
+            lignes.append(
+                f'<li>{vignette}<span class="quoi">'
+                f'<a href="{r}{url_site(lang, t["id"])}">{E(nom)}</a>'
+                f'<span class="loc">{E(lieu)}</span>'
+                f'<span class="meta">{E(detail)}</span></span></li>')
+        lignes.append("</ul>")
+
+    lignes.append(f'<div class="appel"><strong>{E(tr["contrib_appel"])}</strong>'
+                  f'<p>{E(tr["contrib_appel_texte"])}</p>'
+                  f'<a class="btn primary" href="https://github.com/{depot}'
+                  f'/blob/master/CONTRIBUTING.md">{E(tr["contrib_appel_lien"])}</a></div>')
+    lignes.append(pied(lang, chemin, url_base, depot))
+    return "\n".join(lignes)
 
 
 def page_index(deps_tries, total, lang, url_base, depot):
@@ -1143,11 +1302,17 @@ def main():
          for code, liste in par_dep.items()),
         key=lambda d: (d[2], d[1]))
 
+    par_id = {t["id"]: t for t in publiables}
+
     # --- generation
     urls = {"fr": [], "en": []}
     for lang in T:
         urls[lang].append((url_appli(lang), "1.0"))
         urls[lang].append((url_index(lang), "0.8"))
+        urls[lang].append((url_contrib(lang), "0.7"))
+        ecrire(os.path.join(out, url_contrib(lang), "index.html"),
+               page_contributeurs(brut.get("communaute") or {}, par_id, lang,
+                                  url_base, depot, maj))
         ecrire(os.path.join(out, url_index(lang), "index.html"),
                page_index(deps_tries, len(publiables), lang, url_base, depot))
         for code, liste in par_dep.items():
