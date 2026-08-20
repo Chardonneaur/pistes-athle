@@ -427,14 +427,71 @@ def distance(a, b, c, d):
     return 2 * 6371 * math.asin(math.sqrt(h))
 
 
+def alt_photo(p, t, lang):
+    """Texte alternatif d'une photo : la legende, puis le stade et la commune.
+
+    Une legende seule (« La cage de lancer du disque et du marteau ») decrit
+    bien l'objet mais ne le situe nulle part. Un lecteur d'ecran comme un
+    moteur d'images ont besoin des deux, et c'est la meme phrase qui les sert."""
+    lieu_dit = ", ".join(x for x in (nom_de(t, lang), t.get("ville")) if x)
+    legende = (p.get("l") or "").strip().rstrip(".")
+    return f"{legende} — {lieu_dit}" if legende and lieu_dit else (legende or lieu_dit)
+
+
+def image_ld(p, t, lang, url_base):
+    """Une photo en schema.org ImageObject, licence comprise.
+
+    Les photos sont publiees sous ODbL avec le credit de leur auteur :
+    `license` et `creditText` disent a un reutilisateur — humain ou agent — ce
+    qu'il a le droit d'en faire, ce qu'une simple URL ne dit pas."""
+    obj = {
+        "@type": "ImageObject",
+        "contentUrl": f"{url_base}/{p['f']}",
+        "url": f"{url_base}/{p['f']}",
+        "caption": alt_photo(p, t, lang),
+        "license": "https://opendatacommons.org/licenses/odbl/1-0/",
+        "acquireLicensePage": f"{url_base}/{url_site(lang, t['id'])}",
+        "isPartOf": {"@type": "WebPage", "@id": f"{url_base}/{url_site(lang, t['id'])}"},
+    }
+    if p.get("t"):
+        obj["thumbnailUrl"] = f"{url_base}/{p['t']}"
+    if p.get("c"):
+        obj["creditText"] = p["c"]
+        obj["copyrightNotice"] = p["c"]
+        obj["author"] = {"@type": "Person", "name": p["c"]}
+    taille = dimensions_jpeg(os.path.join(ROOT, p["f"]))
+    if taille:
+        obj["width"], obj["height"] = taille
+    if t.get("lat") is not None and t.get("lon") is not None:
+        obj["contentLocation"] = {
+            "@type": "Place",
+            "name": ", ".join(x for x in (nom_de(t, lang), t.get("ville")) if x),
+            "geo": {"@type": "GeoCoordinates",
+                    "latitude": t["lat"], "longitude": t["lon"]},
+        }
+    return obj
+
+
 # ------------------------------------------------------------------- gabarits
-def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base):
-    """<head> commun : canonique, alternatives de langue, Open Graph, JSON-LD."""
+def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base, image=None):
+    """<head> commun : canonique, alternatives de langue, Open Graph, JSON-LD.
+
+    `image` est la photo de couverture de la page, si elle en a une : une URL
+    absolue, sa description et ses dimensions. Sans elle, un partage de la
+    fiche ne montre rien, et l'image n'a aucune chance d'etre reprise en
+    vignette par un moteur ou un agent."""
     r = rel(chemin)
     autre = T[lang]["autre"]
     blocs = "\n".join(
         f'<script type="application/ld+json">{json.dumps(j, ensure_ascii=False).replace("</", "<\\/")}</script>'
         for j in jsonld)
+    og_image = ""
+    if image:
+        og_image = (f'<meta property="og:image" content="{E(image["url"])}">\n'
+                    f'<meta property="og:image:alt" content="{E(image["alt"])}">\n')
+        if image.get("w") and image.get("h"):
+            og_image += (f'<meta property="og:image:width" content="{image["w"]}">\n'
+                         f'<meta property="og:image:height" content="{image["h"]}">\n')
     return f"""<!DOCTYPE html>
 <html lang="{T[lang]['html_lang']}">
 <head>
@@ -452,9 +509,9 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base):
 <meta property="og:title" content="{E(titre)}">
 <meta property="og:description" content="{E(desc)}">
 <meta property="og:url" content="{url_base}/{chemin}">
-<meta name="twitter:card" content="summary">
+{og_image}<meta name="twitter:card" content="{'summary_large_image' if image else 'summary'}">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{r}assets/page.css?v=6">
+<link rel="stylesheet" href="{r}assets/page.css?v=7">
 {blocs}
 </head>
 <body>
@@ -540,8 +597,12 @@ def page_site(t, lang, voisins, url_base, depot, maj):
                            "value": t["couloirs"]})
     if proprietes:
         lieu["additionalProperty"] = proprietes
-    if t["photos"]:
-        lieu["photo"] = [f"{url_base}/{p['f']}" for p in t["photos"]]
+    photos_ld = [image_ld(p, t, lang, url_base) for p in t["photos"]]
+    if photos_ld:
+        # des ImageObject plutot que des URL nues : une URL seule ne dit ni ce
+        # que montre la photo, ni qui l'a prise, ni sous quelle licence on peut
+        # la reutiliser. Google Images et les agents lisent ces trois choses.
+        lieu["photo"] = photos_ld
     if t.get("url"):
         lieu["sameAs"] = t["url"]
     if t.get("note_moyenne"):
@@ -581,7 +642,14 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     requete = quote_plus(" ".join(x for x in (nom, t.get("ville"), t.get("cp")) if x))
     gplace = f"https://www.google.com/maps/search/?api=1&amp;query={requete}"
 
-    lignes = [entete(lang, titre, desc, chemin, alternatives, [lieu, fil], url_base)]
+    couverture = None
+    if t["photos"]:
+        p0 = t["photos"][0]
+        taille = dimensions_jpeg(os.path.join(ROOT, p0["f"])) or (None, None)
+        couverture = {"url": f"{url_base}/{p0['f']}", "alt": alt_photo(p0, t, lang),
+                      "w": taille[0], "h": taille[1]}
+    lignes = [entete(lang, titre, desc, chemin, alternatives, [lieu, fil], url_base,
+                     image=couverture)]
     lignes.append(f"""
 <nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr['accueil'])}</a> ›
   <a href="{r}{url_dep(lang, t['dep'])}">{E(t.get('dep_nom') or t.get('dep') or '')}</a> ›
@@ -601,18 +669,22 @@ def page_site(t, lang, voisins, url_base, depot, maj):
 </div>""")
 
     if t["photos"]:
-        def figure(p):
+        def figure(p, premiere):
             fichier = p.get("t") or p["f"]
             taille = dimensions_jpeg(os.path.join(ROOT, fichier))
             dims = f' width="{taille[0]}" height="{taille[1]}"' if taille else ""
             legende = (f'<figcaption>{E(p["l"])}'
                        + (f' <span>© {E(p["c"])}</span>' if p.get("c") else "")
                        + "</figcaption>") if p.get("l") else ""
+            # la premiere image est le plus gros element affiche d'emblee : la
+            # differer degrade le rendu percu et le classement qui en depend.
+            charge = ('loading="eager" fetchpriority="high"' if premiere
+                      else 'loading="lazy"')
             # la vignette s'affiche, le lien mene a la photo pleine taille
             return (f'<figure><a href="{r}{E(p["f"])}">'
-                    f'<img loading="lazy" src="{r}{E(fichier)}" '
-                    f'alt="{E(p.get("l") or nom)}"{dims}></a>{legende}</figure>')
-        figures = "".join(figure(p) for p in t["photos"])
+                    f'<img {charge} src="{r}{E(fichier)}" '
+                    f'alt="{E(alt_photo(p, t, lang))}"{dims}></a>{legende}</figure>')
+        figures = "".join(figure(p, i == 0) for i, p in enumerate(t["photos"]))
         lignes.append(f'<h2>{E(tr["sec_photos"])}</h2><div class="gallery">{figures}</div>')
     else:
         # a defaut de photo de terrain, l'implantation vue du ciel
@@ -890,13 +962,28 @@ def ecrire(chemin, contenu):
 
 
 def sitemap(urls, url_base, maj):
-    corps = "".join(
-        f"  <url><loc>{url_base}/{u}</loc><lastmod>{maj}</lastmod>"
-        f"<changefreq>monthly</changefreq><priority>{p}</priority></url>\n"
-        for u, p in urls)
+    """Plan de site, extension images comprise.
+
+    Une photo de terrain n'est atteignable qu'en suivant un lien depuis la
+    fiche du site ; l'extension `image:` de sitemaps.org la declare
+    directement, avec sa legende. C'est le moyen le plus direct de faire
+    indexer par Google Images des photos qu'aucun lien externe ne pointe."""
+    lignes = []
+    for entree in urls:
+        u, prio = entree[0], entree[1]
+        images = entree[2] if len(entree) > 2 else ()
+        blocs = "".join(
+            f"<image:image><image:loc>{E(i['loc'])}</image:loc>"
+            f"<image:title>{E(i['titre'])}</image:title>"
+            f"<image:caption>{E(i['legende'])}</image:caption></image:image>"
+            for i in images)
+        lignes.append(f"  <url><loc>{url_base}/{u}</loc><lastmod>{maj}</lastmod>"
+                      f"<changefreq>monthly</changefreq><priority>{prio}</priority>"
+                      f"{blocs}</url>\n")
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
-            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-            f"{corps}</urlset>\n")
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+            '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+            f"{''.join(lignes)}</urlset>\n")
 
 
 def sitemap_index(fichiers, url_base, maj):
@@ -964,6 +1051,22 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   où `<CODE>` est le code INSEE du département (ex. `44`, `2A`, `971`).
 - Chaque page site porte un balisage JSON-LD `SportsActivityLocation` avec adresse, coordonnées,
   agrès, accès et avis. / Every venue page embeds JSON-LD.
+
+## Photos de terrain / Field photos
+
+- Les photos sont prises sur place par des contributeurs, jamais générées ni reprises ailleurs.
+  Elles vivent sous `{url_base}/data/photos/<ID>/`, nommées d'après leur sujet, le stade et la
+  commune. / Photos are taken on site by contributors; filenames describe subject, venue and town.
+- Chaque photo est déclarée en JSON-LD `ImageObject` sur la page de son site, avec sa légende,
+  son auteur, ses dimensions et le lieu photographié, et listée dans le plan de site
+  ([sitemap.xml]({url_base}/sitemap.xml)) via l'extension `image:`.
+  / Each photo is described as an `ImageObject` and declared in the image sitemap.
+- Licence des photos : [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), avec le crédit
+  de leur auteur — distincte de la Licence Ouverte qui couvre les données.
+  / Photos are ODbL 1.0 with author credit, unlike the data itself.
+- Une installation sans photo affiche à la place une orthophoto IGN (BD ORTHO®, Licence Ouverte
+  2.0), datée de son millésime : elle montre l'implantation, pas l'état des agrès.
+  / Venues without a photo show a dated IGN aerial view instead.
 
 ## À savoir / Caveats
 
@@ -1056,7 +1159,11 @@ def main():
         for t in publiables:
             ecrire(os.path.join(out, url_site(lang, t["id"]), "index.html"),
                    page_site(t, lang, voisins.get(t["id"], []), url_base, depot, maj))
-            urls[lang].append((url_site(lang, t["id"]), "0.6"))
+            images = [{"loc": f"{url_base}/{p['f']}",
+                       "titre": nom_de(t, lang),
+                       "legende": alt_photo(p, t, lang)}
+                      for p in (t.get("photos") or [])]
+            urls[lang].append((url_site(lang, t["id"]), "0.6", images))
 
     # --- plan du site, robots, llms
     for lang in T:

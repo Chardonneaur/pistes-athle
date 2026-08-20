@@ -105,7 +105,13 @@ python3 scripts/optimize_photos.py I441310030 ~/photos/pornic/*.jpg
 
 Le script redimensionne, compresse, **supprime les métadonnées EXIF (dont la
 position GPS de votre téléphone)** et fabrique une vignette. Il écrit dans
-`data/photos/<id>/` et vous affiche le bloc JSON à recopier :
+`data/photos/<id>/` et vous affiche le bloc JSON à recopier.
+
+Il **renomme aussi vos fichiers** : `cage-de-lancer.jpg` devient
+`07-cage-de-lancer-stade-jean-vincent-saint-brevin-les-pins.jpg`. Le nom de
+fichier est l'un des rares signaux dont Google Images dispose en plus de
+l'attribut `alt` — nommez donc votre photo d'après son sujet, le stade et la
+commune sont ajoutés tout seuls.
 
 ```json
 {
@@ -117,6 +123,11 @@ position GPS de votre téléphone)** et fabrique une vignette. Il écrit dans
   ]
 }
 ```
+
+La légende compte autant que la photo : elle devient l'attribut `alt` de
+l'image, sa légende visible, son `ImageObject` en JSON-LD et son entrée au plan
+de site. Décrivez ce qu'on voit — « La cage de lancer du disque et du marteau »
+plutôt que « photo 3 ».
 
 Règles : JPEG uniquement, 400 Ko maximum par photo (le script s'en charge),
 photos prises par vous, et **pas de personnes reconnaissables**. En les

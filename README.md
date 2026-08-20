@@ -24,6 +24,9 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
   dans son filtre
 - Filtres accès libre, éclairage, piste couverte, vestiaires, hors enceinte scolaire
 - **Photos et avis d'athlètes** : galerie par site, note sur 5, retours de terrain
+- **Photos indexables** : nom de fichier descriptif, `alt` situé, `ImageObject`
+  JSON-LD avec auteur et licence ODbL, `og:image`, et déclaration au plan de site
+  via l'extension `image:`
 - **Vue aérienne** (orthophoto IGN, Licence Ouverte 2.0) sur les sites qui n'ont pas
   encore de photo, **avec son année de prise de vue** — de 2025 en Loire-Atlantique
   à 2004 à Wallis-et-Futuna : elle montre l'implantation, jamais l'état des agrès
