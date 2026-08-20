@@ -36,6 +36,10 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 > 📄 **[Étude préalable](docs/etude-prealable.md)** — pourquoi ce projet n'existe pas
 > déjà, et pourquoi la réutilisation des données du ministère est juridiquement solide.
 
+> 🔍 **[Lire une orthophoto](docs/lecture-orthophoto.md)** — reconnaître un sautoir
+> ou une cage de lancer vus du ciel, ce qu'on peut en conclure, et surtout ce qu'on
+> ne peut pas : le rappel mesuré est d'un agrès sur trois.
+
 ## Bilingue, et trouvable
 
 L'application est une page unique qui rend 7 100 sites en JavaScript : un moteur de

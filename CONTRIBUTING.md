@@ -46,6 +46,27 @@ Tout ce que vous ne mentionnez pas garde la valeur du ministère.
 > déduite automatiquement, et les mentions incertaines (« aire de saut ») sont
 > effacées. Listez donc tous les agrès du site, pas seulement celui que vous ajoutez.
 
+### Vu de vos yeux, ou déduit d'une image ?
+
+Deux champs, deux niveaux de preuve — ne les confondez pas :
+
+- `agres` : **vous l'avez vu**, sur place ou sur une photo du site. C'est une
+  affirmation, affichée telle quelle.
+- `agres_probables` : vous le **supposez**, à partir d'une vue aérienne, d'une
+  page de club ou d'un article de presse. C'est affiché en grisé, avec une
+  mention d'incertitude, et effacé dès que quelqu'un renseigne `agres`.
+
+Une orthophoto ne montre jamais l'état d'un agrès, et souvent pas l'agrès :
+elle ne peut alimenter que `agres_probables`. Si vous vous lancez dans ce
+travail, lisez d'abord la
+[clé de lecture des orthophotos](docs/lecture-orthophoto.md) : elle dit quelles
+formes sont concluantes, lesquelles ne le sont pas, et donne l'outil
+(`scripts/ortho.py`) pour télécharger l'image au bon cadrage.
+
+Dans les deux cas, dites en `note` **ce que vous avez vu**, pas votre
+conclusion : « cage grillagée dans le virage sud » vaut mieux que « il y a un
+marteau ».
+
 ## Ajouter une piste absente
 
 Choisissez un identifiant qui commence par `c-` (pour « communauté ») :
@@ -150,6 +171,7 @@ Expliquez la raison dans la description de la pull request.
 | `longueur_piste` | entier | développement en mètres (`400`, `333`, `200`…) |
 | `couvert` | booléen | piste indoor ou couverte |
 | `agres` | liste | `longueur`, `triple`, `hauteur`, `perche`, `poids`, `disque`, `marteau`, `javelot`, `steeple` |
+| `agres_probables` | liste | mêmes valeurs — agrès *supposés*, affichés en grisé et suivis d'une mention d'incertitude |
 | `acces_libre` | booléen | on peut entrer et s'entraîner sans licence |
 | `ouvert_public` | booléen | ouvert au public sur certains créneaux |
 | `horaires` | texte | libre, ex. `"Lun-ven 8h-22h"` |
