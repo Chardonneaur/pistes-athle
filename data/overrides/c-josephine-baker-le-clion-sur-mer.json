@@ -1,0 +1,42 @@
+{
+  "id": "c-josephine-baker-le-clion-sur-mer",
+  "nom": "Complexe sportif Joséphine Baker (Le Clion-sur-Mer)",
+  "adresse": "Avenue des Sports",
+  "cp": "44210",
+  "ville": "Pornic",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.11917,
+  "lon": -2.05296,
+  "piste": true,
+  "surface": "bitume",
+  "couloirs": 4,
+  "longueur_probable": 85,
+  "acces_libre": true,
+  "note": "Site absent du recensement du ministère : les 97 équipements que Data ES déclare à Pornic ne mentionnent nulle part cet anneau, ni sous « Équipement d'athlétisme » ni ailleurs. Piste peinte autour d'un city-stade, prolongée d'une ligne droite ; aucun agrès de saut ni de lancer. Développement estimé à 85 m au couloir 1 (environ 105 m au couloir extérieur) et ligne droite d'environ 40 m, d'après le tracé OpenStreetMap et l'orthophoto IGN de 2025, non mesurés sur place.",
+  "photos": [
+    {
+      "fichier": "01-ligne-droite-complexe-sportif-josephine-baker-le-clion-sur-mer-pornic.jpg",
+      "legende": "La ligne droite : quatre couloirs en enrobé rouge, le city-stade au fond",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-virage-complexe-sportif-josephine-baker-le-clion-sur-mer-pornic.jpg",
+      "legende": "Le virage, et à gauche l'aire stabilisée bordée de madriers",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-anneau-autour-du-city-stade-complexe-sportif-josephine-baker-le-clion-sur-mer-pornic.jpg",
+      "legende": "L'anneau longe le city-stade grillagé et ses agrès de fitness",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan",
+      "date": "2026-08-21",
+      "texte": "Une petite piste, mais le revêtement est sympa même s'il reste du goudron. Il y a une grande ligne droite, et on pourrait éventuellement imaginer y faire du lancer du poids, mais c'est tout : il n'y a aucun agrès. Pas l'idéal pour un athlète adulte, ça peut passer pour des petits."
+    }
+  ]
+}
