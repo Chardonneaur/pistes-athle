@@ -6,7 +6,7 @@
  * Seuls les contenus immuables (photos, librairies versionnées) sont servis
  * depuis le cache en priorité.
  */
-const VERSION = 'v10';
+const VERSION = 'v11';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées

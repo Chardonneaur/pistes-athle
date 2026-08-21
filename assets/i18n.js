@@ -27,6 +27,7 @@ const FR = {
     filtres:     'Filtres',
     dep_label:   'Filtrer par département (numéro, nom ou code postal)',
     dep_ph:      'Département',
+    dep_tous:    'Tous les départements',
     lp_label:    'Filtrer par développement de la piste',
     lp_tous:     'Tour de piste',
     lp_option:   m => `${m} m`,
@@ -132,6 +133,7 @@ const FR = {
   sources: ['Data ES (ministère)', 'Data ES + communauté', 'Contribution communautaire'],
 
   filtres: {
+    g_agres: 'Agrès', g_equip: 'Équipements',
     near: '📍 Près de moi', piste: 'Avec piste', synth: 'Synthétique',
     libre: 'Accès libre', perche: 'Perche', long: 'Longueur', haut: 'Hauteur',
     poids: 'Poids', lancer: 'Lancers longs', sauts: 'Un sautoir', ecl: 'Éclairée',
@@ -265,6 +267,7 @@ const EN = {
     filtres:     'Filters',
     dep_label:   'Filter by department (number, name or postcode)',
     dep_ph:      'Department',
+    dep_tous:    'All departments',
     lp_label:    'Filter by lap length',
     lp_tous:     'Lap length',
     lp_option:   m => `${m} m`,
@@ -367,6 +370,7 @@ const EN = {
   sources: ['Data ES (French sports ministry)', 'Data ES + community', 'Community contribution'],
 
   filtres: {
+    g_agres: 'Field events', g_equip: 'Facilities',
     near: '📍 Near me', piste: 'With a track', synth: 'Synthetic',
     libre: 'Free access', perche: 'Pole vault', long: 'Long jump', haut: 'High jump',
     poids: 'Shot put', lancer: 'Long throws', sauts: 'A jump area', ecl: 'Floodlit',

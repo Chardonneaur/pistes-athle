@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '9';
+const APP_VERSION = '10';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -77,6 +77,16 @@ const FILTERS = [
 ].map(f => ({ ...f, label: DICO.filtres[f.id] }));
 
 const has = (t, a) => t.agres.includes(a);
+
+/* Seize puces sur une barre qui defile : sur mobile on balaie, sur desktop la
+   barre ne defile pas toute seule et la moitie des filtres — les agres, en
+   plein milieu — restait invisible. Les deux tiers passent donc dans deux
+   menus a cases a cocher, et la barre ne garde que ce qu'on regle d'un doigt. */
+const GROUPES = [
+  { id: 'agres', cle: 'g_agres', filtres: ['perche', 'long', 'haut', 'poids', 'lancer', 'sauts'] },
+  { id: 'equip', cle: 'g_equip', filtres: ['ecl', 'couv', 'vest', 'noeco', 'photo', 'avis'] },
+];
+const GROUPE_DE = new Map(GROUPES.flatMap(g => g.filtres.map(f => [f, g])));
 
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
@@ -830,17 +840,53 @@ function geolocate() {
 
 /* -------------------------------------------------------------- interface */
 function buildChips() {
+  const menu = g => `
+    <details class="drop" data-g="${g.id}">
+      <summary class="chip" aria-haspopup="true">${esc(DICO.filtres[g.cle])}<span class="drop-n"></span></summary>
+      <div class="drop-panel" role="group" aria-label="${esc(DICO.filtres[g.cle])}">
+        ${g.filtres.map(id => {
+          const f = FILTERS.find(x => x.id === id);
+          return `<label class="drop-item"><input type="checkbox" data-f="${id}"
+                    ${state.active.has(id) ? 'checked' : ''}> <span>${f.label}</span></label>`;
+        }).join('')}
+      </div>
+    </details>`;
+
   $('#chips').innerHTML =
-    `<input id="dep" class="chip-select" list="dep-liste" type="text" autocomplete="off"
-            size="12" placeholder="${esc(U.dep_ph)}" aria-label="${esc(U.dep_label)}">
-     <datalist id="dep-liste"></datalist>
+    `<select id="dep" class="chip-select" aria-label="${esc(U.dep_label)}">
+       <option value="">${esc(U.dep_ph)}</option>
+     </select>
      <select id="lp" class="chip-select" aria-label="${esc(U.lp_label)}">
        <option value="">${esc(U.lp_tous)}</option>
        ${DEVELOPPEMENTS.map(m => `<option value="${m}">${esc(U.lp_option(m))}</option>`).join('')}
      </select>` +
-    FILTERS.map(f =>
+    GROUPES.map(menu).join('') +
+    FILTERS.filter(f => !GROUPE_DE.has(f.id)).map(f =>
       `<button class="chip${state.active.has(f.id) ? ' is-on' : ''}" data-f="${f.id}">${f.label}</button>`
     ).join('');
+  majGroupes();
+}
+
+/* Un menu ferme doit dire ce qu'il cache : « Agres · 2 ». Sans ce compteur,
+   un filtre actif dans un tiroir ferme est un resultat inexplique. */
+function majGroupes() {
+  for (const g of GROUPES) {
+    const n = g.filtres.filter(id => state.active.has(id)).length;
+    const d = document.querySelector(`.drop[data-g="${g.id}"]`);
+    if (!d) continue;
+    d.querySelector('.drop-n').textContent = n ? ` · ${n}` : '';
+    d.querySelector('summary').classList.toggle('is-on', n > 0);
+  }
+}
+
+/* La barre des filtres defile horizontalement : un panneau en absolute y
+   serait coupe. On le pose donc en fixed, sous sa puce, et on ferme au
+   moindre defilement plutot que de le suivre. */
+function placerPanneau(d) {
+  const p = d.querySelector('.drop-panel');
+  const r = d.querySelector('summary').getBoundingClientRect();
+  p.style.top = `${Math.round(r.bottom + 6)}px`;
+  p.style.left = `${Math.round(Math.min(r.left, window.innerWidth - p.offsetWidth - 8))}px`;
 }
 
 /* 108 départements : un champ où l'on tape, avec suggestions. On y saisit le
@@ -871,9 +917,21 @@ function remplirDepartements() {
   const cmp = (a, b) => a.localeCompare(b, DICO.locale);
   DEPS.sort((a, b) => cmp(a.region, b.region) || cmp(a.nom, b.nom));
 
-  $('#dep-liste').innerHTML = DEPS.map(d =>
-    `<option value="${esc(d.libelle)}">${esc(d.region)} · ${esc(U.nb_sites(d.n))}</option>`
-  ).join('');
+  /* Un <select> plutot qu'un champ de saisie : on ne tape pas un departement,
+     on le choisit. Les 108 entrees sont groupees par region — c'est ainsi
+     qu'on cherche « la Loire-Atlantique », pas « le 44 ». */
+  let html = `<option value="">${esc(U.dep_tous)}</option>`;
+  let region = null;
+  for (const d of DEPS) {
+    if (d.region !== region) {
+      if (region !== null) html += '</optgroup>';
+      region = d.region;
+      html += `<optgroup label="${esc(region || '—')}">`;
+    }
+    html += `<option value="${esc(d.code)}">${esc(d.libelle)} · ${esc(U.nb_sites(d.n))}</option>`;
+  }
+  if (region !== null) html += '</optgroup>';
+  champ.innerHTML = html;
   afficherDep();
 }
 
@@ -881,10 +939,8 @@ function remplirDepartements() {
 function afficherDep() {
   const champ = $('#dep');
   if (!champ) return;
-  const d = DEPS.find(x => x.code === state.dep);
-  champ.value = d ? d.libelle : '';
-  champ.size = Math.max(12, champ.value.length + 1);   // la pastille suit le texte
-  champ.classList.toggle('is-on', !!d);
+  champ.value = DEPS.some(x => x.code === state.dep) ? state.dep : '';
+  champ.classList.toggle('is-on', !!champ.value);
 }
 
 /* Rend le code du département désigné par une saisie libre.
@@ -962,22 +1018,11 @@ function init() {
   traduire();
   buildChips();
 
-  /* Pendant la frappe on n'agit que sur une saisie reconnue — ou vidée. Les
-     états intermédiaires (« lo », « loi »…) laissent la liste tranquille. */
-  let debDep;
-  $('#chips').addEventListener('input', e => {
-    if (e.target.id !== 'dep') return;
-    clearTimeout(debDep);
-    const saisie = e.target.value;
-    debDep = setTimeout(() => {
-      const code = resoudreDep(saisie, true);
-      if (code !== null) choisirDep(code);
-    }, 200);
-  });
-
-  /* À la sortie du champ (ou après un choix dans la liste), on affiche le
-     libellé complet, et on efface une saisie restée sans correspondance. */
   $('#chips').addEventListener('change', e => {
+    if (e.target.id === 'dep') {
+      if (!choisirDep(e.target.value)) afficherDep();
+      return;
+    }
     if (e.target.id === 'lp') {
       state.lp = e.target.value;
       e.target.classList.toggle('is-on', !!state.lp);
@@ -985,14 +1030,15 @@ function init() {
       setHash();
       return;
     }
-    if (e.target.id !== 'dep') return;
-    clearTimeout(debDep);
-    const code = resoudreDep(e.target.value, true);
-    if (code === null || !choisirDep(code)) afficherDep();
+    const id = e.target.dataset && e.target.dataset.f;
+    if (!id || e.target.type !== 'checkbox') return;
+    e.target.checked ? state.active.add(id) : state.active.delete(id);
+    majGroupes();
+    apply();
   });
 
   $('#chips').addEventListener('click', e => {
-    const b = e.target.closest('.chip'); if (!b) return;
+    const b = e.target.closest('.chip'); if (!b || b.tagName === 'SUMMARY') return;
     const id = b.dataset.f;
     if (!id) return;
     if (id === 'near' && !state.me) { geolocate(); }
@@ -1000,6 +1046,24 @@ function init() {
     b.classList.toggle('is-on');
     apply();
   });
+
+  /* Un seul tiroir ouvert a la fois, et il se ferme comme tout menu : au clic
+     ailleurs, a Echap, au defilement. */
+  $('#chips').addEventListener('toggle', e => {
+    const d = e.target.closest('.drop');
+    if (!d || !d.open) return;
+    for (const autre of document.querySelectorAll('.drop[open]')) if (autre !== d) autre.open = false;
+    placerPanneau(d);
+    $('#chips').classList.add('chips-open');
+  }, true);
+  const fermerTiroirs = () => {
+    for (const d of document.querySelectorAll('.drop[open]')) d.open = false;
+    $('#chips').classList.remove('chips-open');
+  };
+  document.addEventListener('click', e => { if (!e.target.closest('.drop')) fermerTiroirs(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerTiroirs(); });
+  window.addEventListener('scroll', fermerTiroirs, { passive: true });
+  window.addEventListener('resize', fermerTiroirs);
 
   let deb;
   $('#q').addEventListener('input', e => {
