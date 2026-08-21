@@ -83,17 +83,27 @@ curl -s --get 'https://data.geopf.fr/wfs/ows' \
 
 ### La toponymie
 
-**Pas encore outillée.** La plupart des complexes sportifs français sont *rue du
+La plupart des complexes sportifs français sont *rue du
 Stade*, *rue* ou *avenue des Sports*, ou portent un nom de sportif. Le constat
 saute aux yeux dans les résultats de ce balayage : rue du Stade à Guenrouet,
 Saint-Lumine-de-Coutais, Saint-Gildas-des-Bois, Cordemais et Arthon-en-Retz ;
 avenue des Sports au Clion ; complexes Mickaël-Landreau, Yannick-Noah,
 Christophe-Lemaître.
 
-Une requête Overpass sur `highway` avec `name~"stade|sport"`, plus les
-`leisure=sports_centre` nommés, donnerait de l'ordre de 200 à 300 lieux à
-regarder pour un département comme la Loire-Atlantique. C'est le seul canal qui
-attrape un complexe dont **rien** n'est tagué.
+C'est le seul canal qui attrape un complexe dont **rien** n'est tagué.
+
+`scripts/lieux_a_regarder.py` le croise avec les city-stades de la BD TOPO® et
+produit directement les planches-contact :
+
+```bash
+python3 scripts/lieux_a_regarder.py 44 --deja .work/absentes-44.json \
+        --planches .work/planches44 --json .work/lieux-44.json
+```
+
+Sur la Loire-Atlantique : 837 lieux au nom parlant dans OSM, 1 075 city-stades
+BD TOPO, **706 lieux distincts** une fois retiré ce qui est hors département,
+regroupé, et couvert par un site déjà connu à moins de 200 m. C'est une file
+d'attente pour l'œil, pas une liste de pistes.
 
 ## 3. La méthode, en pratique
 
@@ -252,12 +262,14 @@ l'une de ces deux bases ne pouvait les sortir.
 
 ## 7. Ce qui reste à faire
 
-- [ ] Outiller le canal toponymique (§ 2) et le passer sur la Loire-Atlantique.
-- [ ] Regarder les 66 tracés écartés pour « moins de 8 points ».
-- [ ] Étendre le balayage BD TOPO des city-stades au reste du département, puis
-      aux départements voisins.
-- [ ] Aller mesurer au décamètre les anneaux dont le développement n'est
-      qu'estimé, en commençant par ceux qu'aucun tracé OSM ne couvre.
+Suivi dans les [issues du dépôt](https://github.com/Chardonneaur/pistes-athle/issues),
+étiquette `couverture`.
+
+- [x] Outiller le canal toponymique — `scripts/lieux_a_regarder.py` ([#1](https://github.com/Chardonneaur/pistes-athle/issues/1))
+- [ ] **Lire les 706 planches-contact de la Loire-Atlantique** ([#1](https://github.com/Chardonneaur/pistes-athle/issues/1))
+- [ ] Regarder les 66 tracés écartés pour « moins de 8 points » ([#2](https://github.com/Chardonneaur/pistes-athle/issues/2))
+- [ ] Étendre le balayage aux départements voisins ([#3](https://github.com/Chardonneaur/pistes-athle/issues/3))
+- [ ] Mesurer au décamètre les développements estimés ([#4](https://github.com/Chardonneaur/pistes-athle/issues/4))
 
 ---
 

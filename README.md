@@ -198,6 +198,7 @@ scripts/build_site.py       -> _site/ : application FR/EN, pages par site et par
 scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couverture
+scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
 data/photos/<id>/           photos optimisées, une par site
 data/tracks.json            jeu de données publié (généré, non versionné)
