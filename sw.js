@@ -12,7 +12,7 @@ const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées
 const ASSETS = [
   './', './index.html', './en/', './en/index.html',
-  './assets/style.css?v=9', './assets/i18n.js?v=9', './assets/app.js?v=9',
+  './assets/style.css?v=10', './assets/i18n.js?v=10', './assets/app.js?v=10',
   './assets/icon.svg', './assets/manifest.webmanifest', './assets/manifest.en.webmanifest',
 ];
 

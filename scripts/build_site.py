@@ -598,7 +598,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-{liens}<link rel="stylesheet" href="{r}assets/page.css?v=9">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=10">
 {blocs}
 </head>
 <body>
@@ -1437,7 +1437,7 @@ def page_404(url_base, total):
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{url_base}/assets/page.css?v=9">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=10">
 </head>
 <body>
 <header class="page-bar">
