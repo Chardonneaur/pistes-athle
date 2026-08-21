@@ -1,0 +1,15 @@
+{
+  "id": "c-mickael-landreau-arthon-en-retz",
+  "nom": "Complexe sportif Mickaël Landreau (Arthon-en-Retz)",
+  "adresse": "Rue du Stade",
+  "cp": "44320",
+  "ville": "Chaumes-en-Retz",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.12194,
+  "lon": -1.93581,
+  "piste": true,
+  "longueur_probable": 360,
+  "note": "Anneau du complexe sportif Mickaël Landreau, contre le collège Joséphine-Baker, à Arthon-en-Retz (commune déléguée de Chaumes-en-Retz). Absent du recensement du ministère. OpenStreetMap le trace (way/1429910955, leisure=track) mais son tracé reste ouvert : il s'arrête à 52 m de son point de départ. Refermé, il développe 370 m ; l'emprise de 134 × 76 m en donne 355 — d'où l'ordre de grandeur de 360 m, estimé, non mesuré sur place. L'orthophoto IGN d'avril 2025 montre un anneau en enrobé noir tout neuf, encore en chantier, autour d'un intérieur en sable : aucun marquage de couloirs n'y est lisible, ce qui ne veut pas dire qu'il n'y en a pas aujourd'hui. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

@@ -1,0 +1,13 @@
+{
+  "id": "c-piste-domaine-du-collet-les-moutiers-en-retz",
+  "nom": "Piste du Domaine du Collet (Les Moutiers-en-Retz)",
+  "cp": "44760",
+  "ville": "Les Moutiers-en-Retz",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "piste": true,
+  "lat": 47.03403,
+  "lon": -1.98248,
+  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025 : anneau rouge marqué en couloirs autour d'un petit terrain. Absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente — d'où un développement non estimé : personne ne l'a ni tracé ni mesuré. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. L'anneau se trouve à l'intérieur du Domaine du Collet, un village de vacances : l'accès est vraisemblablement réservé aux résidents, ce qui reste à vérifier."
+}

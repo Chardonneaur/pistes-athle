@@ -1,0 +1,13 @@
+{
+  "id": "c-piste-touvois",
+  "nom": "Piste de Touvois",
+  "cp": "44650",
+  "ville": "Touvois",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "piste": true,
+  "lat": 46.89975,
+  "lon": -1.68676,
+  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau de basket, contre la salle des sports. Absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente — d'où un développement non estimé : personne ne l'a ni tracé ni mesuré. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Aucun site d'athlétisme de l'annuaire à moins de 7 km."
+}

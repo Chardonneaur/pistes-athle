@@ -1,0 +1,14 @@
+{
+  "id": "c-complexe-sportif-des-grenais-saint-philbert-de-grand-lieu",
+  "nom": "Complexe sportif des Grenais (Saint-Philbert-de-Grand-Lieu)",
+  "adresse": "Rue des Aigrettes",
+  "cp": "44310",
+  "ville": "Saint-Philbert-de-Grand-Lieu",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "piste": true,
+  "lat": 47.03279,
+  "lon": -1.62886,
+  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025 : anneau rouge marqué en couloirs autour d'un petit terrain engazonné. Absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente — d'où un développement non estimé : personne ne l'a ni tracé ni mesuré. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Le complexe sportif des Chevrets, déjà à l'annuaire, est un autre site de la commune, à 1,8 km."
+}
