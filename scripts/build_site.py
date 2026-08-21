@@ -323,8 +323,11 @@ def resume(t, lang):
 
     if t["piste"]:
         sol = SOL[lang].get(t.get("surface"), t.get("surface"))
-        tour, _sur = tour_de_piste(t)
-        longueur = f"{tour} m" if tour else ""
+        tour, sur = tour_de_piste(t)
+        # une estimation OSM ne part pas dans la description : c'est la phrase
+        # qu'un moteur de recherche affiche et qu'un agent recopie comme un
+        # fait. Elle reste sur la fiche, suivie de sa mention d'incertitude.
+        longueur = f"{tour} m" if tour and sur else ""
         if lang == "fr":
             bout = "Il dispose d'une piste"
             if longueur:
@@ -472,6 +475,11 @@ def distance(a, b, c, d):
     dlat, dlon = (c - a) * r, (d - b) * r
     h = math.sin(dlat / 2) ** 2 + math.cos(a * r) * math.cos(c * r) * math.sin(dlon / 2) ** 2
     return 2 * 6371 * math.asin(math.sqrt(h))
+
+
+# Code de `source` d'un site cree par la communaute (build_data.SOURCE_CODES) :
+# le ministere ne le connait pas du tout.
+SOURCE_COMMUNAUTE = 2
 
 
 def tour_de_piste(t):
@@ -647,8 +655,12 @@ def page_site(t, lang, voisins, url_base, depot, maj):
             "addressRegion": t.get("dep_nom"),
             "addressCountry": "FR",
         }.items() if v},
-        "isAccessibleForFree": bool(t["acces_libre"]),
-        "publicAccess": bool(t["acces_libre"] or t["ouvert_public"]),
+        # meme regle que la fiche : un site communautaire dont l'acces n'est pas
+        # renseigne ne declare pas un acces ferme, il ne declare rien.
+        **({"isAccessibleForFree": bool(t["acces_libre"]),
+            "publicAccess": bool(t["acces_libre"] or t["ouvert_public"])}
+           if t.get("source") != SOURCE_COMMUNAUTE or t["acces_libre"] or t["ouvert_public"]
+           else {}),
         "inLanguage": lang,
         # la date de mise a jour decrit la page, pas le stade : schema.org ne
         # definit dateModified que sur une oeuvre, d'ou ce noeud WebPage.
@@ -819,18 +831,29 @@ def page_site(t, lang, voisins, url_base, depot, maj):
                          for a in t["agres_probables"])
         lignes.append(f'<h2>{E(tr["sec_agres"])}</h2><ul class="eq">{items}</ul>')
 
+    # Un site que le ministere ne connait pas n'a pas de cases a cocher : ses
+    # booleens valent faux par defaut de saisie, pas par declaration. Ecrire
+    # « Non » ferait passer un blanc pour un constat — on se tait a la place,
+    # et la ligne reapparait des qu'un contributeur remplit le champ.
+    declare = t.get("source") != SOURCE_COMMUNAUTE
+
+    def oui_ou_non(actif, non=None):
+        return tr["oui"] if actif else ((non or tr["non"]) if declare else None)
+
     acces = "".join([
         kv(tr["kv"]["acces_libre"], tr["oui"] if t["acces_libre"]
-           else (tr["ouvert_horaires"] if t["ouvert_public"] else tr["non_reserve"])),
-        kv(tr["kv"]["eclairage"], tr["oui"] if t["eclairage"] else tr["non"]),
-        kv(tr["kv"]["vestiaires"], tr["oui"] if t["vestiaires"] else tr["non"]),
-        kv(tr["kv"]["douches"], tr["oui"] if t["douches"] else tr["non"]),
-        kv(tr["kv"]["sanitaires"], tr["oui"] if t["sanitaires"] else tr["non"]),
+           else (tr["ouvert_horaires"] if t["ouvert_public"]
+                 else (tr["non_reserve"] if declare else None))),
+        kv(tr["kv"]["eclairage"], oui_ou_non(t["eclairage"])),
+        kv(tr["kv"]["vestiaires"], oui_ou_non(t["vestiaires"])),
+        kv(tr["kv"]["douches"], oui_ou_non(t["douches"])),
+        kv(tr["kv"]["sanitaires"], oui_ou_non(t["sanitaires"])),
         kv(tr["kv"]["tribunes"], tr["places"](t["tribunes"]) if t.get("tribunes") else None),
         kv(tr["kv"]["type_site"], tr["enceinte_scolaire"] if t["scolaire"] else None),
         kv(tr["kv"]["horaires"], t.get("horaires")),
     ])
-    lignes.append(f'<h2>{E(tr["sec_acces"])}</h2><dl class="grid">{acces}</dl>')
+    if acces:
+        lignes.append(f'<h2>{E(tr["sec_acces"])}</h2><dl class="grid">{acces}</dl>')
     if t.get("acces_note"):
         lignes.append(f'<p>{E(t["acces_note"])}</p>')
 

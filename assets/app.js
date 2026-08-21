@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '8';
+const APP_VERSION = '9';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -88,6 +88,10 @@ const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste
    plupart des sites n'ont aucun developpement declare — d'ou `lpp`, estime
    d'apres OpenStreetMap. Le filtre accepte l'un ou l'autre. */
 const DEVELOPPEMENTS = [400, 333, 300, 250, 200];
+
+/* Code de `source` d'un site créé par la communauté (build_data.SOURCE_CODES) :
+   le ministère ne le connaît pas du tout. */
+const SOURCE_COMMUNAUTE = 2;
 const tourDePiste = t => t.longueur_piste || t.longueur_probable || null;
 
 const $ = s => document.querySelector(s);
@@ -467,6 +471,25 @@ function openSheet(id) {
   /* À défaut de photo de terrain, on montre au moins l'implantation vue du ciel.
      Le bloc reste distinct de la galerie : une orthophoto n'est pas le témoignage
      de quelqu'un qui est allé courir là. */
+  /* Un site que le ministère ne connaît pas n'a pas de cases à cocher : ses
+     booléens valent faux faute de saisie, pas par déclaration. Écrire « Non »
+     ferait passer un blanc pour un constat — on se tait, et la ligne revient
+     dès qu'un contributeur remplit le champ. */
+  const declare = t.source !== SOURCE_COMMUNAUTE;
+  const ouiNon = actif => actif ? U.oui : (declare ? U.non : null);
+
+  const acces = [
+    kv(U.kv_acces_libre, t.acces_libre ? U.oui
+        : (t.ouvert_public ? U.ouvert_horaires : (declare ? U.non_reserve : null))),
+    kv(U.kv_eclairage, ouiNon(t.eclairage)),
+    kv(U.kv_vestiaires, ouiNon(t.vestiaires)),
+    kv(U.kv_douches, ouiNon(t.douches)),
+    kv(U.kv_sanitaires, ouiNon(t.sanitaires)),
+    kv(U.kv_tribunes, t.tribunes ? U.places(t.tribunes) : null),
+    t.scolaire ? kv(U.kv_type_site, U.enceinte_scolaire) : '',
+    kv(U.kv_horaires, t.horaires),
+  ].join('');
+
   const aerienneUrl = t.photos.length ? null : vueAerienne(t);
   const anneeOrtho = (state.deps[t.dep] || [])[2];
   const aerienne = aerienneUrl ? `
@@ -521,17 +544,7 @@ function openSheet(id) {
     ${agres ? `<div class="sec">${esc(U.sec_agres)}</div><div class="eq">${agres}</div>` : ''}
     ${t.agres_probables.length ? `<p class="src">${U.incertain}</p>` : ''}
 
-    <div class="sec">${esc(U.sec_acces)}</div>
-    <div class="grid">
-      ${kv(U.kv_acces_libre, t.acces_libre ? U.oui : (t.ouvert_public ? U.ouvert_horaires : U.non_reserve))}
-      ${kv(U.kv_eclairage, t.eclairage ? U.oui : U.non)}
-      ${kv(U.kv_vestiaires, t.vestiaires ? U.oui : U.non)}
-      ${kv(U.kv_douches, t.douches ? U.oui : U.non)}
-      ${kv(U.kv_sanitaires, t.sanitaires ? U.oui : U.non)}
-      ${kv(U.kv_tribunes, t.tribunes ? U.places(t.tribunes) : null)}
-      ${t.scolaire ? kv(U.kv_type_site, U.enceinte_scolaire) : ''}
-      ${kv(U.kv_horaires, t.horaires)}
-    </div>
+    ${acces ? `<div class="sec">${esc(U.sec_acces)}</div><div class="grid">${acces}</div>` : ''}
     ${t.acces_note ? `<p class="note">${esc(t.acces_note)}</p>` : ''}
     ${avis}
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}
