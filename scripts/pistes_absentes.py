@@ -54,7 +54,9 @@ MIN_METRES, MAX_METRES = 60.0, 600.0
 
 # Une boucle de quatre ou cinq points est un rectangle - l'emprise du stade,
 # une cloture. Un anneau trace correctement a des virages, donc des points.
+# Un trace ouvert n'a pas cette contrainte : une ligne droite tient en deux.
 MIN_POINTS = 8
+MIN_POINTS_OUVERT = 2
 
 # Data ES place son point ou il veut dans l'installation : a l'entree, sur le
 # gymnase voisin, parfois a la mairie. Au-dela de cette distance on considere
@@ -153,18 +155,28 @@ def athle_possible(tags):
     return bool(set(re.split(r"[;,| ]+", sport)) & SPORTS_ATHLE)
 
 
-def boucles(e):
-    """Boucles fermees portees par un objet OSM.
+def traces(e):
+    """Traces exploitables d'un objet OSM : (points, boucle fermee ?).
 
     Sur un multipolygone, le bord interieur serre la corde : il prime sur le
-    bord exterieur, qui suit l'enrobe et deborde."""
+    bord exterieur, qui suit l'enrobe et deborde.
+
+    Un trace ouvert compte aussi. La piste du complexe Mickael-Landreau, a
+    Arthon-en-Retz, est taguee leisure=track et dessinee dans OSM depuis des
+    mois — mais son auteur a arrete son trait a 52 m du point de depart. Exiger
+    une boucle fermee la rendait invisible, elle et toutes les lignes droites
+    isolees, que le ministere recense pourtant sous « Piste d'athletisme
+    isolee ». On garde le trace, et on dit qu'il est ouvert : sa longueur n'est
+    alors pas un tour de piste."""
     if e["type"] == "way":
         g = points(e.get("geometry"))
-        return [g] if ferme(g) else []
+        return [(g, ferme(g))] if g else []
     for role in ("inner", "outer"):
         rings = [points(m["geometry"]) for m in e.get("members", [])
                  if m.get("role") == role and m.get("geometry")]
-        rings = [g for g in rings if ferme(g)]
+        rings = [(g, ferme(g)) for g in rings if g]
+        if any(f for _, f in rings):
+            return [(g, f) for g, f in rings if f]
         if rings:
             return rings
     return []
@@ -186,14 +198,14 @@ def candidats(data):
         tags = e.get("tags", {})
         if not athle_possible(tags):
             continue
-        for g in boucles(e):
-            if len(g) < MIN_POINTS:
+        for g, boucle in traces(e):
+            if len(g) < (MIN_POINTS if boucle else MIN_POINTS_OUVERT):
                 continue
             m = perimetre(g)
             if not MIN_METRES <= m <= MAX_METRES:
                 continue
             out.append({"osm": f"{e['type']}/{e['id']}", "g": g, "m": m,
-                        "pts": len(g), "c": centre(g), "tags": tags})
+                        "pts": len(g), "c": centre(g), "tags": tags, "boucle": boucle})
     return out
 
 
@@ -218,6 +230,8 @@ def revendique(sites, groupe, rayon):
     le plus proche : Data ES pointe souvent le gymnase plutot que la piste.
     Retourne (site, distance, certain)."""
     for c in groupe:
+        if not c["boucle"]:
+            continue                       # « dedans » ne veut rien dire sur un trait
         for s in sites:
             if dedans((s["lat"], s["lon"]), c["g"]):
                 return s, dist(c["c"], (s["lat"], s["lon"])), True
@@ -337,7 +351,7 @@ def examiner(dep, sites, data, rayon, min_m, max_m):
             "dep": dep, "osm": c["osm"],
             "url": f"https://www.openstreetmap.org/{c['osm']}",
             "lat": round(c["c"][0], 5), "lon": round(c["c"][1], 5),
-            "perimetre": round(c["m"], 1), "points": c["pts"],
+            "perimetre": round(c["m"], 1), "points": c["pts"], "boucle": c["boucle"],
             "longueur": round(longueur), "largeur": round(largeur),
             "couloirs": c["tags"].get("lanes"),
             "surface": c["tags"].get("surface"),
@@ -360,7 +374,8 @@ def afficher(fiche):
     if fiche.get("lieu_osm") and fiche["lieu_osm"] != fiche.get("nom_osm"):
         print(f"    {fiche['lieu_osm']}" +
               (f"  (enceinte scolaire : {fiche['ecole']})" if fiche.get("scolaire") else ""))
-    detail = [f"anneau de {fiche['perimetre']:.0f} m",
+    detail = [f"anneau de {fiche['perimetre']:.0f} m" if fiche["boucle"]
+              else f"trace ouvert de {fiche['perimetre']:.0f} m",
               f"{fiche['longueur']} x {fiche['largeur']} m",
               f"{fiche['points']} points"]
     if fiche.get("couloirs"):
