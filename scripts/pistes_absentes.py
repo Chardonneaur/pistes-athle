@@ -1,0 +1,480 @@
+#!/usr/bin/env python3
+"""Cherche dans OpenStreetMap les pistes que l'annuaire ne connait pas.
+
+    python3 scripts/pistes_absentes.py 44
+    python3 scripts/pistes_absentes.py 44 --ortho .work/ortho
+    python3 scripts/pistes_absentes.py --tous --cache-dir .work/osm --json .work/absentes.json
+
+Le recensement du ministere est declaratif : ce qu'une commune ne declare pas
+n'y figure pas, et l'application ne peut pas l'inventer. L'anneau de quatre
+couloirs peint autour du city-stade du Clion-sur-Mer (Pornic) en est l'exemple :
+cartographie dans OpenStreetMap depuis juillet 2025, lisible sur l'orthophoto
+IGN, absent des 97 equipements que Data ES declare sur la commune - sous
+« Equipement d'athletisme » comme sous n'importe quelle autre famille.
+
+Ce script prend donc le probleme par l'autre bout. Il liste les anneaux de
+course cartographies dans OSM, retire ceux qu'un site de data/tracks.json
+revendique deja, et affiche ce qui reste.
+
+Chaque ligne est une piste *a verifier*, pas une piste prouvee. Un anneau peut
+etre un circuit de karting mal tague, un contributeur peut avoir dessine
+l'emprise du stade plutot que la corde, et le perimetre affiche est celui du
+trace, jamais une mesure. La vue aerienne (--ortho) tranche depuis le bureau la
+plupart des cas ; le reste demande d'y aller, appareil photo en main. Une fois
+sur place, CONTRIBUTING.md dit comment transformer une ligne de cette liste en
+contribution (identifiant `c-...`).
+
+(c) OpenStreetMap contributors, ODbL - https://www.openstreetmap.org/copyright
+(c) IGN - BD ORTHO(R), Licence Ouverte 2.0, pour les images de --ortho.
+"""
+import argparse
+import json
+import os
+import re
+import sys
+import time
+import unicodedata
+import urllib.error
+import urllib.parse
+import urllib.request
+
+from build_data import annee_ortho
+from ortho import carte as url_ortho
+from osm_longueurs import (ESSAIS, OVERPASS, PAUSE, centre, charger_sites,
+                           code_osm, dedans, dist, ferme, perimetre, points)
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BAN = "https://api-adresse.data.gouv.fr/reverse/"
+UA = {"User-Agent": "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"}
+
+# Un anneau autour d'un city-stade de 28 x 15 m developpe 85 m ; en dessous de
+# 60 m on tient un rond-point ou un cercle de lancer, au-dessus de 600 m un
+# hippodrome ou un circuit automobile.
+MIN_METRES, MAX_METRES = 60.0, 600.0
+
+# Une boucle de quatre ou cinq points est un rectangle - l'emprise du stade,
+# une cloture. Un anneau trace correctement a des virages, donc des points.
+MIN_POINTS = 8
+
+# Data ES place son point ou il veut dans l'installation : a l'entree, sur le
+# gymnase voisin, parfois a la mairie. Au-dela de cette distance on considere
+# que le site declare n'est pas celui de l'anneau.
+RAYON_CONNU = 150.0
+
+# Bord interieur et bord exterieur du meme revetement, anneau et ligne droite
+# tracee a part : un equipement, une ligne de resultat.
+REGROUPEMENT = 80.0
+
+# Un anneau OSM n'a presque jamais de nom : c'est l'equipement qui le porte.
+# On le cherche dans ce rayon, et on prefere le nom d'un complexe sportif a
+# celui d'un parc.
+RAYON_CONTEXTE = 200.0
+CLASSES = (("leisure", ("sports_centre", "stadium")), ("amenity", ("school",
+           "kindergarten", "college")), ("leisure", ("track", "pitch", "park",
+           "playground")))
+
+# Un anneau sans tag `sport` reste candidat : beaucoup de contributeurs
+# s'arretent a leisure=track. Un anneau qui annonce un autre sport, non.
+SPORTS_ATHLE = {"athletics", "running"}
+
+REQUETE = """
+[out:json][timeout:240];
+area["ref:INSEE"="%s"]["admin_level"="6"]->.a;
+(
+  way["leisure"="track"](area.a);
+  relation["leisure"="track"](area.a);
+  way["leisure"="pitch"]["sport"~"athletics|running"](area.a);
+  relation["leisure"="pitch"]["sport"~"athletics|running"](area.a);
+  way["athletics"](area.a);
+  relation["athletics"](area.a);
+);
+out body geom;
+"""
+
+
+CONTEXTE = """
+[out:json][timeout:240];
+(%s);
+out tags center;
+(%s);
+out geom;
+"""
+
+
+def slug(s):
+    s = unicodedata.normalize("NFD", s or "")
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
+    return re.sub(r"[^a-z0-9]+", "-", s).strip("-") or "site"
+
+
+def overpass(requete, timeout=280, quoi=""):
+    """Une requete Overpass, reprise ESSAIS fois avant d'abandonner.
+
+    Overpass renvoie volontiers un 504 quand la requete est lourde ou le
+    serveur charge : reessayer coute quelques secondes, echouer coute le
+    departement."""
+    req = urllib.request.Request(
+        OVERPASS, data=urllib.parse.urlencode({"data": requete}).encode(), headers=UA)
+    for essai in range(1, ESSAIS + 1):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return json.load(r)
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            if essai == ESSAIS:
+                raise
+            attente = PAUSE * 4 * essai
+            print(f"   {quoi}{exc} - nouvelle tentative dans {attente:.0f} s")
+            time.sleep(attente)
+
+
+def interroger(dep, cache=None, silencieux=False):
+    """Reponse Overpass pour un departement, en cache si on en donne un.
+
+    Meme prudence que dans osm_longueurs.py : le cache rend la campagne
+    reprenable, et on reessaie plutot que d'abandonner un departement sur un
+    Overpass surcharge."""
+    if cache and os.path.exists(cache):
+        with open(cache, encoding="utf-8") as f:
+            return json.load(f)
+    data = overpass(REQUETE % code_osm(dep), quoi=f"({dep}) ")
+    if not silencieux:
+        print(f"-> {len(data['elements'])} objets OSM recus")
+    if cache:
+        os.makedirs(os.path.dirname(cache), exist_ok=True)
+        with open(cache, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+    return data
+
+
+def athle_possible(tags):
+    sport = (tags.get("sport") or "").lower()
+    if not sport:
+        return True                       # leisure=track nu : ca se regarde
+    return bool(set(re.split(r"[;,| ]+", sport)) & SPORTS_ATHLE)
+
+
+def boucles(e):
+    """Boucles fermees portees par un objet OSM.
+
+    Sur un multipolygone, le bord interieur serre la corde : il prime sur le
+    bord exterieur, qui suit l'enrobe et deborde."""
+    if e["type"] == "way":
+        g = points(e.get("geometry"))
+        return [g] if ferme(g) else []
+    for role in ("inner", "outer"):
+        rings = [points(m["geometry"]) for m in e.get("members", [])
+                 if m.get("role") == role and m.get("geometry")]
+        rings = [g for g in rings if ferme(g)]
+        if rings:
+            return rings
+    return []
+
+
+def emprise(g):
+    """Longueur et largeur de la boite englobante, en metres."""
+    lats = [p[0] for p in g]
+    lons = [p[1] for p in g]
+    cotes = (dist((min(lats), min(lons)), (min(lats), max(lons))),
+             dist((min(lats), min(lons)), (max(lats), min(lons))))
+    return max(cotes), min(cotes)
+
+
+def candidats(data):
+    """Anneaux plausibles, un par boucle retenue."""
+    out = []
+    for e in data["elements"]:
+        tags = e.get("tags", {})
+        if not athle_possible(tags):
+            continue
+        for g in boucles(e):
+            if len(g) < MIN_POINTS:
+                continue
+            m = perimetre(g)
+            if not MIN_METRES <= m <= MAX_METRES:
+                continue
+            out.append({"osm": f"{e['type']}/{e['id']}", "g": g, "m": m,
+                        "pts": len(g), "c": centre(g), "tags": tags})
+    return out
+
+
+def regrouper(cands):
+    """Un equipement, un groupe. Le representant est la boucle la plus courte,
+    celle qui approche le mieux le developpement reel."""
+    groupes = []
+    for c in sorted(cands, key=lambda x: x["m"]):
+        for g in groupes:
+            if dist(c["c"], g[0]["c"]) <= REGROUPEMENT:
+                g.append(c)
+                break
+        else:
+            groupes.append([c])
+    return groupes
+
+
+def revendique(sites, groupe, rayon):
+    """Le site de l'annuaire qui possede cet anneau, s'il existe.
+
+    Un point tombe *dans* la boucle tranche sans discussion. Sinon on regarde
+    le plus proche : Data ES pointe souvent le gymnase plutot que la piste.
+    Retourne (site, distance, certain)."""
+    for c in groupe:
+        for s in sites:
+            if dedans((s["lat"], s["lon"]), c["g"]):
+                return s, dist(c["c"], (s["lat"], s["lon"])), True
+    if not sites:
+        return None, None, False
+    c = groupe[0]
+    s = min(sites, key=lambda s: dist(c["c"], (s["lat"], s["lon"])))
+    d = dist(c["c"], (s["lat"], s["lon"]))
+    return s, d, d <= rayon
+
+
+def classe(tags):
+    """Rang du lieu : un complexe sportif nomme vaut mieux qu'un parc."""
+    for rang, (cle, valeurs) in enumerate(CLASSES):
+        if tags.get(cle) in valeurs:
+            return rang
+    return len(CLASSES)
+
+
+# Overpass repond 504 des que la requete enchaine trop de `around` : on
+# interroge par paquets, quitte a y passer une minute de plus.
+PAR_PAQUET = 8
+
+
+def contexte(fiches):
+    """Nom du lieu et enceinte scolaire, cherches autour de chaque anneau.
+
+    Sans cela une fiche s'appellerait « 47.11917, -2.05296 » : l'anneau n'a pas
+    de nom, l'equipement qui le porte en a un. La meme requete dit si l'anneau
+    tombe dans une cour d'ecole, ce que le filtre « hors enceinte scolaire »
+    de l'application demande de savoir."""
+    paquets = [fiches[i:i + PAR_PAQUET] for i in range(0, len(fiches), PAR_PAQUET)]
+    for n, paquet in enumerate(paquets, 1):
+        noms = "".join(
+            f'nwr(around:{RAYON_CONTEXTE:.0f},{f["lat"]},{f["lon"]})["name"]'
+            '["leisure"~"^(sports_centre|stadium|track|pitch|park|playground)$"];'
+            f'nwr(around:{RAYON_CONTEXTE:.0f},{f["lat"]},{f["lon"]})["name"]'
+            '["amenity"~"^(school|kindergarten|college)$"];' for f in paquet)
+        ecoles = "".join(
+            f'way(around:{RAYON_CONTEXTE:.0f},{f["lat"]},{f["lon"]})'
+            '["amenity"~"^(school|kindergarten|college)$"];' for f in paquet)
+        try:
+            data = overpass(CONTEXTE % (noms, ecoles), quoi=f"(contexte {n}/{len(paquets)}) ")
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            print(f"   contexte OSM indisponible pour le paquet {n} : {exc}")
+            continue
+        lieux, enceintes = [], []
+        for e in data["elements"]:
+            tags = e.get("tags", {})
+            g = points(e.get("geometry"))
+            c = centre(g) if g else ((e.get("center") or {}).get("lat"),
+                                     (e.get("center") or {}).get("lon"))
+            if tags.get("amenity") in ("school", "kindergarten", "college") and ferme(g):
+                enceintes.append((g, tags.get("name")))
+            if tags.get("name") and c and c[0] is not None:
+                lieux.append((classe(tags), c, tags["name"]))
+        for f in paquet:
+            point = (f["lat"], f["lon"])
+            proches = [(rang, dist(point, c), nom) for rang, c, nom in lieux
+                       if dist(point, c) <= RAYON_CONTEXTE]
+            if proches:
+                f["lieu_osm"] = min(proches)[2]
+            ecole = [nom for g, nom in enceintes if dedans(point, g)]
+            if ecole:
+                f["scolaire"] = True
+                f["ecole"] = ecole[0]
+        if n < len(paquets):
+            time.sleep(PAUSE)
+
+
+def adresse(lat, lon, timeout=15):
+    """Commune et voie les plus proches, d'apres la Base Adresse Nationale.
+
+    Un anneau n'a pas d'adresse dans OSM ; la contribution en demande une, et
+    « Pornic, avenue des Sports » vaut mieux qu'un couple de coordonnees pour
+    decider si on connait deja l'endroit."""
+    url = BAN + "?" + urllib.parse.urlencode({"lat": lat, "lon": lon})
+    try:
+        with urllib.request.urlopen(urllib.request.Request(url, headers=UA),
+                                    timeout=timeout) as r:
+            feats = json.load(r).get("features") or []
+    except (urllib.error.URLError, OSError, ValueError):
+        return None, None, None
+    if not feats:
+        return None, None, None
+    p = feats[0]["properties"]
+    return p.get("city"), p.get("street") or p.get("name"), p.get("postcode")
+
+
+def telecharger_ortho(dossier, dep, fiche):
+    """Vue aerienne cadree sur l'anneau, plus le millesime de la prise de vue."""
+    os.makedirs(dossier, exist_ok=True)
+    champ = max(150, min(500, round(fiche["longueur"] * 2.5 / 10) * 10))
+    nom = f"{dep}-{slug(fiche['commune'] or 'commune')}-{fiche['osm'].replace('/', '')}.jpg"
+    chemin = os.path.join(dossier, nom)
+    urllib.request.urlretrieve(url_ortho(fiche["lat"], fiche["lon"], champ, 2000), chemin)
+    try:
+        annee = annee_ortho(fiche["lat"], fiche["lon"])
+    except (urllib.error.URLError, OSError, ValueError):
+        annee = None
+    return chemin, champ, annee
+
+
+def examiner(dep, sites, data, rayon, min_m, max_m):
+    """Anneaux OSM du departement qui ne correspondent a aucun site connu."""
+    cands = [c for c in candidats(data) if min_m <= c["m"] <= max_m]
+    groupes = regrouper(cands)
+    connus, absents = 0, []
+    for groupe in groupes:
+        site, d, certain = revendique(sites, groupe, rayon)
+        if certain:
+            connus += 1
+            continue
+        c = groupe[0]
+        longueur, largeur = emprise(c["g"])
+        absents.append({
+            "dep": dep, "osm": c["osm"],
+            "url": f"https://www.openstreetmap.org/{c['osm']}",
+            "lat": round(c["c"][0], 5), "lon": round(c["c"][1], 5),
+            "perimetre": round(c["m"], 1), "points": c["pts"],
+            "longueur": round(longueur), "largeur": round(largeur),
+            "couloirs": c["tags"].get("lanes"),
+            "surface": c["tags"].get("surface"),
+            "nom_osm": c["tags"].get("name"),
+            "boucles": len(groupe),
+            "proche_id": site["id"] if site else None,
+            "proche_nom": site["nom"] if site else None,
+            "proche_ville": site["ville"] if site else None,
+            "proche_m": round(d) if d is not None else None,
+        })
+    return groupes, connus, sorted(absents, key=lambda f: -(f["proche_m"] or 0))
+
+
+def afficher(fiche):
+    lieu = ", ".join(x for x in (fiche.get("commune"), fiche.get("voie")) if x)
+    titre = fiche.get("nom_osm") or lieu or f"{fiche['lat']}, {fiche['lon']}"
+    print(f"\n  {titre}   [{fiche['dep']}]")
+    if lieu and fiche.get("nom_osm"):
+        print(f"    {lieu}")
+    if fiche.get("lieu_osm") and fiche["lieu_osm"] != fiche.get("nom_osm"):
+        print(f"    {fiche['lieu_osm']}" +
+              (f"  (enceinte scolaire : {fiche['ecole']})" if fiche.get("scolaire") else ""))
+    detail = [f"anneau de {fiche['perimetre']:.0f} m",
+              f"{fiche['longueur']} x {fiche['largeur']} m",
+              f"{fiche['points']} points"]
+    if fiche.get("couloirs"):
+        detail.append(f"{fiche['couloirs']} couloirs (OSM)")
+    if fiche.get("surface"):
+        detail.append(fiche["surface"])
+    print(f"    {', '.join(detail)}")
+    print(f"    {fiche['lat']}, {fiche['lon']}   {fiche['url']}")
+    if fiche.get("proche_nom"):
+        print(f"    rien dans l'annuaire avant {fiche['proche_m']} m "
+              f"({fiche['proche_nom']}, {fiche['proche_ville']})")
+    else:
+        print("    aucun site de l'annuaire dans ce departement")
+    if fiche.get("ortho"):
+        millesime = f", IGN {fiche['ortho_annee']}" if fiche.get("ortho_annee") else ""
+        print(f"    {fiche['ortho']}  ({fiche['ortho_champ']} m de cote{millesime})")
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__,
+                                 formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("dep", nargs="?", help="code de departement, ex. 44")
+    ap.add_argument("--tous", action="store_true",
+                    help="tous les departements presents dans data/tracks.json")
+    ap.add_argument("--ortho", metavar="DOSSIER",
+                    help="telecharge la vue aerienne IGN de chaque anneau absent")
+    ap.add_argument("--json", metavar="FICHIER", help="ecrit le resultat en JSON")
+    ap.add_argument("--cache", help="fichier de cache de la reponse Overpass")
+    ap.add_argument("--cache-dir", help="repertoire de cache, un fichier par departement")
+    ap.add_argument("--rayon", type=float, default=RAYON_CONNU, metavar="M",
+                    help=f"distance en deca de laquelle un site connu revendique "
+                         f"l'anneau (defaut {RAYON_CONNU:.0f} m)")
+    ap.add_argument("--min", type=float, default=MIN_METRES, metavar="M",
+                    help=f"perimetre minimal retenu (defaut {MIN_METRES:.0f} m)")
+    ap.add_argument("--max", type=float, default=MAX_METRES, metavar="M",
+                    help=f"perimetre maximal retenu (defaut {MAX_METRES:.0f} m)")
+    ap.add_argument("--sans-adresse", action="store_true",
+                    help="n'interroge pas la Base Adresse Nationale")
+    ap.add_argument("--sans-contexte", action="store_true",
+                    help="ne cherche pas le nom du lieu ni l'enceinte scolaire")
+    args = ap.parse_args()
+
+    if args.tous:
+        deps = sorted({s["dep"] for s in charger_sites() if s.get("dep")},
+                      key=lambda d: (len(d), d))
+    elif args.dep:
+        deps = [args.dep]
+    else:
+        ap.error("indiquez un code de departement, ou --tous")
+
+    tous_sites = charger_sites()
+    par_dep = {}
+    for s in tous_sites:
+        par_dep.setdefault(s.get("dep"), []).append(s)
+
+    absents, echecs = [], []
+    total_anneaux = total_connus = 0
+    for i, dep in enumerate(deps, 1):
+        cache = args.cache or (os.path.join(args.cache_dir, f"{dep}.json")
+                               if args.cache_dir else None)
+        neuf = not (cache and os.path.exists(cache))
+        try:
+            data = interroger(dep, cache, silencieux=len(deps) > 1)
+        except Exception as exc:                            # noqa: BLE001
+            echecs.append(dep)
+            print(f"[{i:3d}/{len(deps)}] {dep:>4} : echec - {str(exc)[:60]}")
+            continue
+        groupes, connus, manquants = examiner(
+            dep, par_dep.get(dep, []), data, args.rayon, args.min, args.max)
+        total_anneaux += len(groupes)
+        total_connus += connus
+        absents.extend(manquants)
+        if len(deps) > 1:
+            print(f"[{i:3d}/{len(deps)}] {dep:>4} : {len(data['elements']):4d} objets, "
+                  f"{len(groupes):3d} anneau(x), {connus:3d} deja connu(s), "
+                  f"{len(manquants):3d} absent(s)")
+        else:
+            print(f"-> {len(groupes)} anneau(x) exploitable(s), {connus} deja "
+                  f"dans l'annuaire, {len(manquants)} absent(s)")
+        if neuf and len(deps) > 1:
+            time.sleep(PAUSE)
+
+    if not args.sans_contexte:
+        contexte(absents)
+    for fiche in absents:
+        if not args.sans_adresse:
+            ville, voie, cp = adresse(fiche["lat"], fiche["lon"])
+            fiche.update(commune=ville, voie=voie, cp=cp)
+        if args.ortho:
+            try:
+                chemin, champ, annee = telecharger_ortho(args.ortho, fiche["dep"], fiche)
+                court = os.path.relpath(chemin, ROOT)
+                fiche.update(ortho=chemin if court.startswith("..") else court,
+                             ortho_champ=champ, ortho_annee=annee)
+            except (urllib.error.URLError, OSError) as exc:
+                print(f"   ortho indisponible pour {fiche['osm']} : {exc}")
+        afficher(fiche)
+
+    print(f"\n{'=' * 70}")
+    print(f"{total_anneaux} anneau(x) OSM sur {len(deps) - len(echecs)} departement(s) : "
+          f"{total_connus} apparie(s) a l'annuaire, {len(absents)} sans correspondance")
+    if echecs:
+        print(f"  departements en echec : {', '.join(echecs)}")
+    if args.json:
+        os.makedirs(os.path.dirname(os.path.abspath(args.json)), exist_ok=True)
+        with open(args.json, "w", encoding="utf-8") as f:
+            json.dump(absents, f, ensure_ascii=False, indent=2)
+            f.write("\n")
+        print(f"-> {args.json}")
+    if absents:
+        print("\nAucune de ces lignes n'est une piste tant que personne ne l'a vue :\n"
+              "regardez la vue aerienne, puis allez-y. CONTRIBUTING.md, section\n"
+              "« Ajouter une piste absente », dit comment en faire une contribution.")
+
+
+if __name__ == "__main__":
+    main()

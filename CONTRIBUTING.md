@@ -69,7 +69,18 @@ marteau ».
 
 ## Ajouter une piste absente
 
-Choisissez un identifiant qui commence par `c-` (pour « communauté ») :
+Pour savoir *lesquelles* manquent, `scripts/pistes_absentes.py` compare les
+anneaux de course cartographiés dans OpenStreetMap au contenu de l'annuaire,
+et liste ceux que personne ne revendique :
+
+```bash
+python3 scripts/pistes_absentes.py 44 --ortho .work/ortho
+```
+
+Il en sort une liste de candidats — jamais une certitude. Regardez la vue
+aérienne, puis allez-y.
+
+Choisissez ensuite un identifiant qui commence par `c-` (pour « communauté ») :
 
 ```json
 {
