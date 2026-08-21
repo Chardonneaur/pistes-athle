@@ -52,6 +52,10 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 > ou une cage de lancer vus du ciel, ce qu'on peut en conclure, et surtout ce qu'on
 > ne peut pas : le rappel mesuré est d'un agrès sur trois.
 
+> 🧭 **[Trouver les pistes que le recensement ignore](docs/trouver-les-pistes-manquantes.md)**
+> — la méthode : quatre sources à croiser, six façons de se tromper, et ce que le
+> balayage de la Loire-Atlantique et du Pays de Retz a donné.
+
 ## Bilingue, et trouvable
 
 L'application est une page unique qui rend 7 100 sites en JavaScript : un moteur de

@@ -127,7 +127,8 @@ du ministère :
 
 - présence, forme et développement de l'anneau (400 m, 333 m, simple ligne droite) ;
 - revêtement : le synthétique est rouge saturé et uni, la cendrée brun mat, le
-  bitume gris ;
+  bitume gris — **sauf sur les petits anneaux, où cette lecture est fausse**
+  (voir l'encadré ci-dessous) ;
 - nombre de couloirs, comptables dans la ligne droite ;
 - nature de l'intérieur : gazon, synthétique, plateau bétonné, skatepark ;
 - **abandon** : anneau sans marquage, végétation sur la piste, terrain non
@@ -136,3 +137,13 @@ du ministère :
 
 C'est là qu'il faut commencer un département : les corrections structurelles sont
 sûres, les agrès ne le sont pas.
+
+> ⚠️ **Le revêtement fait exception.** Deux contre-exemples mesurés le 21 août
+> 2026 : au Clion-sur-Mer la bande est rouge vif et le contributeur qui l'a
+> foulée dit « ça reste du goudron » ; au lycée Briacé du Landreau l'anneau est
+> brun-rouge sur l'image et le ministère le déclare **bitume**. L'enrobé coloré
+> est indiscernable du tartan vu du ciel, et c'est précisément le revêtement des
+> anneaux peints autour des city-stades. Ne renseignez `surface` que si
+> OpenStreetMap le tague ou si quelqu'un l'a vu ; décrivez la couleur dans
+> `note`, pas dans la donnée. Détail dans
+> [trouver-les-pistes-manquantes.md](trouver-les-pistes-manquantes.md) § 4.6.

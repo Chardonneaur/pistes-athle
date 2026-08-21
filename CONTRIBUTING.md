@@ -78,7 +78,9 @@ python3 scripts/pistes_absentes.py 44 --ortho .work/ortho
 ```
 
 Il en sort une liste de candidats — jamais une certitude. Regardez la vue
-aérienne, puis allez-y.
+aérienne, puis allez-y. La méthode complète, les autres sources à croiser et les
+pièges rencontrés sont dans
+[docs/trouver-les-pistes-manquantes.md](docs/trouver-les-pistes-manquantes.md).
 
 Choisissez ensuite un identifiant qui commence par `c-` (pour « communauté ») :
 

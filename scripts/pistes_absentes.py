@@ -191,18 +191,42 @@ def emprise(g):
     return max(cotes), min(cotes)
 
 
-def candidats(data):
-    """Anneaux plausibles, un par boucle retenue."""
+# Motifs d'ecart, dans l'ordre ou ils sont testes. Ils sont comptes et
+# affiches : un filtre qui ecarte en silence ne se voit pas, et c'est ainsi que
+# la piste d'Arthon-en-Retz a manque pendant tout un balayage.
+MOTIFS = {
+    "autre_sport": "sport declare autre que l'athletisme",
+    "sans_trace": "aucun trace geometrique exploitable",
+    "trop_peu_de_points": "trace trop grossier (moins de %d points)" % MIN_POINTS,
+    "hors_bornes": "longueur hors des bornes %.0f-%.0f m" % (MIN_METRES, MAX_METRES),
+}
+
+
+def candidats(data, ecartes=None):
+    """Anneaux plausibles, un par trace retenu.
+
+    `ecartes` recoit le compte des objets refuses, par motif."""
+    compte = ecartes if ecartes is not None else {}
+    def refuser(motif, e, detail=""):
+        compte.setdefault(motif, []).append(f"{e['type']}/{e['id']}{detail}")
+
     out = []
     for e in data["elements"]:
         tags = e.get("tags", {})
         if not athle_possible(tags):
+            refuser("autre_sport", e, f" (sport={tags.get('sport')})")
             continue
-        for g, boucle in traces(e):
+        vus = traces(e)
+        if not vus:
+            refuser("sans_trace", e)
+            continue
+        for g, boucle in vus:
             if len(g) < (MIN_POINTS if boucle else MIN_POINTS_OUVERT):
+                refuser("trop_peu_de_points", e, f" ({len(g)} points)")
                 continue
             m = perimetre(g)
             if not MIN_METRES <= m <= MAX_METRES:
+                refuser("hors_bornes", e, f" ({m:.0f} m)")
                 continue
             out.append({"osm": f"{e['type']}/{e['id']}", "g": g, "m": m,
                         "pts": len(g), "c": centre(g), "tags": tags, "boucle": boucle})
@@ -335,9 +359,9 @@ def telecharger_ortho(dossier, dep, fiche):
     return chemin, champ, annee
 
 
-def examiner(dep, sites, data, rayon, min_m, max_m):
+def examiner(dep, sites, data, rayon, min_m, max_m, ecartes=None):
     """Anneaux OSM du departement qui ne correspondent a aucun site connu."""
-    cands = [c for c in candidats(data) if min_m <= c["m"] <= max_m]
+    cands = [c for c in candidats(data, ecartes) if min_m <= c["m"] <= max_m]
     groupes = regrouper(cands)
     connus, absents = 0, []
     for groupe in groupes:
@@ -431,7 +455,7 @@ def main():
     for s in tous_sites:
         par_dep.setdefault(s.get("dep"), []).append(s)
 
-    absents, echecs = [], []
+    absents, echecs, ecartes = [], [], {}
     total_anneaux = total_connus = 0
     for i, dep in enumerate(deps, 1):
         cache = args.cache or (os.path.join(args.cache_dir, f"{dep}.json")
@@ -444,7 +468,7 @@ def main():
             print(f"[{i:3d}/{len(deps)}] {dep:>4} : echec - {str(exc)[:60]}")
             continue
         groupes, connus, manquants = examiner(
-            dep, par_dep.get(dep, []), data, args.rayon, args.min, args.max)
+            dep, par_dep.get(dep, []), data, args.rayon, args.min, args.max, ecartes)
         total_anneaux += len(groupes)
         total_connus += connus
         absents.extend(manquants)
@@ -477,6 +501,14 @@ def main():
     print(f"\n{'=' * 70}")
     print(f"{total_anneaux} anneau(x) OSM sur {len(deps) - len(echecs)} departement(s) : "
           f"{total_connus} apparie(s) a l'annuaire, {len(absents)} sans correspondance")
+    if ecartes:
+        total = sum(len(v) for v in ecartes.values())
+        print(f"\n{total} objet(s) ecarte(s) avant meme d'etre examine(s) — "
+              f"c'est ici que se cache ce qui manque :")
+        for motif, liste in sorted(ecartes.items(), key=lambda kv: -len(kv[1])):
+            exemples = ", ".join(liste[:3]) + (" ..." if len(liste) > 3 else "")
+            print(f"  {len(liste):4d}  {MOTIFS.get(motif, motif)}")
+            print(f"        {exemples}")
     if echecs:
         print(f"  departements en echec : {', '.join(echecs)}")
     if args.json:
