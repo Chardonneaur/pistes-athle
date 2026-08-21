@@ -1,0 +1,16 @@
+{
+  "id": "c-piste-machecoul-saint-meme",
+  "nom": "Piste de Machecoul-Saint-Même",
+  "adresse": "Boulevard Jean de Grandmaison",
+  "cp": "44270",
+  "ville": "Machecoul-Saint-Même",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 46.99053,
+  "lon": -1.81779,
+  "piste": true,
+  "longueur_probable": 105,
+  "scolaire": true,
+  "note": "Anneau repéré dans OpenStreetMap (relation/19412231, tracé le 2025-07-31) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un terrain engazonné. Développement d'environ 105 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

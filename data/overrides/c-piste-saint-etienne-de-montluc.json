@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-saint-etienne-de-montluc",
+  "nom": "Piste de Saint-Étienne-de-Montluc",
+  "adresse": "la Croix Gaudin",
+  "cp": "44360",
+  "ville": "Saint-Étienne-de-Montluc",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.28309,
+  "lon": -1.73796,
+  "piste": true,
+  "longueur_probable": 400,
+  "note": "Anneau repéré dans OpenStreetMap (relation/3209440, tracé le 2013-09-15) puis lu sur l'orthophoto IGN de 2025 : anneau sans marquage lisible autour d'un terrain de football. Développement d'environ 400 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "c-complexe-sportif-des-richardieres-aigrefeuille-sur-maine",
+  "nom": "Complexe sportif des Richardières",
+  "adresse": "Rue de la Chapelle",
+  "cp": "44140",
+  "ville": "Aigrefeuille-sur-Maine",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.07706,
+  "lon": -1.40595,
+  "piste": true,
+  "longueur_probable": 100,
+  "couloirs": 2,
+  "surface": "bitume",
+  "note": "Anneau repéré dans OpenStreetMap (way/1443313293, tracé le 2026-02-07) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un court de tennis. Développement d'environ 100 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Revêtement d'après OpenStreetMap."
+}

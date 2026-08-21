@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-saint-lumine-de-coutais",
+  "nom": "Piste de Saint-Lumine-de-Coutais",
+  "adresse": "Rue du Stade",
+  "cp": "44310",
+  "ville": "Saint-Lumine-de-Coutais",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.05669,
+  "lon": -1.72358,
+  "piste": true,
+  "longueur_probable": 95,
+  "note": "Anneau repéré dans OpenStreetMap (relation/15023551, tracé le 2022-12-19) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 95 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

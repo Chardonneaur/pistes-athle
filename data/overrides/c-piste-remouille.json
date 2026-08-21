@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-remouille",
+  "nom": "Piste de Remouillé",
+  "adresse": "Place de la Bosselle",
+  "cp": "44140",
+  "ville": "Remouillé",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.05652,
+  "lon": -1.37594,
+  "piste": true,
+  "longueur_probable": 85,
+  "note": "Anneau repéré dans OpenStreetMap (relation/12195488, tracé le 2021-01-16) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 85 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

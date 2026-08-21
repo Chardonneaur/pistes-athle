@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-derval",
+  "nom": "Piste de Derval",
+  "adresse": "Rue de l'Abbé Orain",
+  "cp": "44590",
+  "ville": "Derval",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.67117,
+  "lon": -1.67203,
+  "piste": true,
+  "longueur_probable": 90,
+  "note": "Anneau repéré dans OpenStreetMap (relation/12743766, tracé le 2021-05-22) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 90 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "c-complexe-sportif-henri-dupont-vieillevigne",
+  "nom": "Complexe sportif Henri Dupont",
+  "adresse": "Rue du Quarteron",
+  "cp": "44116",
+  "ville": "Vieillevigne",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 46.96901,
+  "lon": -1.43824,
+  "piste": true,
+  "longueur_probable": 100,
+  "note": "Anneau repéré dans OpenStreetMap (way/1436369378, tracé le 2025-12-31) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 100 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

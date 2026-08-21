@@ -1,0 +1,16 @@
+{
+  "id": "c-complexe-sportif-du-pin-le-pin",
+  "nom": "Complexe sportif du Pin",
+  "adresse": "Rue des Abbayes",
+  "cp": "44540",
+  "ville": "Le Pin",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.58535,
+  "lon": -1.15573,
+  "piste": true,
+  "longueur_probable": 75,
+  "surface": "bitume",
+  "note": "Anneau repéré dans OpenStreetMap (relation/11248915, tracé le 2020-06-28) puis lu sur l'orthophoto IGN de 2025 : bande de piste sans marquage lisible autour d'un plateau multisports. Développement d'environ 75 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Revêtement d'après OpenStreetMap."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "c-stade-municipal-des-noues-le-cellier",
+  "nom": "Stade Municipal des Noues",
+  "adresse": "Chemin de la Prairie",
+  "cp": "44850",
+  "ville": "Le Cellier",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.32871,
+  "lon": -1.34759,
+  "piste": true,
+  "longueur_probable": 350,
+  "note": "Anneau repéré dans OpenStreetMap (relation/20671705, tracé le 2026-05-11) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un terrain de football synthétique. Développement d'environ 350 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

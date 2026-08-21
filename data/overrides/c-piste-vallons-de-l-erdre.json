@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-vallons-de-l-erdre",
+  "nom": "Piste de Vallons-de-l'Erdre",
+  "adresse": "Rue des Hêtres",
+  "cp": "44540",
+  "ville": "Vallons-de-l'Erdre",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.4839,
+  "lon": -1.11026,
+  "piste": true,
+  "longueur_probable": 75,
+  "note": "Anneau repéré dans OpenStreetMap (relation/11487851, tracé le 2020-08-09) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un terrain engazonné. Développement d'environ 75 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

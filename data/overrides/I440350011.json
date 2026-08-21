@@ -1,5 +1,7 @@
 {
   "id": "I440350011",
   "longueur_probable": 200,
-  "note": "Développement estimé à 200 m d'après le tracé de l'anneau dans OpenStreetMap (w856838019), non mesuré sur place."
+  "lat": 47.30564,
+  "lon": -1.55739,
+  "note": "Développement estimé à 200 m d'après le tracé de l'anneau dans OpenStreetMap (w856838019), non mesuré sur place. Le point du ministère tombait à 178 m de là, sur un bâtiment du complexe : il est ramené sur l'anneau, que le ministère déclare sous le nom de « Piste d'athlétisme de la rivière » et qu'OpenStreetMap trace sous celui de « Piste de la Rivière »."
 }

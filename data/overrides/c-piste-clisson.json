@@ -1,0 +1,17 @@
+{
+  "id": "c-piste-clisson",
+  "nom": "Piste de Clisson",
+  "adresse": "Venelle d’Abelard",
+  "cp": "44190",
+  "ville": "Clisson",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.08243,
+  "lon": -1.28391,
+  "piste": true,
+  "longueur_probable": 110,
+  "couloirs": 2,
+  "surface": "bitume",
+  "note": "Anneau repéré dans OpenStreetMap (way/1136029476, tracé le 2023-01-28) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un terrain engazonné. Développement d'environ 110 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Revêtement d'après OpenStreetMap."
+}

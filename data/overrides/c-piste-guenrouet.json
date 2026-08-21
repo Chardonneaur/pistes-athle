@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-guenrouet",
+  "nom": "Piste de Guenrouet",
+  "adresse": "Rue du Stade",
+  "cp": "44530",
+  "ville": "Guenrouet",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.51239,
+  "lon": -1.96217,
+  "piste": true,
+  "longueur_probable": 400,
+  "note": "Anneau repéré dans OpenStreetMap (relation/9962632, tracé le 2019-08-24) puis lu sur l'orthophoto IGN de 2025 : anneau bitumé sans marquage lisible autour d'un terrain de football. Développement d'environ 400 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

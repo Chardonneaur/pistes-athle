@@ -1,0 +1,16 @@
+{
+  "id": "c-piste-saint-leger-les-vignes",
+  "nom": "Piste de Saint-Léger-les-Vignes",
+  "adresse": "Rue de la Rive",
+  "cp": "44710",
+  "ville": "Saint-Léger-les-Vignes",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.13342,
+  "lon": -1.73296,
+  "piste": true,
+  "longueur_probable": 105,
+  "couloirs": 3,
+  "note": "Anneau repéré dans OpenStreetMap (way/1539174055, tracé le 2026-07-14) puis lu sur l'orthophoto IGN de 2025 : aucun anneau sur l'orthophoto d'avril 2025, antérieure au relevé OpenStreetMap de juillet 2026 : l'aménagement paraît postérieur à la prise de vue. Développement d'environ 105 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

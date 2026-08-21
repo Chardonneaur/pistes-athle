@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-mouzeil",
+  "nom": "Piste de Mouzeil",
+  "adresse": "Rue des Charmilles",
+  "cp": "44850",
+  "ville": "Mouzeil",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.44904,
+  "lon": -1.34683,
+  "piste": true,
+  "longueur_probable": 105,
+  "note": "Anneau repéré dans OpenStreetMap (relation/16848667, tracé le 2023-12-20) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 105 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}

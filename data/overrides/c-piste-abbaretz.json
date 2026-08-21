@@ -1,0 +1,15 @@
+{
+  "id": "c-piste-abbaretz",
+  "nom": "Piste d'Abbaretz",
+  "adresse": "Allée des Coquelicots",
+  "cp": "44170",
+  "ville": "Abbaretz",
+  "dep": "44",
+  "dep_nom": "Loire-Atlantique",
+  "region": "Pays de la Loire",
+  "lat": 47.55043,
+  "lon": -1.53436,
+  "piste": true,
+  "longueur_probable": 70,
+  "note": "Anneau repéré dans OpenStreetMap (relation/13968019, tracé le 2022-03-26) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un terrain engazonné, en partie sous les arbres. Développement d'environ 70 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+}
