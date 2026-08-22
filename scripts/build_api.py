@@ -266,7 +266,28 @@ def grille(index):
 
 
 # ----------------------------------------------------------- document OpenAPI
-def parametres_recherche():
+def comptes(index):
+    """Les effectifs qui servent a expliquer les filtres.
+
+    Recopier « 7 135 installations » dans une description la condamne a etre
+    fausse au premier passage du cron mensuel — elle l'etait deja d'une unite
+    le lendemain de son ecriture. Un agent qui lit un chiffre dans un contrat
+    le croit ; on les compte donc a chaque build."""
+    return {
+        "total": len(index),
+        "longueur": sum(1 for t in index if t.get("lp")),
+        "couloirs": sum(1 for t in index if t.get("cl")),
+        "acces_inconnu": sum(1 for t in index if not t.get("al")),
+        "sans_avis": sum(1 for t in index if not t.get("nv")),
+    }
+
+
+def n(v):
+    """Un effectif, en francais : espaces fines plutot que virgules."""
+    return f"{v:,}".replace(",", "\u202f")
+
+
+def parametres_recherche(c):
     """Les parametres de GET /api/tracks, dans l'ordre ou on les explique."""
     p = [
         ("city", "string", "Commune, en clair ou en slug (`Nantes`, `nantes`). "
@@ -278,22 +299,23 @@ def parametres_recherche():
                               "Defaut 10, maximum 100. Sans `lat`/`lon`, ignore."),
         ("track_length", "string", "Developpement de l'anneau en metres : valeur exacte "
                                    "(`400`) ou intervalle (`300-400`). Alias : `length`. "
-                                   "Ne porte que sur les 2 255 sites dont le ministere "
-                                   "declare la longueur, jamais sur les estimations."),
+                                   f"Ne porte que sur les {n(c['longueur'])} sites dont le "
+                                   "ministere declare la longueur, jamais sur les estimations."),
         ("lanes_min", "integer", "Nombre minimal de couloirs. Attention : `couloirs` "
-                                 "n'est renseigne que sur 112 sites sur 7 135 ; ce filtre "
-                                 "exclut de fait tous les autres."),
+                                 f"n'est renseigne que sur {n(c['couloirs'])} sites sur "
+                                 f"{n(c['total'])} ; ce filtre exclut de fait tous les autres."),
         ("surface", "string", "Revetement : " + ", ".join(f"`{SURFACE_EN[s]}`" for s in SURFACES) + "."),
         ("free_access", "string", "`true` : les sites declares en acces libre. "
-                                  "`unknown` : ceux dont l'acces n'est pas renseigne. "
-                                  "`false` est **refuse** (400) — un blanc n'est pas un "
-                                  "non, et repondre par une liste serait inventer."),
+                                  f"`unknown` : les {n(c['acces_inconnu'])} dont l'acces "
+                                  "n'est pas renseigne. `false` est **refuse** (400) — un "
+                                  "blanc n'est pas un non, et repondre par une liste serait "
+                                  "inventer."),
         ("has_reviews", "boolean", "`true` : les installations qu'au moins un contributeur "
                                    "a decrites. `false` : celles que personne n'a encore "
-                                   "vues — 7 130 sur 7 135. Contrairement a `free_access`, "
-                                   "le `false` est ici legitime : l'absence d'avis est un "
-                                   "fait de notre propre base, pas un silence du "
-                                   "recensement."),
+                                   f"vues — {n(c['sans_avis'])} sur {n(c['total'])}. "
+                                   "Contrairement a `free_access`, le `false` est ici "
+                                   "legitime : l'absence d'avis est un fait de notre propre "
+                                   "base, pas un silence du recensement."),
         ("certainty", "string", "`declared` (defaut) : les disciplines filtrent sur les "
                                 "agres declares. `probable` : sur les agres deduits d'une "
                                 "orthophoto. `any` : les deux."),
@@ -326,6 +348,7 @@ def openapi(url_base, api_url, index, maj):
             d["example"] = exemple
         return d
 
+    c = comptes(index)
     exemples = {"city": "Nantes", "department": "44", "lat": 47.21, "lon": -1.55,
                 "radius": 20, "track_length": "400", "lanes_min": 6,
                 "surface": "synthetic", "free_access": "true", "javelin": True}
@@ -401,7 +424,8 @@ def openapi(url_base, api_url, index, maj):
                     "Sur le miroir statique GitHub Pages, la chaine de requete est ignoree "
                     "par l'hebergeur : cette URL y renvoie le document de capacites "
                     "`/api/tracks.json`, qui indique quoi appeler a la place.",
-                "parameters": [param(n, t, d, exemples.get(n)) for n, t, d in parametres_recherche()],
+                "parameters": [param(nom, typ, desc, exemples.get(nom))
+                               for nom, typ, desc in parametres_recherche(c)],
                 "responses": {
                     "200": {"description": "Liste des installations correspondantes.",
                             "content": {"application/json": {
@@ -430,7 +454,7 @@ def openapi(url_base, api_url, index, maj):
         "/api/index.json": {
             "get": {
                 "operationId": "getIndex",
-                "summary": "Index compact des 7 135 installations, en un fichier",
+                "summary": f"Index compact des {n(c['total'])} installations, en un fichier",
                 "description": "1,0 Mo contre 1,5 Mo pour `data/tracks.json` : "
                                "uniquement les champs sur lesquels on filtre. Permet a un "
                                "agent de faire lui-meme n'importe quelle conjonction, sans "
@@ -522,14 +546,16 @@ def openapi(url_base, api_url, index, maj):
         "info": {
             "title": "Ou s'entrainer ? — API des pistes d'athletisme francaises",
             "version": maj,
-            "summary": "Recherche dans les 7 135 installations d'athletisme recensees en France.",
+            "summary": f"Recherche dans les {n(c['total'])} installations d'athletisme "
+                       f"recensees en France.",
             "description":
                 "Annuaire libre des installations d'athletisme francaises : revetement, "
                 "developpement, couloirs, agres, conditions d'acces, coordonnees.\n\n"
                 "**Deux regles de contrat a connaitre avant d'interpreter une reponse.**\n\n"
-                "1. `acces_libre` vaut `true` ou `null`, jamais `false`. 5 551 des 7 135 "
-                "installations n'ont pas d'information d'acces ; un blanc n'est pas un "
-                "refus. C'est pourquoi `free_access=false` renvoie une 400.\n"
+                f"1. `acces_libre` vaut `true` ou `null`, jamais `false`. "
+                f"{n(c['acces_inconnu'])} des {n(c['total'])} installations n'ont pas "
+                "d'information d'acces ; un blanc n'est pas un refus. C'est pourquoi "
+                "`free_access=false` renvoie une 400.\n"
                 "2. `agres_declares` vient de l'exploitant ; `agres_probables` est deduit "
                 "d'une orthophoto par un contributeur. Les filtres de discipline portent "
                 "sur le premier, sauf `certainty=probable|any`.\n\n"
@@ -546,7 +572,7 @@ def openapi(url_base, api_url, index, maj):
     }
 
 
-def capacites(url_base, api_url, maj, nb, facettes_dispo):
+def capacites(url_base, api_url, maj, c, facettes_dispo):
     """Ce que l'hote sait faire, en JSON, pour l'agent qui frappe a la porte.
 
     C'est la reponse a `/api/tracks?city=Nantes` sur l'hebergement statique.
@@ -559,7 +585,7 @@ def capacites(url_base, api_url, maj, nb, facettes_dispo):
         "documentation": f"{url_base}/llms.txt",
         "license": LICENCE,
         "build": maj,
-        "count": nb,
+        "count": c["total"],
         "query_api": {
             "available": bool(api_url),
             "endpoint": f"{api_url}/api/tracks" if api_url else None,
@@ -568,7 +594,7 @@ def capacites(url_base, api_url, maj, nb, facettes_dispo):
                     "est ignoree par l'hebergeur, donc /api/tracks?city=Nantes ne peut pas "
                     "filtrer. Utilisez les facettes ci-dessous, ou telechargez index_url "
                     "et filtrez localement.",
-            "parameters": [n for n, _, _ in parametres_recherche()],
+            "parameters": [nom for nom, _, _ in parametres_recherche(c)],
         },
         "index_url": f"{url_base}/api/index.json",
         "endpoints": {
@@ -590,14 +616,15 @@ def capacites(url_base, api_url, maj, nb, facettes_dispo):
             "surfaces": [SURFACE_EN[s] for s in SURFACES],
         },
         "contract": {
-            "free_access": "true | unknown. `false` est refuse : 5 551 installations n'ont "
-                           "pas d'information d'acces, et un blanc n'est pas un non.",
+            "free_access": f"true | unknown. `false` est refuse : {n(c['acces_inconnu'])} "
+                           "installations n'ont pas d'information d'acces, et un blanc "
+                           "n'est pas un non.",
             "disciplines": "Filtrent sur les agres declares. Les agres deduits d'une "
                            "orthophoto sont rendus a part, dans agres_probables.",
             "has_reviews": "true | false. Le false est ici legitime, contrairement a "
                            "free_access : l'absence d'avis est un fait de cette base. "
-                           "Sur cet hote statique, les 7 130 installations sans avis se "
-                           "obtiennent en retirant reviewed.json de index.json.",
+                           f"Sur cet hote statique, les {n(c['sans_avis'])} installations "
+                           "sans avis s'obtiennent en retirant reviewed.json de index.json.",
         },
         "facets_generated": facettes_dispo,
     }
@@ -711,7 +738,7 @@ def construire(out, sites, deps, url_base, maj, depot, api_url=None):
 
     # --- capacites, en JSON et en HTML
     sans_acces = sum(1 for t in index if not t.get("al"))
-    cap = capacites(url_base, api_url, maj, len(index), len(publies))
+    cap = capacites(url_base, api_url, maj, comptes(index), len(publies))
     ecrire(os.path.join(api, "tracks.json"), cap)
     chemin_html = os.path.join(api, "tracks", "index.html")
     os.makedirs(os.path.dirname(chemin_html), exist_ok=True)
