@@ -5,3 +5,5 @@ data/tracks.json
 .work/
 .shots/
 _site/
+.wrangler/
+node_modules/

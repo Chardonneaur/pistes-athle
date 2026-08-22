@@ -49,11 +49,35 @@ jobs:
               sys.exit(f"ERREUR : seulement {n} sites, l'API a probablement repondu partiellement")
           PY
 
-      - name: Assembler le site (application FR/EN + pages statiques)
+      - name: Assembler le site (application FR/EN + pages statiques + API)
+        # API_URL : URL du serveur de recherche (api/worker.js) s'il est deploye.
+        # Sans elle, le site declare honnetement que seules les facettes statiques
+        # sont disponibles — voir le document de capacites /api/tracks.json.
+        env:
+          API_URL: ${{ vars.API_URL }}
         run: |
           python3 scripts/build_site.py --out _site
           du -sh _site
           echo "$(find _site -name index.html | wc -l) pages HTML générées"
+          echo "$(find _site/api -name '*.json' | wc -l) réponses JSON générées"
+
+      - name: Vérifier que l'API est servable
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          for f in ("_site/openapi.json", "_site/api/tracks.json", "_site/api/index.json"):
+              d = json.load(open(f))
+              print(f"{f} ok")
+          o = json.load(open("_site/openapi.json"))
+          if o.get("openapi") != "3.1.0" or not o.get("paths"):
+              sys.exit("ERREUR : openapi.json incomplet")
+          i = json.load(open("_site/api/index.json"))
+          if len(i["tracks"]) < 5000:
+              sys.exit(f"ERREUR : index a {len(i['tracks'])} entrees")
+          # Un blanc n'est pas un non : acces_libre ne doit jamais valoir false.
+          if any(t.get("al") not in (1, None) for t in i["tracks"]):
+              sys.exit("ERREUR : acces_libre porte une valeur autre que 1 ou absent")
+          PY
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

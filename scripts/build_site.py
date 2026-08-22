@@ -22,6 +22,9 @@ import re
 import shutil
 from datetime import date
 
+import build_api
+from build_api import DISCIPLINES, SURFACE_EN, slug
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
 
@@ -80,6 +83,7 @@ T = {
         "html_lang": "fr", "og_locale": "fr_FR", "autre": "en",
         "prefixe": "", "seg_site": "site", "seg_dep": "departement",
         "seg_index": "departements", "seg_contrib": "contributeurs",
+        "seg_pistes": "pistes", "seg_ville": "ville",
         "marque": "Où s'entraîner ?",
         "bascule": "English", "bascule_code": "EN",
         "accueil": "Accueil",
@@ -155,11 +159,27 @@ T = {
                                "horaire : c'est ce que les données publiques n'auront jamais.",
         "contrib_appel_lien": "Comment contribuer",
         "code_source": "Code source",
+        "crit_partout": "Où trouver ces installations",
+        "crit_dep_lien": lambda n: f"{n} site{'s' if n > 1 else ''}",
+        "crit_api": "Cette liste en JSON",
+        "crit_api_texte": "La même sélection, servie à une machine : mêmes sites, mêmes "
+                          "champs, avec la licence et la date de génération.",
+        "ville_titre": lambda v: f"Pistes d'athlétisme à {v}",
+        "ville_desc": lambda v, n: (f"Les {n} installations d'athlétisme recensées à {v} : "
+                                    f"piste, revêtement, agrès, accès."
+                                    if n > 1 else
+                                    f"L'installation d'athlétisme recensée à {v} : "
+                                    f"piste, revêtement, agrès, accès."),
+        "ville_autour": "À moins de 20 km",
+        "ville_autour_vide": "Aucune autre installation recensée dans un rayon de 20 km.",
+        "crit_vide": "Aucune installation ne correspond.",
+        "a_km": lambda d: f"à {d} km",
     },
     "en": {
         "html_lang": "en", "og_locale": "en_GB", "autre": "fr",
         "prefixe": "en/", "seg_site": "track", "seg_dep": "department",
         "seg_index": "departments", "seg_contrib": "contributors",
+        "seg_pistes": "tracks", "seg_ville": "city",
         "marque": "Where to train?",
         "bascule": "Français", "bascule_code": "FR",
         "accueil": "Home",
@@ -235,6 +255,21 @@ T = {
                                "track, an opening time: that is what open data will never hold.",
         "contrib_appel_lien": "How to contribute",
         "code_source": "Source code",
+        "crit_partout": "Where to find them",
+        "crit_dep_lien": lambda n: f"{n} venue{'s' if n > 1 else ''}",
+        "crit_api": "This list as JSON",
+        "crit_api_texte": "The same selection, served to a machine: same venues, same "
+                          "fields, with the licence and build date.",
+        "ville_titre": lambda v: f"Athletics tracks in {v}, France",
+        "ville_desc": lambda v, n: (f"The {n} athletics venues recorded in {v}, France: "
+                                    f"track, surface, equipment, access."
+                                    if n > 1 else
+                                    f"The athletics venue recorded in {v}, France: "
+                                    f"track, surface, equipment, access."),
+        "ville_autour": "Within 20 km",
+        "ville_autour_vide": "No other venue recorded within 20 km.",
+        "crit_vide": "No venue matches.",
+        "a_km": lambda d: f"{d} km away",
     },
 }
 
@@ -264,6 +299,15 @@ def url_appli(lang):
 
 def url_contrib(lang):
     return f"{T[lang]['prefixe']}{T[lang]['seg_contrib']}/"
+
+
+def url_critere(lang, cle, dep_slug=None):
+    base = f"{T[lang]['prefixe']}{T[lang]['seg_pistes']}/{cle}/"
+    return f"{base}{dep_slug}/" if dep_slug else base
+
+
+def url_ville(lang, ville_slug):
+    return f"{T[lang]['prefixe']}{T[lang]['seg_ville']}/{ville_slug}/"
 
 
 # ---------------------------------------------------------------------- donnees
@@ -599,6 +643,8 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
 {liens}<link rel="stylesheet" href="{r}assets/page.css?v=10">
+<link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
+<link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
 {blocs}
 </head>
 <body>
@@ -1387,6 +1433,350 @@ def ecrire(chemin, contenu):
         f.write(contenu)
 
 
+# ------------------------------------------- pages par critere et par commune
+# Un critere, c'est un axe que les gens tapent en clair : « piste de 400 m »,
+# « stade en acces libre », « sautoir a la perche ». Chaque axe donne une page
+# nationale — un carrefour qui repartit vers les departements — et une page par
+# departement ou l'axe a de quoi dire quelque chose.
+#
+# Le produit cartesien de tous les axes par tous les departements ferait plus
+# de 3 000 pages, vides pour la plupart. On part donc de la donnee : un critere
+# n'existe que s'il a des sites, une intersection que si elle en a assez pour
+# ne pas repeter la fiche.
+MIN_INTERSECTION = 3
+# 131 developpements distincts figurent au recensement, la plupart sur un seul
+# site. Une longueur ne merite une page que si elle est courante.
+MIN_LONGUEUR = 15
+MIN_COULOIRS = 5
+RAYON_VILLE_KM = 20.0
+MAX_AUTOUR = 12
+
+# « Lyon 3e Arrondissement » : Data ES ne connait pas Lyon, seulement ses
+# arrondissements. Paris, Lyon et Marseille pesent 174 installations qui
+# n'apparaitraient sous aucune page de commune.
+ARRONDISSEMENT = re.compile(r"^(.+?)\s+\d+(?:er|e|eme|ème)\s+Arrondissement$", re.I)
+
+AGRES_PARAM = {v: k for k, v in DISCIPLINES.items()}
+
+
+def criteres(sites):
+    """Les axes de page, deduits du recensement, dans l'ordre d'affichage.
+
+    Chaque entree porte ses slugs (fr et en, figes : ce sont des URLs
+    publiques), ses gabarits de titre et de description, ses sites, et le
+    chemin de la facette d'API qui rend exactement la meme selection. Ce
+    dernier lien est le pont entre la page et l'API : un agent qui atterrit sur
+    la page decouvre qu'il existe une facon machine de la redemander."""
+    out = []
+
+    def ajoute(sl_fr, sl_en, titre, desc, retenus, api):
+        if retenus:
+            out.append({"slug": {"fr": sl_fr, "en": sl_en}, "titre": titre,
+                        "desc": desc, "sites": retenus, "api": api})
+
+    # --- developpement de l'anneau
+    compte = {}
+    for t in sites:
+        if t.get("longueur_piste"):
+            compte[t["longueur_piste"]] = compte.get(t["longueur_piste"], 0) + 1
+    for m in sorted((v for v, n in compte.items() if n >= MIN_LONGUEUR), reverse=True):
+        ajoute(f"{m}m", f"{m}m",
+               {"fr": f"Pistes d'athlétisme de {m} m{{dep}}",
+                "en": f"{m} m athletics tracks{{dep}}"},
+               {"fr": f"Les {{n}} pistes d'athlétisme dont le ministère déclare un "
+                      f"développement de {m} m{{dep}} : revêtement, couloirs, agrès, accès.",
+                "en": f"The {{n}} athletics tracks recorded with a {m} m lap{{dep}}: "
+                      f"surface, lanes, equipment, access."},
+               [t for t in sites if t.get("longueur_piste") == m],
+               f"length/{m}")
+
+    # --- couloirs. Renseigne sur 112 sites : peu de pages, mais des pages
+    # qui repondent a une question tres precise, donc tres qualifiee.
+    for n in range(8, 1, -1):
+        retenus = [t for t in sites if (t.get("couloirs") or 0) >= n]
+        if len(retenus) < MIN_COULOIRS:
+            continue
+        ajoute(f"{n}-couloirs", f"{n}-lanes",
+               {"fr": f"Pistes d'athlétisme d'au moins {n} couloirs{{dep}}",
+                "en": f"Athletics tracks with {n} lanes or more{{dep}}"},
+               {"fr": f"Les {{n}} pistes déclarant au moins {n} couloirs{{dep}}. "
+                      f"Le nombre de couloirs n'est renseigné que sur une minorité de "
+                      f"fiches : d'autres pistes en ont autant sans le déclarer.",
+                "en": f"The {{n}} tracks declaring {n} lanes or more{{dep}}. Lane count "
+                      f"is recorded on a minority of venues: others have as many "
+                      f"without saying so."},
+               retenus, f"lanes/{n}")
+
+    # --- acces libre. `acces_libre` vaut vrai ou rien : la page ne parle que
+    # des sites qui le declarent, et le dit.
+    ajoute("acces-libre", "free-access",
+           {"fr": "Pistes d'athlétisme en accès libre{dep}",
+            "en": "Athletics tracks with free access{dep}"},
+           {"fr": "Les {n} installations d'athlétisme déclarées librement accessibles{dep}. "
+                  "Une fiche muette sur l'accès n'est pas une fiche fermée : elle est "
+                  "muette, et n'apparaît pas ici.",
+            "en": "The {n} athletics venues declared freely accessible{dep}. A venue "
+                  "silent on access is not a closed venue: it is silent, and does not "
+                  "appear here."},
+           [t for t in sites if t.get("acces_libre")], "free-access")
+
+    # --- disciplines, sur les agres declares seulement
+    for agres in ORDRE_AGRES:
+        param = AGRES_PARAM.get(agres)
+        if not param:
+            continue
+        ajoute(agres, param.replace("_", "-"),
+               {"fr": f"Pistes d'athlétisme avec {AGRES['fr'][agres].lower()}{{dep}}",
+                "en": f"Athletics venues with {AGRES['en'][agres].lower()}{{dep}}"},
+               {"fr": f"Les {{n}} installations dont le recensement déclare "
+                      f"« {AGRES['fr'][agres]} »{{dep}} : piste, revêtement, accès.",
+                "en": f"The {{n}} venues recorded with « {AGRES['en'][agres]} »{{dep}}: "
+                      f"track, surface, access."},
+               [t for t in sites if agres in (t.get("agres") or [])],
+               f"discipline/{param}")
+
+    # --- revetements
+    for sol in SURFACE_EN:
+        ajoute(sol, SURFACE_EN[sol],
+               {"fr": f"Pistes d'athlétisme en {SOL['fr'][sol].lower()}{{dep}}",
+                "en": f"{SOL['en'][sol]} athletics tracks{{dep}}"},
+               {"fr": f"Les {{n}} pistes d'athlétisme dont le revêtement déclaré est "
+                      f"« {SOL['fr'][sol]} »{{dep}} : développement, couloirs, agrès, accès.",
+                "en": f"The {{n}} athletics tracks recorded with a « {SOL['en'][sol]} » "
+                      f"surface{{dep}}: lap length, lanes, equipment, access."},
+               [t for t in sites if t.get("surface") == sol],
+               f"surface/{SURFACE_EN[sol]}")
+    return out
+
+
+def suffixe_lieu(lang, nom):
+    if not nom:
+        return {"fr": " en France", "en": " in France"}[lang]
+    return (f" en {nom}" if lang == "fr" else f" in {nom}, France")
+
+
+def item_ld(s, lang, url_base, nom_dep=None):
+    """Une installation, telle qu'elle apparait dans un ItemList.
+
+    La page porte le lieu lui-meme, pas seulement son lien : un agent qui lit
+    la liste y trouve deja commune, coordonnees et revetement, sans ouvrir
+    chaque fiche."""
+    lieu = {"@type": "SportsActivityLocation",
+            "@id": f"{url_base}/{url_site(lang, s['id'])}#place",
+            "name": nom_de(s, lang), "url": f"{url_base}/{url_site(lang, s['id'])}",
+            "sport": "Athletics", "identifier": s["id"]}
+    if s.get("ville"):
+        lieu["address"] = {"@type": "PostalAddress", "addressLocality": s["ville"],
+                           "addressRegion": nom_dep or s.get("dep_nom") or "",
+                           "addressCountry": "FR"}
+    if s.get("lat") is not None and s.get("lon") is not None:
+        lieu["geo"] = {"@type": "GeoCoordinates", "latitude": s["lat"], "longitude": s["lon"]}
+    if s.get("surface"):
+        lieu["additionalProperty"] = [{"@type": "PropertyValue",
+                                       "name": T[lang]["kv"]["revetement"],
+                                       "value": SOL[lang].get(s["surface"], s["surface"])}]
+    return lieu
+
+
+def resume_liste(s, lang):
+    """La ligne de details sous le nom, dans une liste."""
+    details = []
+    tour, sur = tour_de_piste(s)
+    if tour:
+        details.append(f"{tour} m" if sur else f"{tour} m ?")
+    if s.get("surface"):
+        details.append(SOL[lang].get(s["surface"], s["surface"]))
+    if s.get("couloirs"):
+        details.append(f"{s['couloirs']} couloirs" if lang == "fr"
+                       else f"{s['couloirs']} lanes")
+    details += [AGRES[lang][a] for a in tri_agres(s["agres"]) if a in AGRES[lang]]
+    return details
+
+
+def liste_html(sites, lang, r, groupee=True):
+    """Les sites, groupes par commune, comme sur la page de departement."""
+    lignes, ville_courante = [], None
+    for s in sites:
+        if groupee and s.get("ville") != ville_courante:
+            if ville_courante is not None:
+                lignes.append("</ul>")
+            ville_courante = s.get("ville")
+            lignes.append(f'<h2 class="ville">{E(ville_courante or "")}</h2><ul class="liste">')
+        elif not groupee and ville_courante is None:
+            ville_courante = True
+            lignes.append('<ul class="liste">')
+        details = resume_liste(s, lang)
+        if not groupee and s.get("ville"):
+            details.insert(0, s["ville"])
+        meta = f'<span class="meta">{E(" · ".join(details))}</span>' if details else ""
+        lignes.append(f'<li><a href="{r}{url_site(lang, s["id"])}">'
+                      f'{E(nom_de(s, lang))}{meta}</a></li>')
+    if ville_courante is not None:
+        lignes.append("</ul>")
+    return "".join(lignes)
+
+
+def bloc_api(lang, url_base, chemin_api, r):
+    """Le pont entre la page et l'API : la meme selection, en JSON."""
+    tr = T[lang]
+    return (f'<section class="lede"><h2>{E(tr["crit_api"])}</h2>'
+            f'<p>{E(tr["crit_api_texte"])}</p>'
+            f'<p><code><a href="{url_base}/api/tracks/{chemin_api}.json">'
+            f'/api/tracks/{E(chemin_api)}.json</a></code> · '
+            f'<a href="{url_base}/openapi.json">openapi.json</a> · '
+            f'<a href="{r}llms.txt">llms.txt</a></p></section>')
+
+
+def page_critere(crit, lang, dep, sites, repartition, url_base, depot):
+    """Page d'un critere, nationale (`dep` None) ou dans un departement.
+
+    La page nationale est un carrefour : elle ne deroule pas 1 584 sites, elle
+    repartit vers les departements. La page departementale porte la liste.
+    C'est ce qui evite a la fois la page interminable et la page maigre."""
+    cle = crit["slug"][lang]
+    code, nom_dep = (dep if dep else (None, None))
+    dep_slug = repartition["slug_dep"].get(code) if code else None
+    chemin = url_critere(lang, cle, dep_slug)
+    r = rel(chemin)
+    tr = T[lang]
+    suffixe = suffixe_lieu(lang, nom_dep)
+    titre = crit["titre"][lang].format(dep=suffixe)
+    desc = crit["desc"][lang].format(n=len(sites), dep=suffixe)
+    autre_slug = crit["slug"][tr["autre"]]
+    alternatives = {}
+    for l in T:
+        sl = crit["slug"][l]
+        alternatives[l] = url_critere(l, sl, dep_slug)
+
+    liste_ld = {
+        "@context": "https://schema.org", "@type": "ItemList",
+        "name": titre, "numberOfItems": len(sites),
+        "itemListOrder": "https://schema.org/ItemListUnordered",
+        "itemListElement": [{"@type": "ListItem", "position": i + 1,
+                             "item": item_ld(s, lang, url_base, nom_dep)}
+                            for i, s in enumerate(sites[:200])],
+    }
+    fil_items = [{"@type": "ListItem", "position": 1, "name": tr["accueil"],
+                  "item": f"{url_base}/{url_appli(lang)}"}]
+    if dep:
+        fil_items.append({"@type": "ListItem", "position": 2,
+                          "name": crit["titre"][lang].format(dep=suffixe_lieu(lang, None)),
+                          "item": f"{url_base}/{url_critere(lang, cle)}"})
+    fil_items.append({"@type": "ListItem", "position": len(fil_items) + 1,
+                      "name": titre, "item": f"{url_base}/{chemin}"})
+    fil = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+           "itemListElement": fil_items}
+
+    lignes = [entete(lang, titre, desc, chemin, alternatives, [liste_ld, fil], url_base)]
+    fil_html = f'<a href="{r}{url_appli(lang)}">{E(tr["accueil"])}</a> ›'
+    if dep:
+        fil_html += (f' <a href="{r}{url_critere(lang, cle)}">'
+                     f'{E(crit["titre"][lang].format(dep=""))}</a> › {E(nom_dep or code)}')
+    else:
+        fil_html += f' {E(crit["titre"][lang].format(dep=""))}'
+    lignes.append(f'''
+<nav class="crumb">{fil_html}</nav>
+<h1>{E(titre)}</h1>
+<p class="loc">{E(tr["nb_sites"](len(sites)))}</p>
+<p class="lede">{E(desc)}</p>''')
+
+    if dep:
+        lignes.append(liste_html(sites, lang, r))
+        lignes.append(f'<p><a href="{r}{url_dep(lang, code)}">'
+                      f'{E(tr["dep_titre"].format(dep=nom_dep or code))}</a></p>')
+    else:
+        # carrefour : les departements ou le critere existe, du plus fourni au
+        # moins fourni. Un departement sans page dediee pointe vers sa liste.
+        lignes.append(f'<h2>{E(tr["crit_partout"])}</h2><ul class="liste cols">')
+        for code_d, n in repartition["par_dep"]:
+            nom = repartition["nom_dep"].get(code_d) or code_d
+            sl = repartition["slug_dep"].get(code_d)
+            cible = (url_critere(lang, cle, sl) if n >= MIN_INTERSECTION and sl
+                     else url_dep(lang, code_d))
+            lignes.append(f'<li><a href="{r}{cible}">{E(nom)}'
+                          f'<span class="meta">{E(tr["crit_dep_lien"](n))}</span></a></li>')
+        lignes.append("</ul>")
+
+    chemin_api = crit["api"] + (f"/{code}" if dep else "")
+    lignes.append(bloc_api(lang, url_base, chemin_api, r))
+    lignes.append(pied(lang, chemin, url_base, depot))
+    return "".join(lignes)
+
+
+def page_ville(ville, ville_slug, sites, autour, lang, url_base, depot):
+    """Page d'une commune.
+
+    2 604 des 3 847 communes du recensement n'ont qu'une installation. Une page
+    qui se contenterait de la relister serait un doublon de la fiche. Elle
+    porte donc aussi ce qu'il y a autour, dans RAYON_VILLE_KM : c'est ce qu'on
+    veut vraiment savoir quand on cherche ou s'entrainer dans une commune qui
+    n'a qu'un stade."""
+    chemin = url_ville(lang, ville_slug)
+    r = rel(chemin)
+    tr = T[lang]
+    titre = tr["ville_titre"](ville)
+    desc = tr["ville_desc"](ville, len(sites))
+    alternatives = {l: url_ville(l, ville_slug) for l in T}
+    nom_dep = sites[0].get("dep_nom")
+
+    liste_ld = {
+        "@context": "https://schema.org", "@type": "ItemList",
+        "name": titre, "numberOfItems": len(sites),
+        "itemListOrder": "https://schema.org/ItemListUnordered",
+        "itemListElement": [{"@type": "ListItem", "position": i + 1,
+                             "item": item_ld(s, lang, url_base, nom_dep)}
+                            for i, s in enumerate(sites)],
+    }
+    fil = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+           "itemListElement": [
+               {"@type": "ListItem", "position": 1, "name": tr["accueil"],
+                "item": f"{url_base}/{url_appli(lang)}"},
+               {"@type": "ListItem", "position": 2, "name": nom_dep or "",
+                "item": f"{url_base}/{url_dep(lang, sites[0].get('dep') or '00')}"},
+               {"@type": "ListItem", "position": 3, "name": titre,
+                "item": f"{url_base}/{chemin}"}]}
+
+    lignes = [entete(lang, titre, desc, chemin, alternatives, [liste_ld, fil], url_base)]
+    lignes.append(f'''
+<nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr["accueil"])}</a> ›
+  <a href="{r}{url_dep(lang, sites[0].get("dep") or "00")}">{E(nom_dep or "")}</a> ›
+  {E(ville)}</nav>
+<h1>{E(titre)}</h1>
+<p class="loc">{E(nom_dep or "")} · {E(tr["nb_sites"](len(sites)))}</p>''')
+    # Sur Paris, Lyon ou Marseille, la liste regroupe par arrondissement : 79
+    # entrees a plat ne se lisent pas. Ailleurs, la commune est unique.
+    par_arrondissement = len({s.get("ville") for s in sites}) > 1
+    lignes.append(liste_html(sites, lang, r, groupee=par_arrondissement))
+
+    lignes.append(f'<h2>{E(tr["ville_autour"])}</h2>')
+    if autour:
+        lignes.append('<ul class="liste">')
+        for s, d in autour:
+            details = [s.get("ville") or "", tr["a_km"](round(d))] + resume_liste(s, lang)
+            lignes.append(f'<li><a href="{r}{url_site(lang, s["id"])}">'
+                          f'{E(nom_de(s, lang))}'
+                          f'<span class="meta">{E(" · ".join(x for x in details if x))}</span>'
+                          f'</a></li>')
+        lignes.append("</ul>")
+    else:
+        lignes.append(f'<p>{E(tr["ville_autour_vide"])}</p>')
+
+    dep = sites[0].get("dep") or "00"
+    lignes.append(bloc_api(lang, url_base, f"city/{dep}/{ville_slug_nu(ville_slug, dep)}", r))
+    lignes.append(pied(lang, chemin, url_base, depot))
+    return "".join(lignes)
+
+
+def ville_slug_nu(ville_slug, dep):
+    """Le slug de commune sans son suffixe de departement.
+
+    Les 23 slugs partages entre plusieurs departements — Valence est dans la
+    Drome et dans le Tarn-et-Garonne — portent leur code en suffixe dans l'URL
+    de la page. La facette d'API, elle, est deja rangee par departement et n'en
+    a pas besoin."""
+    return ville_slug[:-(len(dep) + 1)] if ville_slug.endswith(f"-{dep}") else ville_slug
+
+
 def sitemap(urls, url_base, maj):
     """Plan de site, extension images comprise.
 
@@ -1476,6 +1866,7 @@ def robots(url_base):
     return (f"# Où s'entraîner ? — annuaire ouvert des pistes d'athlétisme françaises.\n"
             f"# Données sous Licence Ouverte 2.0, réutilisation libre avec attribution.\n"
             f"# Description lisible par un agent : {url_base}/llms.txt\n"
+            f"# Contrat de l'API, OpenAPI 3.1 : {url_base}/openapi.json\n"
             f"# Jeu de données complet : {url_base}/data/tracks.json\n\n"
             f"{blocs}\n\nSitemap: {url_base}/sitemap.xml\n")
 
@@ -1523,6 +1914,52 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   où `<CODE>` est le code INSEE du département (ex. `44`, `2A`, `971`).
 - Chaque page site porte un balisage JSON-LD `SportsActivityLocation` avec adresse, coordonnées,
   agrès, accès et avis. / Every venue page embeds JSON-LD.
+
+## Interroger l'annuaire / Querying the directory
+
+- [openapi.json]({url_base}/openapi.json) : le contrat complet, en OpenAPI 3.1 — paramètres de
+  recherche, schéma des réponses, vocabulaires. / The full contract, OpenAPI 3.1.
+- [api/tracks.json]({url_base}/api/tracks.json) : document de capacités. Il dit ce que cet hôte
+  sait faire et quelles URL appeler. **À lire en premier.** / Capability document; read this first.
+- [api/index.json]({url_base}/api/index.json) : les {fr_total} installations réduites aux champs
+  filtrables, en un fichier (~1 Mo). De quoi faire soi-même n'importe quelle conjonction de
+  critères. / The whole directory reduced to its filterable fields, in one file.
+- Facettes pré-calculées, un fichier JSON par critère / pre-computed facets, one JSON file each:
+  `api/tracks/<ID>.json` · `api/tracks/department/<CODE>.json` · `api/tracks/city/<DEP>/<SLUG>.json` ·
+  `api/tracks/discipline/<DISCIPLINE>.json` (et `/<DEP>.json`) · `api/tracks/length/<METRES>.json` ·
+  `api/tracks/surface/<REVETEMENT>.json` · `api/tracks/lanes/<N>.json` ·
+  `api/tracks/free-access.json` · `api/tracks/reviewed.json` ·
+  `api/geo/<LAT>/<LON>.json` (cellule de 0,1 degré).
+- Ce site est **statique** : l'hébergeur ignore la chaîne de requête, donc `api/tracks?city=Nantes`
+  ne filtre rien. Utilisez les facettes, ou téléchargez `api/index.json`. Le document de capacités
+  indique si un serveur de recherche à paramètres est déployé.
+  / This host is static: query strings are ignored by the host. Use the facets, or download the
+  index and filter locally.
+- Deux règles de lecture / two reading rules: `acces_libre` vaut `true` ou `null`, **jamais**
+  `false` — un blanc n'est pas un refus ; et les disciplines filtrent sur les agrès **déclarés**,
+  ceux qu'un contributeur a déduits d'une orthophoto étant rendus à part.
+  / `acces_libre` is never `false`, only `true` or `null`; discipline filters use declared
+  equipment only.
+- `nb_avis` fait exception : zéro y est un fait, pas un blanc. Cette base sait si quelqu'un a
+  décrit un site, donc `has_reviews=false` est légitime là où `free_access=false` ne l'est pas.
+  Les {fr_total} moins les 5 décrites forment la file d'attente de la contribution — croisez-la
+  avec une commune ou un département pour savoir où aller voir.
+  / `nb_avis` is the exception: zero is a fact, so `has_reviews=false` is meaningful.
+
+## Pages de recherche / Search pages
+
+- Par commune / by town: `{url_base}/ville/<SLUG>/` et `{url_base}/en/city/<SLUG>/`.
+  Paris, Lyon et Marseille regroupent leurs arrondissements, que Data ES sépare.
+  / Paris, Lyon and Marseille aggregate their arrondissements.
+- Par critère / by criterion: `{url_base}/pistes/<CRITERE>/` et `{url_base}/en/tracks/<CRITERION>/` —
+  développement (`400m`), couloirs (`6-couloirs` / `6-lanes`), accès (`acces-libre` / `free-access`),
+  discipline (`perche` / `pole-vault`), revêtement (`synthetique` / `synthetic`).
+- Croisement avec un département / crossed with a department:
+  `{url_base}/pistes/<CRITERE>/<DEPARTEMENT>/`. Seules les intersections comptant au moins trois
+  installations existent : une page qui répéterait une seule fiche n'apporterait rien.
+  / Only intersections with at least three venues are generated.
+- Chaque page de recherche porte le lien vers la facette d'API qui rend la même sélection en JSON.
+  / Every search page links to the API facet returning the same selection.
 
 ## Photos de terrain / Field photos
 
@@ -1617,6 +2054,83 @@ def main():
 
     par_id = {t["id"]: t for t in publiables}
 
+    # --- axes de recherche : criteres, communes, et l'API qui rend les memes
+    # selections en JSON. On part de la donnee : rien n'est genere a vide.
+    noms_dep = {code: (liste[0].get("dep_nom") or code) for code, liste in par_dep.items()}
+    slug_dep = {}
+    for code, nom in noms_dep.items():
+        sl = slug(nom) or code
+        # Deux departements de meme slug s'ecraseraient l'un l'autre. Le code
+        # INSEE tranche, et il est stable.
+        if sl in slug_dep.values():
+            sl = f"{sl}-{code}"
+        slug_dep[code] = sl
+
+    axes = criteres(publiables)
+    for crit in axes:
+        compte = {}
+        for t in crit["sites"]:
+            compte[t.get("dep") or "00"] = compte.get(t.get("dep") or "00", 0) + 1
+        crit["repartition"] = {
+            "par_dep": sorted(compte.items(), key=lambda kv: (-kv[1], noms_dep.get(kv[0], ""))),
+            "nom_dep": noms_dep, "slug_dep": slug_dep}
+
+    # Communes. 23 slugs sont partages par plusieurs departements — Valence est
+    # dans la Drome et dans le Tarn-et-Garonne : on suffixe par le code.
+    brut_villes = {}
+    for t in publiables:
+        sl = slug(t.get("ville") or "")
+        if sl:
+            brut_villes.setdefault(sl, {}).setdefault(t.get("dep") or "00", []).append(t)
+
+    # Paris, Lyon et Marseille n'existent pas dans Data ES : le recensement ne
+    # connait que « Lyon 3e Arrondissement ». Sans regroupement, la requete la
+    # plus frequente du pays — « piste d'athletisme a Lyon » — ne tombe sur
+    # aucune page. On ajoute donc la commune entiere, sans retirer les
+    # arrondissements, qui restent la bonne reponse pour qui cherche precis.
+    for ville_mere, code in (("Paris", "75"), ("Lyon", "69"), ("Marseille", "13")):
+        tout = [t for t in publiables
+                if (t.get("dep") or "") == code
+                and ARRONDISSEMENT.match(t.get("ville") or "")
+                and ARRONDISSEMENT.match(t["ville"]).group(1) == ville_mere]
+        if tout:
+            brut_villes.setdefault(slug(ville_mere), {})[code] = tout
+
+    communes = []
+    for sl, par_code in brut_villes.items():
+        for code, liste in par_code.items():
+            final = sl if len(par_code) == 1 else f"{sl}-{code}"
+            liste.sort(key=lambda s: ((s.get("ville") or "").lower(),
+                                      (s.get("nom") or "").lower()))
+            mere = ARRONDISSEMENT.match(liste[0].get("ville") or "")
+            nom = (mere.group(1) if mere and slug(mere.group(1)) == sl
+                   else liste[0].get("ville") or sl)
+            communes.append((final, nom, liste))
+
+    # Ce qu'il y a autour de chaque commune : grille grossiere puis distance
+    # exacte, pour ne pas comparer 3 847 communes a 7 135 sites.
+    grille = {}
+    for t in publiables:
+        grille.setdefault((round(t["lat"] / 0.25), round(t["lon"] / 0.25)), []).append(t)
+    voisinage = {}
+    for final, ville, liste in communes:
+        lat = sum(s["lat"] for s in liste) / len(liste)
+        lon = sum(s["lon"] for s in liste) / len(liste)
+        ici = {s["id"] for s in liste}
+        proches = []
+        gy, gx = round(lat / 0.25), round(lon / 0.25)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                for s in grille.get((gy + dy, gx + dx), ()):
+                    if s["id"] in ici:
+                        continue
+                    d = distance(lat, lon, s["lat"], s["lon"])
+                    if d <= RAYON_VILLE_KM:
+                        proches.append((s, d))
+        proches.sort(key=lambda p: p[1])
+        voisinage[final] = proches[:MAX_AUTOUR]
+
+
     # --- generation
     urls = {"fr": [], "en": []}
     for lang in T:
@@ -1634,6 +2148,27 @@ def main():
             ecrire(os.path.join(out, url_dep(lang, code), "index.html"),
                    page_departement(code, nom_dep, region, liste, lang, url_base, depot))
             urls[lang].append((url_dep(lang, code), "0.7"))
+        for crit in axes:
+            cle = crit["slug"][lang]
+            rep = crit["repartition"]
+            crit["sites"].sort(key=lambda s: ((s.get("ville") or "").lower(),
+                                              (s.get("nom") or "").lower()))
+            ecrire(os.path.join(out, url_critere(lang, cle), "index.html"),
+                   page_critere(crit, lang, None, crit["sites"], rep, url_base, depot))
+            urls[lang].append((url_critere(lang, cle), "0.6"))
+            for code, n in rep["par_dep"]:
+                if n < MIN_INTERSECTION:
+                    continue
+                dedans = [s for s in crit["sites"] if (s.get("dep") or "00") == code]
+                chemin = url_critere(lang, cle, rep["slug_dep"][code])
+                ecrire(os.path.join(out, chemin, "index.html"),
+                       page_critere(crit, lang, (code, noms_dep.get(code, code)),
+                                    dedans, rep, url_base, depot))
+                urls[lang].append((chemin, "0.5"))
+        for final, ville, liste in communes:
+            ecrire(os.path.join(out, url_ville(lang, final), "index.html"),
+                   page_ville(ville, final, liste, voisinage[final], lang, url_base, depot))
+            urls[lang].append((url_ville(lang, final), "0.6"))
         for t in publiables:
             ecrire(os.path.join(out, url_site(lang, t["id"]), "index.html"),
                    page_site(t, lang, voisins.get(t["id"], []), url_base, depot, maj))
@@ -1643,6 +2178,10 @@ def main():
                       for p in (t.get("photos") or [])]
             urls[lang].append((url_site(lang, t["id"]), "0.6", images))
 
+
+    # --- API statique, index compact et openapi.json
+    stat_api = build_api.construire(out, publiables, deps, url_base, maj, depot,
+                                    os.environ.get("API_URL"))
     # --- plan du site, robots, llms
     for lang in T:
         ecrire(os.path.join(out, f"sitemap-{lang}.xml"), sitemap(urls[lang], url_base, maj))
@@ -1658,6 +2197,9 @@ def main():
     print(f"-> {out}")
     print(f"   {len(publiables)} sites x 2 langues, {len(par_dep)} departements, "
           f"{pages} URL au plan du site")
+    print(f"   {len(axes)} criteres, {len(communes)} communes")
+    print(f"   API : {stat_api['facettes']} facettes, {stat_api['cellules']} cellules geo, "
+          f"openapi.json")
     print(f"   URL publique : {url_base}")
 
 

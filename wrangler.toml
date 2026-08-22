@@ -1,0 +1,15 @@
+# Serveur de recherche /api/tracks — voir api/worker.js et le README, § « Interroger
+# l'annuaire ». Deploiement :
+#
+#   npx wrangler login          # une fois, ouvre le navigateur
+#   npx wrangler deploy
+#
+# Puis declarer l'URL obtenue en variable de depot API_URL (Settings > Secrets and
+# variables > Actions > Variables), pour que le prochain build l'annonce dans
+# openapi.json et dans le document de capacites /api/tracks.json.
+name = "pistes-athle-api"
+main = "api/worker.js"
+compatibility_date = "2026-08-22"
+
+[observability]
+enabled = true
