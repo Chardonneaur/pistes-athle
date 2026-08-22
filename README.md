@@ -69,7 +69,11 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/departement/<CODE>/` et `/en/department/<CODE>/` | les installations d'un département, groupées par commune |
 | `/departements/` et `/en/departments/` | l'annuaire des 108 départements, groupés par région |
 | `/contributeurs/` et `/en/contributors/` | le classement des contributeurs et toutes leurs contributions |
-| `/sitemap.xml` | index de plan de site (une entrée par langue, ~14 400 URL) |
+| `/ville/<SLUG>/` et `/en/city/<SLUG>/` | les installations d'une commune, et celles à moins de 20 km |
+| `/pistes/<CRITÈRE>/` et `/en/tracks/<CRITERION>/` | développement, couloirs, accès libre, discipline, revêtement |
+| `/pistes/<CRITÈRE>/<DÉPARTEMENT>/` | le croisement des deux, quand il compte au moins trois installations |
+| `/api/…` et `/openapi.json` | l'API statique et son contrat — voir « Interroger l'annuaire » |
+| `/sitemap.xml` | index de plan de site (une entrée par langue, ~23 700 URL) |
 | `/robots.txt` | tout ouvert, robots d'IA compris, explicitement |
 | `/llms.txt` | description du site et du jeu de données pour un agent, avec le schéma des clés |
 
@@ -85,6 +89,66 @@ coordonnées, leur note et leurs avis en JSON-LD.
 Les libellés de l'interface vivent dans `assets/i18n.js` ; `<html lang>` décide de la
 langue servie. Les pages statiques, elles, sont traduites à la génération par
 `scripts/build_site.py`.
+
+## Interroger l'annuaire
+
+Un agent pouvait déjà **lire** le site : `llms.txt`, JSON-LD, `tracks.json`. Il ne
+pouvait pas l'**interroger** — pour répondre à « une piste de 400 m en accès libre près
+de Nantes », il fallait télécharger 1,5 Mo et filtrer soi-même. Trois couches y
+répondent, de la plus simple à la plus puissante.
+
+**Les facettes**, un fichier JSON par critère, générées par `scripts/build_api.py` :
+
+```
+/api/tracks/<ID>.json                     une installation
+/api/tracks/department/<CODE>.json        un département
+/api/tracks/city/<DEP>/<SLUG>.json        une commune
+/api/tracks/discipline/<DISCIPLINE>.json  et /<DEP>.json pour le croisement
+/api/tracks/length/<MÈTRES>.json          /api/tracks/surface/<REVÊTEMENT>.json
+/api/tracks/lanes/<N>.json                /api/tracks/free-access.json
+/api/geo/<LAT>/<LON>.json                 cellule de 0,1° (~11 km), avec ses voisines
+```
+
+Une facette n'existe que si elle contient au moins une installation : on part de la
+donnée, jamais du produit cartésien des vocabulaires.
+
+**L'index compact**, `/api/index.json` : les 7 135 installations réduites aux seuls
+champs sur lesquels on filtre, 1,0 Mo contre 1,5 Mo pour `tracks.json`. De quoi faire
+soi-même n'importe quelle conjonction, en un téléchargement.
+
+**Le serveur de recherche**, `api/worker.js`. GitHub Pages sert des fichiers statiques
+et **ignore la chaîne de requête** : `/api/tracks?city=Nantes` ne peut pas filtrer ici.
+Le worker comble exactement ce trou — paramètres combinables, recherche par rayon — en
+lisant l'index publié par le build, donc sans jamais pouvoir en diverger :
+
+```bash
+npx wrangler deploy api/worker.js --name pistes-athle-api
+API_URL=https://pistes-athle-api.<compte>.workers.dev python3 scripts/build_site.py
+```
+
+Sans `API_URL`, le site déclare qu'aucun serveur de recherche n'est disponible et
+renvoie vers les facettes. Mieux vaut un agent qui sait qu'il doit filtrer lui-même
+qu'un agent qui croit avoir filtré.
+
+`/api/tracks.json` est le **document de capacités** : il dit lequel de ces chemins est
+disponible sur cet hôte. C'est ce que `/api/tracks?...` renvoie quand la chaîne de
+requête a été jetée par l'hébergeur — un 404 n'apprendrait rien à personne.
+
+`/openapi.json` (OpenAPI 3.1) décrit le tout, et est généré : les vocabulaires sortent
+du jeu de données et changent au rebuild mensuel.
+
+### Deux règles de contrat
+
+Elles viennent de la donnée, pas du confort, et un agent qui les ignore publie des
+affirmations fausses.
+
+`acces_libre` vaut `true` ou `null`, **jamais** `false`. 5 551 des 7 135 installations
+n'ont aucune information d'accès : un blanc n'est pas un refus. C'est pourquoi
+`free_access=false` renvoie une 400 plutôt qu'une liste.
+
+Les filtres de discipline portent sur les agrès **déclarés** par l'exploitant. Ce qu'un
+contributeur a déduit d'une orthophoto est rendu à part, dans `agres_probables`, et
+`saut_indetermine` signifie « il y a un sautoir, on ne sait pas lequel ».
 
 ## D'où viennent les données
 
@@ -193,8 +257,11 @@ assets/page.css             feuille de style des pages statiques
 assets/manifest*.webmanifest  PWA, une par langue
 sw.js                       service worker (hors-ligne)
 scripts/build_data.py       Data ES + overrides -> data/tracks.json
-scripts/build_site.py       -> _site/ : application FR/EN, pages par site et par
-                            département, sitemaps, robots.txt, llms.txt
+scripts/build_site.py       -> _site/ : application FR/EN, pages par site, par
+                            département, par commune et par critère, sitemaps,
+                            robots.txt, llms.txt
+scripts/build_api.py        -> _site/api/ : facettes JSON, index compact, openapi.json
+api/worker.js               serveur de recherche /api/tracks?... (à déployer, optionnel)
 scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couverture
