@@ -7,7 +7,7 @@ principe : ils sont reproductibles avec les commandes données ici.*
 Le [Recensement des Équipements Sportifs](https://equipements.sports.gouv.fr/)
 est **déclaratif**. Ce qu'une commune ne déclare pas n'existe pour personne, et
 l'application ne peut pas l'inventer. Ce document dit comment chercher ce qui
-manque, ce que chaque source voit et ne voit pas, et les six manières dont la
+manque, ce que chaque source voit et ne voit pas, et les sept manières dont la
 méthode se trompe — toutes rencontrées en vrai.
 
 ## 1. Le cas qui a lancé la recherche
@@ -55,8 +55,9 @@ de 150 m — et affiche le reste avec sa commune, son adresse, l'équipement voi
 nommé, l'enceinte scolaire éventuelle, et la vue aérienne cadrée.
 
 Il affiche aussi, depuis le § 5.1, **ce qu'il a écarté et pourquoi**. Sur la
-Loire-Atlantique : 164 tracés exploitables, et **269 objets écartés** avant tout
-examen. C'est dans ce tas que se cache ce qui manque.
+Loire-Atlantique : 174 tracés exploitables, et **268 objets écartés** avant tout
+examen. C'est dans ce tas que se cache ce qui manque — le § 5.1 raconte ce qu'on
+y a trouvé en allant y voir.
 
 ### BD TOPO®
 
@@ -125,7 +126,7 @@ d'attente pour l'œil, pas une liste de pistes.
 La résolution n'est pas la limite : la BD ORTHO® est à **20 cm/pixel** et c'est
 le fond natif. Demander une image plus fine ne fait que du sur-échantillonnage.
 
-## 4. Les six façons de se tromper
+## 4. Les sept façons de se tromper
 
 Toutes rencontrées, toutes documentées par un cas réel.
 
@@ -204,6 +205,17 @@ revêtement de cette classe d'équipements. **Ne renseigner `surface` que si OSM
 le tague ou si quelqu'un l'a vu.** Décrire la couleur dans `note`, pas dans la
 donnée.
 
+### 4.7 La ligne droite dessinée en surface
+
+Le pendant du § 4.1. Un contributeur qui trace une ligne droite en *trait* est
+compris ; celui qui la trace en *surface* — un quadrilatère long et étroit,
+fermé — ne l'était pas : quatre points, donc « tracé trop grossier », et un
+périmètre valant deux fois la longueur. Sur la Loire-Atlantique, 41 objets dans
+ce cas, dont 12 assez longs pour compter.
+
+*Corrigé* : `ruban()` reconnaît la forme et rend la longueur, pas le périmètre.
+Détail et chiffres au § 5.1.1.
+
 ## 5. Deux règles de conduite
 
 ### 5.1 Un filtre qui écarte en silence ne se voit pas
@@ -213,13 +225,55 @@ rien dans sa sortie ne signalait qu'il avait rejeté quoi que ce soit. Depuis, i
 compte et affiche ses écarts par motif, avec des exemples :
 
 ```
-269 objet(s) ecarte(s) avant meme d'etre examine(s) :
+268 objet(s) ecarte(s) avant meme d'etre examine(s) :
    139  sport declare autre que l'athletisme
-    66  trace trop grossier (moins de 8 points)
-    64  longueur hors des bornes 60-600 m
+    68  longueur hors des bornes 60-600 m
+    55  sautoir ou aire de lancer (tag athletics)
+     6  boucle trop grossiere (moins de 8 points)
 ```
 
-Ces 66 tracés « trop grossiers » sont la prochaine chose à regarder.
+Ce tableau porte déjà la correction du § 5.1.1. Avant elle il annonçait 269
+objets, dont 66 « tracés trop grossiers » — et c'est en allant les regarder
+qu'on a compris ce qu'ils étaient.
+
+#### 5.1.1 Ce que contenaient les 66 « moins de 8 points »
+
+*Les 66 ont été regardés un par un à l'orthophoto, tracé OSM superposé, le
+22 août 2026.* Résultat, et il n'était pas celui qu'on attendait :
+
+- **aucun n'était un anneau.** Le seuil `MIN_POINTS = 8` ne cachait pas une
+  seule piste. Sa justification — *« une boucle de quatre ou cinq points est un
+  rectangle, l'emprise du stade »* — se vérifie sur les trois seuls objets
+  compacts du tas : l'emprise du stade d'athlétisme Muriel-Hurtis à
+  Saint-Philbert-de-Grand-Lieu (`way/257351463` — l'anneau réel est tracé à
+  l'intérieur), un triangle jeté sur le city-stade de Guenrouet
+  (`way/717882302`, dont l'anneau voisin est déjà à l'annuaire), et une aire de
+  lancer.
+- **mais le tas n'était pas fait de rectangles.** 41 des 66 étaient des **lignes
+  droites dessinées en surface** : un quadrilatère long et étroit, fermé, de
+  quatre à sept points. Le compte de points les rejetait, et leur « périmètre »
+  valait deux fois leur longueur — deux façons de se tromper sur le même objet.
+  Or `traces()` accepte déjà la ligne droite quand elle est tracée en *trait*
+  (§ 4.1) : c'est le même équipement, recensé par le ministère sous « Piste
+  d'athlétisme isolée », perdu pour une question de style de saisie.
+- **32 portaient un tag `athletics` de concours** (`long_jump`, `pole_vault`,
+  `shot_put`…). Un sautoir n'est pas une piste, et l'objet le dit lui-même : le
+  deviner à la taille était inutile.
+
+Le seuil n'était donc pas faux — il était le mauvais critère. Il n'a pas été
+abaissé : il a été **précédé** par un critère de forme, `ruban()`. On y cherche
+le rectangle qui a la même aire *A* et le même périmètre *P* que la boucle ; sa
+longueur vaut `P/4 + √((P/4)² − A)`. Un anneau n'a pas de solution — il enferme
+plus d'aire qu'aucun rectangle de ce périmètre. Une emprise de stade en donne
+une large. Une ligne droite en donne une étroite, et c'est sa longueur, pas son
+périmètre. Un garde-fou complète : une ligne droite tient dans la diagonale de
+sa boîte englobante, un sentier qui revient sur lui-même non.
+
+Sur la Loire-Atlantique, ce changement fait passer le balayage OSM de 164 à 174
+tracés exploitables : 7 lignes droites de plus rattachées à un site connu, et
+**3 candidats de plus à regarder**, tous loin de tout site déclaré — Mouzeil
+(`way/380425880`), Le Loroux-Bottereau (`way/1094046972`), Cordemais
+(`way/188079241`). Le tas des « moins de 8 points » tombe de 66 à 6.
 
 ### 5.2 Une fiche n'affirme que ce que quelqu'un a déclaré ou vu
 
@@ -244,6 +298,9 @@ tout quand on ne sait pas.
 | → déjà déclaré autrement | 1 |
 | → faux positifs | 11 |
 
+*Chiffres du balayage d'août 2026, avant le § 5.1.1 : le même balayage sort
+aujourd'hui 174 tracés exploitables et trois candidats de plus.*
+
 ### Pays de Retz — balayage BD TOPO® des city-stades
 
 38 communes (Pornic Agglo, Sud Retz Atlantique, Sud Estuaire, Grand Lieu).
@@ -267,7 +324,8 @@ Suivi dans les [issues du dépôt](https://github.com/Chardonneaur/pistes-athle/
 
 - [x] Outiller le canal toponymique — `scripts/lieux_a_regarder.py` ([#1](https://github.com/Chardonneaur/pistes-athle/issues/1))
 - [ ] **Lire les 706 planches-contact de la Loire-Atlantique** ([#1](https://github.com/Chardonneaur/pistes-athle/issues/1))
-- [ ] Regarder les 66 tracés écartés pour « moins de 8 points » ([#2](https://github.com/Chardonneaur/pistes-athle/issues/2))
+- [x] Regarder les 66 tracés écartés pour « moins de 8 points » — § 5.1.1 ([#2](https://github.com/Chardonneaur/pistes-athle/issues/2))
+- [ ] Aller voir les 3 lignes droites que `ruban()` a fait sortir (§ 5.1.1)
 - [ ] Étendre le balayage aux départements voisins ([#3](https://github.com/Chardonneaur/pistes-athle/issues/3))
 - [ ] Mesurer au décamètre les développements estimés ([#4](https://github.com/Chardonneaur/pistes-athle/issues/4))
 
