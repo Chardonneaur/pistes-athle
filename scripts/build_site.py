@@ -1871,8 +1871,28 @@ def robots(url_base):
             f"{blocs}\n\nSitemap: {url_base}/sitemap.xml\n")
 
 
-def llms_txt(url_base, total, avec_piste, deps, maj, depot):
-    """Convention llms.txt : une page d'orientation pour les agents."""
+def llms_txt(url_base, total, avec_piste, deps, maj, depot, api_url=None):
+    """Convention llms.txt : une page d'orientation pour les agents.
+
+    `api_url` est le serveur de recherche, s'il tourne. Sans lui, on dit que la
+    chaine de requete est inerte ici ; avec lui, on donne l'URL. Un llms.txt qui
+    tairait le serveur de recherche laisserait l'agent composer a la main des
+    conjonctions qu'une seule requete resout."""
+    if api_url:
+        interroger = f"""- **Recherche à paramètres combinables** : `{api_url}/api/tracks`.
+  Tous les critères se combinent en conjonction (ET), et la recherche par rayon accepte des
+  coordonnées quelconques — ce qu'aucun fichier pré-calculé ne peut offrir. Exemple :
+  `{api_url}/api/tracks?lat=47.21&lon=-1.55&radius=20&free_access=true`
+  / Combinable query parameters, including radius search around arbitrary coordinates.
+- Ce miroir-ci est **statique** : la chaîne de requête y est ignorée par l'hébergeur. Les facettes
+  ci-dessus et le serveur de recherche répondent aux mêmes questions — l'un fichier par fichier,
+  l'autre en un appel. / This mirror is static; the search server above takes parameters."""
+    else:
+        interroger = """- Ce site est **statique** : l'hébergeur ignore la chaîne de requête, donc `api/tracks?city=Nantes`
+  ne filtre rien. Utilisez les facettes, ou téléchargez `api/index.json`. Le document de capacités
+  indique si un serveur de recherche à paramètres est déployé.
+  / This host is static: query strings are ignored by the host. Use the facets, or download the
+  index and filter locally."""
     fr_total, fr_piste = f"{total:,}".replace(",", " "), f"{avec_piste:,}".replace(",", " ")
     return f"""# Où s'entraîner ? / Where to train?
 
@@ -1930,11 +1950,7 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   `api/tracks/surface/<REVETEMENT>.json` · `api/tracks/lanes/<N>.json` ·
   `api/tracks/free-access.json` · `api/tracks/reviewed.json` ·
   `api/geo/<LAT>/<LON>.json` (cellule de 0,1 degré).
-- Ce site est **statique** : l'hébergeur ignore la chaîne de requête, donc `api/tracks?city=Nantes`
-  ne filtre rien. Utilisez les facettes, ou téléchargez `api/index.json`. Le document de capacités
-  indique si un serveur de recherche à paramètres est déployé.
-  / This host is static: query strings are ignored by the host. Use the facets, or download the
-  index and filter locally.
+{interroger}
 - Deux règles de lecture / two reading rules: `acces_libre` vaut `true` ou `null`, **jamais**
   `false` — un blanc n'est pas un refus ; et les disciplines filtrent sur les agrès **déclarés**,
   ceux qu'un contributeur a déduits d'une orthophoto étant rendus à part.
@@ -2191,7 +2207,8 @@ def main():
     ecrire(os.path.join(out, "404.html"), page_404(url_base, len(publiables)))
     avec_piste = sum(1 for t in publiables if t["piste"])
     ecrire(os.path.join(out, "llms.txt"),
-           llms_txt(url_base, len(publiables), avec_piste, par_dep, maj, depot))
+           llms_txt(url_base, len(publiables), avec_piste, par_dep, maj, depot,
+                    os.environ.get("API_URL")))
 
     pages = sum(len(u) for u in urls.values())
     print(f"-> {out}")
