@@ -106,6 +106,7 @@ répondent, de la plus simple à la plus puissante.
 /api/tracks/discipline/<DISCIPLINE>.json  et /<DEP>.json pour le croisement
 /api/tracks/length/<MÈTRES>.json          /api/tracks/surface/<REVÊTEMENT>.json
 /api/tracks/lanes/<N>.json                /api/tracks/free-access.json
+/api/tracks/reviewed.json                 les installations qu'un contributeur a décrites
 /api/geo/<LAT>/<LON>.json                 cellule de 0,1° (~11 km), avec ses voisines
 ```
 
@@ -149,6 +150,16 @@ n'ont aucune information d'accès : un blanc n'est pas un refus. C'est pourquoi
 Les filtres de discipline portent sur les agrès **déclarés** par l'exploitant. Ce qu'un
 contributeur a déduit d'une orthophoto est rendu à part, dans `agres_probables`, et
 `saut_indetermine` signifie « il y a un sautoir, on ne sait pas lequel ».
+
+`nb_avis` est l'exception qui éclaire la règle : zéro y est un **fait**, pas un blanc.
+Cette base sait si quelqu'un a décrit un site, puisque les avis sont les siens. Donc
+`has_reviews=false` est légitime là où `free_access=false` ne l'est pas — et les 7 130
+installations que personne n'a encore vues, croisées avec une commune ou un département,
+sont exactement la file d'attente de la contribution :
+
+```
+/api/tracks?has_reviews=false&free_access=true&department=44   → 53 pistes à décrire
+```
 
 ## D'où viennent les données
 

@@ -1928,7 +1928,8 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   `api/tracks/<ID>.json` · `api/tracks/department/<CODE>.json` · `api/tracks/city/<DEP>/<SLUG>.json` ·
   `api/tracks/discipline/<DISCIPLINE>.json` (et `/<DEP>.json`) · `api/tracks/length/<METRES>.json` ·
   `api/tracks/surface/<REVETEMENT>.json` · `api/tracks/lanes/<N>.json` ·
-  `api/tracks/free-access.json` · `api/geo/<LAT>/<LON>.json` (cellule de 0,1 degré).
+  `api/tracks/free-access.json` · `api/tracks/reviewed.json` ·
+  `api/geo/<LAT>/<LON>.json` (cellule de 0,1 degré).
 - Ce site est **statique** : l'hébergeur ignore la chaîne de requête, donc `api/tracks?city=Nantes`
   ne filtre rien. Utilisez les facettes, ou téléchargez `api/index.json`. Le document de capacités
   indique si un serveur de recherche à paramètres est déployé.
@@ -1939,6 +1940,11 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   ceux qu'un contributeur a déduits d'une orthophoto étant rendus à part.
   / `acces_libre` is never `false`, only `true` or `null`; discipline filters use declared
   equipment only.
+- `nb_avis` fait exception : zéro y est un fait, pas un blanc. Cette base sait si quelqu'un a
+  décrit un site, donc `has_reviews=false` est légitime là où `free_access=false` ne l'est pas.
+  Les {fr_total} moins les 5 décrites forment la file d'attente de la contribution — croisez-la
+  avec une commune ou un département pour savoir où aller voir.
+  / `nb_avis` is the exception: zero is a fact, so `has_reviews=false` is meaningful.
 
 ## Pages de recherche / Search pages
 

@@ -118,6 +118,10 @@ def compact(t):
         r["g"] = sorted(t["agres"])
     if t.get("agres_probables"):
         r["gp"] = sorted(t["agres_probables"])
+    if t.get("nb_avis"):
+        r["nv"] = t["nb_avis"]
+    if t.get("note_moyenne"):
+        r["nt"] = t["note_moyenne"]
     return r
 
 
@@ -125,7 +129,7 @@ KEYMAP = {"i": "id", "n": "nom", "v": "ville", "d": "departement", "cp": "code_p
           "y": "latitude", "x": "longitude", "p": "piste",
           "lp": "longueur_piste_m", "lpp": "longueur_probable_m", "cl": "couloirs",
           "s": "revetement", "al": "acces_libre", "g": "agres_declares",
-          "gp": "agres_probables"}
+          "gp": "agres_probables", "nv": "nb_avis", "nt": "note_moyenne"}
 
 
 def plein(t, url_base):
@@ -145,6 +149,11 @@ def plein(t, url_base):
          "acces_libre": True if t.get("al") else None,
          "agres_declares": t.get("g") or [],
          "agres_probables": t.get("gp") or [],
+         # Ici, contrairement a `acces_libre`, l'absence *est* un fait : on sait
+         # si quelqu'un a decrit ce site, parce que c'est notre propre base.
+         # Zero avis se dit donc zero, et se filtre.
+         "nb_avis": t.get("nv") or 0,
+         "note_moyenne": t.get("nt"),
          "url": f"{url_base}/site/{t['i']}/"}
     return r
 
@@ -225,6 +234,11 @@ def facettes(index, deps):
             seau(f"surface/{SURFACE_EN[t['s']]}/{dep}",
                  {"surface": t["s"], "department": dep})["ids"].append(sid)
 
+        if t.get("nv"):
+            seau("reviewed", {"has_reviews": True})["ids"].append(sid)
+            seau(f"reviewed/{dep}",
+                 {"has_reviews": True, "department": dep})["ids"].append(sid)
+
         if t.get("al"):
             seau("free-access", {"free_access": True})["ids"].append(sid)
             seau(f"free-access/{dep}",
@@ -274,6 +288,12 @@ def parametres_recherche():
                                   "`unknown` : ceux dont l'acces n'est pas renseigne. "
                                   "`false` est **refuse** (400) — un blanc n'est pas un "
                                   "non, et repondre par une liste serait inventer."),
+        ("has_reviews", "boolean", "`true` : les installations qu'au moins un contributeur "
+                                   "a decrites. `false` : celles que personne n'a encore "
+                                   "vues — 7 130 sur 7 135. Contrairement a `free_access`, "
+                                   "le `false` est ici legitime : l'absence d'avis est un "
+                                   "fait de notre propre base, pas un silence du "
+                                   "recensement."),
         ("certainty", "string", "`declared` (defaut) : les disciplines filtrent sur les "
                                 "agres declares. `probable` : sur les agres deduits d'une "
                                 "orthophoto. `any` : les deux."),
@@ -295,7 +315,10 @@ def openapi(url_base, api_url, index, maj):
     premier passage du cron."""
     def param(nom, typ, desc, exemple=None):
         s = {"type": typ}
-        if typ == "boolean":
+        if typ == "boolean" and nom != "has_reviews":
+            # Une discipline se demande avec true : « sans cet agres » n'existe
+            # pas, une fiche muette n'affirmant pas l'absence. `has_reviews`
+            # est le seul booleen ou le faux veut dire quelque chose.
             s["enum"] = [True]
         d = {"name": nom, "in": "query", "required": False,
              "description": desc, "schema": s}
@@ -341,6 +364,12 @@ def openapi(url_base, api_url, index, maj):
                                                "`saut_indetermine` / `lancer_indetermine` "
                                                "signalent un agres dont la discipline est "
                                                "inconnue."},
+            "nb_avis": {"type": "integer",
+                        "description": "Nombre d'avis rediges par des contributeurs. "
+                                       "Zero est un fait, pas un blanc : la base sait si "
+                                       "quelqu'un a decrit ce site."},
+            "note_moyenne": {"type": ["number", "null"],
+                             "description": "Moyenne des notes, si au moins un avis en porte une."},
             "url": {"type": "string", "format": "uri",
                     "description": "Fiche HTML de l'installation, avec son JSON-LD."},
         },
@@ -449,6 +478,8 @@ def openapi(url_base, api_url, index, maj):
          "Croisement couloirs x departement", "n", "Nombre minimal de couloirs", "6", None),
         ("/api/tracks/free-access.json", "listFreeAccess",
          "Installations declarees en acces libre", None, None, None, None),
+        ("/api/tracks/reviewed.json", "listReviewed",
+         "Installations decrites par un contributeur", None, None, None, None),
         ("/api/geo/{lat}/{lon}.json", "listByCell",
          "Cellule geographique de 0,1 degre", "lat",
          f"Latitude arrondie au pas de {PAS_GRILLE}", "47.2", None),
@@ -551,6 +582,7 @@ def capacites(url_base, api_url, maj, nb, facettes_dispo):
             "surface": f"{url_base}/api/tracks/surface/{{surface}}.json",
             "lanes_min": f"{url_base}/api/tracks/lanes/{{n}}.json",
             "free_access": f"{url_base}/api/tracks/free-access.json",
+            "reviewed": f"{url_base}/api/tracks/reviewed.json",
             "geo_cell": f"{url_base}/api/geo/{{lat}}/{{lon}}.json",
         },
         "vocabularies": {
@@ -562,6 +594,10 @@ def capacites(url_base, api_url, maj, nb, facettes_dispo):
                            "pas d'information d'acces, et un blanc n'est pas un non.",
             "disciplines": "Filtrent sur les agres declares. Les agres deduits d'une "
                            "orthophoto sont rendus a part, dans agres_probables.",
+            "has_reviews": "true | false. Le false est ici legitime, contrairement a "
+                           "free_access : l'absence d'avis est un fait de cette base. "
+                           "Sur cet hote statique, les 7 130 installations sans avis se "
+                           "obtiennent en retirant reviewed.json de index.json.",
         },
         "facets_generated": facettes_dispo,
     }

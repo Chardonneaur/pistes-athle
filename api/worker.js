@@ -100,6 +100,10 @@ function plein(t, distance) {
     acces_libre: t.al ? true : null,
     agres_declares: t.g || [],
     agres_probables: t.gp || [],
+    // Ici, contrairement a acces_libre, l'absence *est* un fait : cette base
+    // sait si quelqu'un a decrit ce site. Zero avis se dit zero, et se filtre.
+    nb_avis: t.nv || 0,
+    note_moyenne: t.nt ?? null,
     url: `${SOURCE}/site/${t.i}/`,
   };
 }
@@ -199,6 +203,18 @@ export default {
       compris.surface = revetement;
     }
 
+    // --- avis. Le seul booleen dont le faux veut dire quelque chose : « aucun
+    // contributeur n'a encore decrit ce site » est une affirmation que cette
+    // base peut faire, et c'est la file d'attente de la contribution.
+    let avis = null;
+    if (q.has("has_reviews")) {
+      const v = q.get("has_reviews").toLowerCase();
+      if (["true", "1", "yes"].includes(v)) avis = true;
+      else if (["false", "0", "no"].includes(v)) avis = false;
+      else return erreur("Valeur invalide", "has_reviews", "true | false");
+      compris.has_reviews = avis;
+    }
+
     const certitude = (q.get("certainty") || "declared").toLowerCase();
     if (!["declared", "probable", "any"].includes(certitude)) {
       return erreur("Valeur invalide", "certainty", "declared | probable | any");
@@ -238,6 +254,8 @@ export default {
         // « Lyon » doit attraper « Lyon 3e Arrondissement ».
         if (sv !== ville && !sv.startsWith(`${ville}-`)) continue;
       }
+      if (avis === true && !t.nv) continue;
+      if (avis === false && t.nv) continue;
       if (compris.free_access === true && !t.al) continue;
       if (compris.free_access === "unknown" && t.al) continue;
       if (lgMin !== null && !(t.lp >= lgMin && t.lp <= lgMax)) continue;
