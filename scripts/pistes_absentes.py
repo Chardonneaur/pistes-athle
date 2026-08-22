@@ -29,6 +29,7 @@ contribution (identifiant `c-...`).
 """
 import argparse
 import json
+import math
 import os
 import re
 import sys
@@ -57,6 +58,21 @@ MIN_METRES, MAX_METRES = 60.0, 600.0
 # Un trace ouvert n'a pas cette contrainte : une ligne droite tient en deux.
 MIN_POINTS = 8
 MIN_POINTS_OUVERT = 2
+
+# Un sautoir, un couloir d'elan, une aire de lancer : de l'athletisme, mais pas
+# une piste. Le tag `athletics` le dit lui-meme, et le dire vaut mieux que de
+# le deviner a la taille. `sprint` n'y est pas : c'est une ligne droite.
+CONCOURS = {"long_jump", "triple_jump", "high_jump", "pole_vault",
+            "shot_put", "discus_throw", "javelin_throw", "hammer_throw"}
+
+# Beaucoup de contributeurs dessinent une ligne droite comme une *surface* : un
+# quadrilatere long et etroit, ferme, de quatre points. Le compte de points la
+# rejette et son perimetre vaut deux fois sa longueur - deux facons de se
+# tromper sur le meme objet. Huit couloirs de 1,22 m font 9,8 m de large ; plus
+# large que cela, ou moins de quatre fois plus long que large, ce n'est plus une
+# ligne droite mais une emprise.
+LARGEUR_RUBAN = 12.0
+ALLONGEMENT_RUBAN = 4.0
 
 # Data ES place son point ou il veut dans l'installation : a l'entree, sur le
 # gymnase voisin, parfois a la mairie. Au-dela de cette distance on considere
@@ -167,7 +183,10 @@ def traces(e):
     une boucle fermee la rendait invisible, elle et toutes les lignes droites
     isolees, que le ministere recense pourtant sous « Piste d'athletisme
     isolee ». On garde le trace, et on dit qu'il est ouvert : sa longueur n'est
-    alors pas un tour de piste."""
+    alors pas un tour de piste.
+
+    La meme ligne droite dessinee en *surface* revient ici fermee, et c'est
+    `ruban()` qui la remet dans le bon sens : voir candidats()."""
     if e["type"] == "way":
         g = points(e.get("geometry"))
         return [(g, ferme(g))] if g else []
@@ -191,13 +210,57 @@ def emprise(g):
     return max(cotes), min(cotes)
 
 
+def aire(g):
+    """Aire de la boucle, en metres carres : formule du lacet, projection locale.
+
+    Sur quelques dizaines de metres, un degre de latitude vaut 111 320 m et un
+    degre de longitude autant, multiplie par le cosinus de la latitude. La
+    deformation residuelle est trois ordres de grandeur sous ce qu'on en fait."""
+    lat0 = sum(p[0] for p in g) / len(g)
+    k = math.cos(math.radians(lat0))
+    xy = [(p[1] * k * 111320.0, p[0] * 111320.0) for p in g]
+    return abs(sum(xy[i][0] * xy[i + 1][1] - xy[i + 1][0] * xy[i][1]
+                   for i in range(len(xy) - 1))) / 2
+
+
+def ruban(g):
+    """Longueur de la ligne droite, si cette boucle n'est qu'un ruban.
+
+    On cherche le rectangle qui a la meme aire A et le meme perimetre P que la
+    boucle : sa longueur vaut P/4 + racine((P/4)^2 - A). Un anneau n'a pas de
+    solution - il enferme plus d'aire qu'aucun rectangle de ce perimetre - et
+    l'emprise d'un stade en donne une large. Retourne None dans les deux cas.
+
+    C'est le critere que le compte de points remplacait mal : sur les
+    soixante-six objets que la Loire-Atlantique ecartait pour « moins de huit
+    points », aucun n'etait un anneau, et quarante et un etaient des lignes
+    droites dessinees en surface - douze passe les bornes de longueur."""
+    p = perimetre(g)
+    a = aire(g)
+    d = (p / 4) ** 2 - a
+    if d <= 0:
+        return None
+    longueur = p / 4 + math.sqrt(d)
+    largeur = a / longueur if longueur else 0
+    if largeur > LARGEUR_RUBAN or longueur < ALLONGEMENT_RUBAN * largeur:
+        return None
+    # Une boucle mince mais repliee - un sentier qui revient sur lui-meme, un
+    # pumptrack - enferme aussi peu d'aire qu'un ruban. Ce qui les separe : une
+    # ligne droite tient dans sa boite englobante en diagonale, pas au-dela.
+    cotes = emprise(g)
+    if longueur > 1.05 * math.hypot(*cotes):
+        return None
+    return longueur
+
+
 # Motifs d'ecart, dans l'ordre ou ils sont testes. Ils sont comptes et
 # affiches : un filtre qui ecarte en silence ne se voit pas, et c'est ainsi que
 # la piste d'Arthon-en-Retz a manque pendant tout un balayage.
 MOTIFS = {
     "autre_sport": "sport declare autre que l'athletisme",
+    "concours": "sautoir ou aire de lancer (tag athletics)",
     "sans_trace": "aucun trace geometrique exploitable",
-    "trop_peu_de_points": "trace trop grossier (moins de %d points)" % MIN_POINTS,
+    "trop_peu_de_points": "boucle trop grossiere (moins de %d points)" % MIN_POINTS,
     "hors_bornes": "longueur hors des bornes %.0f-%.0f m" % (MIN_METRES, MAX_METRES),
 }
 
@@ -216,20 +279,28 @@ def candidats(data, ecartes=None):
         if not athle_possible(tags):
             refuser("autre_sport", e, f" (sport={tags.get('sport')})")
             continue
+        concours = set(re.split(r"[;,| ]+", (tags.get("athletics") or "").lower()))
+        if concours & CONCOURS:
+            refuser("concours", e, f" (athletics={tags['athletics']})")
+            continue
         vus = traces(e)
         if not vus:
             refuser("sans_trace", e)
             continue
         for g, boucle in vus:
+            droite = ruban(g) if boucle else None
+            if droite:
+                boucle = False            # une ligne droite, pas un tour de piste
             if len(g) < (MIN_POINTS if boucle else MIN_POINTS_OUVERT):
                 refuser("trop_peu_de_points", e, f" ({len(g)} points)")
                 continue
-            m = perimetre(g)
+            m = droite or perimetre(g)
             if not MIN_METRES <= m <= MAX_METRES:
                 refuser("hors_bornes", e, f" ({m:.0f} m)")
                 continue
             out.append({"osm": f"{e['type']}/{e['id']}", "g": g, "m": m,
-                        "pts": len(g), "c": centre(g), "tags": tags, "boucle": boucle})
+                        "pts": len(g), "c": centre(g), "tags": tags, "boucle": boucle,
+                        "ruban": bool(droite)})
     return out
 
 
@@ -376,6 +447,7 @@ def examiner(dep, sites, data, rayon, min_m, max_m, ecartes=None):
             "url": f"https://www.openstreetmap.org/{c['osm']}",
             "lat": round(c["c"][0], 5), "lon": round(c["c"][1], 5),
             "perimetre": round(c["m"], 1), "points": c["pts"], "boucle": c["boucle"],
+            "ruban": c.get("ruban", False),
             "longueur": round(longueur), "largeur": round(largeur),
             "couloirs": c["tags"].get("lanes"),
             "surface": c["tags"].get("surface"),
@@ -399,6 +471,7 @@ def afficher(fiche):
         print(f"    {fiche['lieu_osm']}" +
               (f"  (enceinte scolaire : {fiche['ecole']})" if fiche.get("scolaire") else ""))
     detail = [f"anneau de {fiche['perimetre']:.0f} m" if fiche["boucle"]
+              else f"ligne droite de {fiche['perimetre']:.0f} m" if fiche.get("ruban")
               else f"trace ouvert de {fiche['perimetre']:.0f} m",
               f"{fiche['longueur']} x {fiche['largeur']} m",
               f"{fiche['points']} points"]
