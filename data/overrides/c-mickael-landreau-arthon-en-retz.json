@@ -10,6 +10,59 @@
   "lat": 47.12194,
   "lon": -1.93581,
   "piste": true,
-  "longueur_probable": 360,
-  "note": "Anneau du complexe sportif Mickaël Landreau, contre le collège Joséphine-Baker, à Arthon-en-Retz (commune déléguée de Chaumes-en-Retz). Absent du recensement du ministère. OpenStreetMap le trace (way/1429910955, leisure=track) mais son tracé reste ouvert : il s'arrête à 52 m de son point de départ. Refermé, il développe 370 m ; l'emprise de 134 × 76 m en donne 355 — d'où l'ordre de grandeur de 360 m, estimé, non mesuré sur place. L'orthophoto IGN d'avril 2025 montre un anneau en enrobé noir tout neuf, encore en chantier, autour d'un intérieur en sable : aucun marquage de couloirs n'y est lisible, ce qui ne veut pas dire qu'il n'y en a pas aujourd'hui. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+  "couloirs": 4,
+  "surface": "synthetique",
+  "couvert": false,
+  "eclairage": true,
+  "acces_libre": true,
+  "scolaire": false,
+  "longueur_probable": 250,
+  "agres": ["longueur", "triple", "hauteur", "poids", "disque", "marteau", "javelot"],
+  "acces_note": "Sanitaires visibles juste à côté de la piste ; leur ouverture n'a pas été vérifiée le jour de la visite.",
+  "photos": [
+    {
+      "fichier": "01-01-vue-ensemble-sautoir-hauteur-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Vue d'ensemble avec l'abri alu du sautoir en hauteur sur la piste, gymnase en fond",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-02-ligne-droite-fosse-saut-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Ligne droite vers la fosse de saut en longueur et triple saut",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-03-couloir-elan-javelot-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Couloir d'élan du javelot",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "04-04-cercle-lancer-poids-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Cercle de lancer du poids, gazon synthétique",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "05-05-couloirs-marques-entrainement-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Couloirs 1 et 2 avec marques d'entraînement",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "06-06-virage-piste-cage-lancers-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Virage de la piste, cage de lancer du disque et du marteau au loin",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "07-07-cage-lancer-disque-marteau-complexe-sportif-mickael-landreau-arthon-en-retz-chaumes-en-retz.jpg",
+      "legende": "Cage de lancer du disque et du marteau, filets en place",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-22",
+      "note": 5,
+      "texte": "Piste flambant neuve, revêtement tartan impeccable sur l'anneau à 4 couloirs et sa ligne droite d'arrivée élargie à 6 couloirs pour le 100 m. Les aires de lancer (poids, disque, marteau, javelot) et la fosse de saut en longueur/triple saut sont déjà en place et utilisables. Seuls bémols : le sautoir à la perche n'est pas encore équipé, les poteaux étant commandés et en attente de livraison par la mairie, et le sautoir en hauteur est présent mais son tapis de réception reste stocké dans son abri, donc pas prêt à l'usage immédiat. Accès libre le jour de la visite, sanitaires à proximité immédiate."
+    }
+  ],
+  "note": "Visite sur place le 22 août 2026. Anneau tout neuf en tartan (revêtement synthétique confirmé au sol, impeccable, aucune fissure ni marquage effacé constaté), à 4 couloirs, avec une ligne droite d'arrivée élargie à 6 couloirs pour le 100 m. Longueur de l'anneau donnée à 250 m par une élue de la commune sur place : non mesurée au décamètre, donc en longueur_probable plutôt qu'en longueur_piste. Ce chiffre remplace l'estimation géométrique précédente (360 m, déduite d'OpenStreetMap et de l'orthophoto IGN) ; les deux sources restent des estimations et l'écart n'est pas expliqué — à vérifier par une mesure directe lors d'une prochaine visite. Portail ouvert, entrée libre le jour de la visite. Site indépendant du collège Joséphine-Baker voisin (pas d'enceinte scolaire partagée). Mâts d'éclairage neufs en place autour de l'anneau. Agrès constatés : fosse de saut en longueur et triple saut, cercle de lancer du poids (gazon synthétique), cage de lancer du disque et du marteau (filets en place), couloir d'élan du javelot. Sautoir en hauteur présent mais son tapis de réception est stocké dans un abri en aluminium sur roulettes (marque DIMA), donc pas déployé ni utilisable en l'état. Sautoir à la perche non équipé : les poteaux sont commandés et en attente de livraison par la mairie, d'après une élue rencontrée sur place — l'agrès n'est donc pas listé comme présent. Les deux noms coexistent sur place, constaté le 22 août 2026 : « Stade des Chaumes » désigne l'ensemble du complexe (déclaré au Recensement des Équipements Sportifs sous I440050001, avec gymnase et tribune de 556 places), « complexe sportif Mickaël Landreau » désigne plus précisément cette installation."
 }
