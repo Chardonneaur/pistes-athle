@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '10';
+const APP_VERSION = '11';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -74,6 +74,11 @@ const FILTERS = [
   { id: 'noeco',  test: t => !t.scolaire },
   { id: 'photo',  test: t => t.photos.length > 0 },
   { id: 'avis',   test: t => t.avis.length > 0 },
+  /* L'inverse d'« avec avis » n'est pas un caprice de symetrie : c'est la file
+     d'attente de la contribution. 7 129 sites sur 7 134 n'ont ete decrits par
+     personne, et c'est la seule question a laquelle le recensement ne peut pas
+     repondre — les avis sont les notres. */
+  { id: 'noavis', test: t => t.avis.length === 0 },
 ].map(f => ({ ...f, label: DICO.filtres[f.id] }));
 
 const has = (t, a) => t.agres.includes(a);
@@ -84,9 +89,23 @@ const has = (t, a) => t.agres.includes(a);
    menus a cases a cocher, et la barre ne garde que ce qu'on regle d'un doigt. */
 const GROUPES = [
   { id: 'agres', cle: 'g_agres', filtres: ['perche', 'long', 'haut', 'poids', 'lancer', 'sauts'] },
-  { id: 'equip', cle: 'g_equip', filtres: ['ecl', 'couv', 'vest', 'noeco', 'photo', 'avis'] },
+  { id: 'equip', cle: 'g_equip', filtres: ['ecl', 'couv', 'vest', 'noeco', 'photo', 'avis', 'noavis'] },
 ];
 const GROUPE_DE = new Map(GROUPES.flatMap(g => g.filtres.map(f => [f, g])));
+
+/* « Avec avis » et « Sans avis » se contredisent : les cocher tous deux ne
+   donne jamais rien. Cocher l'un decoche donc l'autre, plutot que de laisser
+   quelqu'un devant zero resultat sans comprendre pourquoi. */
+const OPPOSES = new Map([['avis', 'noavis'], ['noavis', 'avis']]);
+
+function decocherOppose(id) {
+  const autre = OPPOSES.get(id);
+  if (!autre || !state.active.delete(autre)) return;
+  const el = document.querySelector(`#chips [data-f="${autre}"]`);
+  if (!el) return;
+  if (el.type === 'checkbox') el.checked = false;
+  el.classList.remove('is-on');
+}
 
 /* ------------------------------------------------------------------ état */
 const state = { all: [], deps: {}, shown: [], limit: 40, active: new Set(['piste']),
@@ -1033,6 +1052,7 @@ function init() {
     const id = e.target.dataset && e.target.dataset.f;
     if (!id || e.target.type !== 'checkbox') return;
     e.target.checked ? state.active.add(id) : state.active.delete(id);
+    if (e.target.checked) decocherOppose(id);
     majGroupes();
     apply();
   });
@@ -1043,7 +1063,9 @@ function init() {
     if (!id) return;
     if (id === 'near' && !state.me) { geolocate(); }
     state.active.has(id) ? state.active.delete(id) : state.active.add(id);
+    if (state.active.has(id)) decocherOppose(id);
     b.classList.toggle('is-on');
+    majGroupes();
     apply();
   });
 

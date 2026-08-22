@@ -642,7 +642,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-{liens}<link rel="stylesheet" href="{r}assets/page.css?v=10">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=11">
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
 {blocs}
@@ -1827,7 +1827,7 @@ def page_404(url_base, total):
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{url_base}/assets/page.css?v=10">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=11">
 </head>
 <body>
 <header class="page-bar">
