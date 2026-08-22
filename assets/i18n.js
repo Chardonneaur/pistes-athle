@@ -138,7 +138,7 @@ const FR = {
     libre: 'Accès libre', perche: 'Perche', long: 'Longueur', haut: 'Hauteur',
     poids: 'Poids', lancer: 'Lancers longs', sauts: 'Un sautoir', ecl: 'Éclairée',
     couv: 'Couverte', vest: 'Vestiaires', noeco: 'Hors enceinte scolaire',
-    photo: '📷 Avec photos', avis: '★ Avec avis',
+    photo: '📷 Avec photos', avis: '★ Avec avis', noavis: '☆ Sans avis',
   },
 
   tags: {
@@ -375,7 +375,7 @@ const EN = {
     libre: 'Free access', perche: 'Pole vault', long: 'Long jump', haut: 'High jump',
     poids: 'Shot put', lancer: 'Long throws', sauts: 'A jump area', ecl: 'Floodlit',
     couv: 'Indoor', vest: 'Changing rooms', noeco: 'Outside school grounds',
-    photo: '📷 With photos', avis: '★ With reviews',
+    photo: '📷 With photos', avis: '★ With reviews', noavis: '☆ Without reviews',
   },
 
   tags: {
