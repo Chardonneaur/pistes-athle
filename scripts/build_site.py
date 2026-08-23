@@ -92,6 +92,9 @@ T = {
                       "piste, revêtement, sautoirs, aires de lancer, accès.",
         "index_intro": "Chaque département renvoie vers la liste de ses installations d'athlétisme, "
                        "puis vers la fiche détaillée de chacune.",
+        "index_criteres": "Par critère",
+        "index_criteres_intro": "Les mêmes installations, prises par ce qu'on y cherche : "
+                                "développement de l'anneau, couloirs, revêtement, agrès, accès.",
         "dep_titre": "Pistes d'athlétisme en {dep}",
         "dep_desc": "Les {n} sites d'athlétisme du département {dep} ({reg}) : revêtement, "
                     "couloirs, sautoirs, aires de lancer, éclairage, accès libre.",
@@ -188,6 +191,9 @@ T = {
                       "track, surface, jump and throwing areas, access.",
         "index_intro": "Each department links to the list of its athletics facilities, "
                        "and from there to the full record of each venue.",
+        "index_criteres": "By criterion",
+        "index_criteres_intro": "The same venues, taken by what people look for: lap length, "
+                                "lanes, surface, equipment, access.",
         "dep_titre": "Athletics tracks in {dep}, France",
         "dep_desc": "The {n} athletics venues of the {dep} department ({reg}), France: surface, "
                     "lanes, jump and throwing areas, floodlighting, free access.",
@@ -671,7 +677,7 @@ def pied(lang, chemin, url_base, depot):
 """
 
 
-def page_site(t, lang, voisins, url_base, depot, maj):
+def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None):
     chemin = url_site(lang, t["id"])
     r = rel(chemin)
     tr = T[lang]
@@ -762,16 +768,21 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     if avis_ld:
         lieu["review"] = avis_ld
 
+    # Le fil d'Ariane est aussi un chemin d'exploration. Sans son maillon
+    # commune, les pages de ville ne sont atteignables que par le plan du site :
+    # rien n'y mene depuis l'accueil, et une page orpheline est exploree tard,
+    # re-exploree rarement, et ne recoit aucune autorite interne.
+    etapes = [(tr["accueil"], f"{url_base}/{url_appli(lang)}"),
+              (t.get("dep_nom") or "France",
+               f"{url_base}/{url_dep(lang, t['dep'])}" if t.get("dep")
+               else f"{url_base}/{url_index(lang)}")]
+    if ville_slug and ville:
+        etapes.append((ville, f"{url_base}/{url_ville(lang, ville_slug)}"))
+    etapes.append((nom, url_absolue))
     fil = {
         "@context": "https://schema.org", "@type": "BreadcrumbList",
-        "itemListElement": [
-            {"@type": "ListItem", "position": 1, "name": tr["accueil"],
-             "item": f"{url_base}/{url_appli(lang)}"},
-            {"@type": "ListItem", "position": 2, "name": t.get("dep_nom") or "France",
-             "item": f"{url_base}/{url_dep(lang, t['dep'])}" if t.get("dep")
-                     else f"{url_base}/{url_index(lang)}"},
-            {"@type": "ListItem", "position": 3, "name": nom, "item": url_absolue},
-        ],
+        "itemListElement": [{"@type": "ListItem", "position": i + 1, "name": n, "item": u}
+                            for i, (n, u) in enumerate(etapes)],
     }
 
     # --- corps
@@ -804,10 +815,12 @@ def page_site(t, lang, voisins, url_base, depot, maj):
         lieu["image"] = couverture["url"]
     lignes = [entete(lang, titre, desc, chemin, alternatives, [lieu, fil], url_base,
                      image=couverture, preconnect=origines)]
+    maillon_ville = (f'<a href="{r}{url_ville(lang, ville_slug)}">{E(ville)}</a> ›\n  '
+                     if ville_slug and ville else "")
     lignes.append(f"""
 <nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr['accueil'])}</a> ›
   <a href="{r}{url_dep(lang, t['dep'])}">{E(t.get('dep_nom') or t.get('dep') or '')}</a> ›
-  {E(nom)}</nav>
+  {maillon_ville}{E(nom)}</nav>
 <h1>{E(nom)}</h1>
 <p class="loc">{E(adresse)}{f" · {E(t['dep_nom'])}" if t.get('dep_nom') else ''}</p>""")
 
@@ -942,7 +955,7 @@ def page_site(t, lang, voisins, url_base, depot, maj):
     return "".join(lignes)
 
 
-def page_departement(code, nom_dep, region, sites, lang, url_base, depot):
+def page_departement(code, nom_dep, region, sites, lang, url_base, depot, villes=None):
     chemin = url_dep(lang, code)
     r = rel(chemin)
     tr = T[lang]
@@ -1003,7 +1016,13 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot):
             if ville_courante is not None:
                 lignes.append("</ul>")
             ville_courante = s.get("ville")
-            lignes.append(f'<h2 class="ville">{E(ville_courante or "")}</h2><ul class="liste">')
+            # Le regroupement se fait sur le nom exact de la commune : tous les
+            # sites du groupe partagent donc la meme page de ville, et le titre
+            # du groupe est le seul lien qui y mene depuis le departement.
+            sl = (villes or {}).get(s["id"])
+            etiquette = (f'<a href="{r}{url_ville(lang, sl)}">{E(ville_courante or "")}</a>'
+                         if sl else E(ville_courante or ""))
+            lignes.append(f'<h2 class="ville">{etiquette}</h2><ul class="liste">')
         details = []
         tour, sur = tour_de_piste(s)
         if tour:
@@ -1111,7 +1130,7 @@ def page_contributeurs(communaute, par_id, lang, url_base, depot, maj):
     return "\n".join(lignes)
 
 
-def page_index(deps_tries, total, lang, url_base, depot):
+def page_index(deps_tries, total, lang, url_base, depot, axes=()):
     chemin = url_index(lang)
     r = rel(chemin)
     tr = T[lang]
@@ -1143,6 +1162,18 @@ def page_index(deps_tries, total, lang, url_base, depot):
                       f'<span class="meta">({nb})</span></a>')
     if region_courante is not None:
         lignes.append("</div>")
+
+    # Les pages par critere n'etaient liees que les unes aux autres. L'annuaire
+    # des departements est deja le hub du site : c'est la qu'elles se raccrochent.
+    if axes:
+        lignes.append(f'<h2>{E(tr["index_criteres"])}</h2>'
+                      f'<p class="lede">{E(tr["index_criteres_intro"])}</p><div class="cols">')
+        for crit in axes:
+            lignes.append(f'<a href="{r}{url_critere(lang, crit["slug"][lang])}">'
+                          f'{E(crit["titre"][lang].format(dep=""))} '
+                          f'<span class="meta">({len(crit["sites"])})</span></a>')
+        lignes.append("</div>")
+
     lignes.append(pied(lang, chemin, url_base, depot))
     return "".join(lignes)
 
@@ -2123,6 +2154,18 @@ def main():
                    else liste[0].get("ville") or sl)
             communes.append((final, nom, liste))
 
+    # La page de commune de chaque site, pour que la fiche et la page du
+    # departement puissent y renvoyer. Un site de Lyon appartient a deux pages :
+    # son arrondissement et la commune mere. On garde la plus precise, celle
+    # dont le slug est bien celui de la commune du recensement.
+    ville_de_site = {}
+    for final, _nom, liste in communes:
+        for s in liste:
+            sl = slug(s.get("ville") or "")
+            precis = final in (sl, f"{sl}-{s.get('dep') or '00'}")
+            if precis or s["id"] not in ville_de_site:
+                ville_de_site[s["id"]] = final
+
     # Ce qu'il y a autour de chaque commune : grille grossiere puis distance
     # exacte, pour ne pas comparer 3 847 communes a 7 135 sites.
     grille = {}
@@ -2157,12 +2200,13 @@ def main():
                page_contributeurs(brut.get("communaute") or {}, par_id, lang,
                                   url_base, depot, maj))
         ecrire(os.path.join(out, url_index(lang), "index.html"),
-               page_index(deps_tries, len(publiables), lang, url_base, depot))
+               page_index(deps_tries, len(publiables), lang, url_base, depot, axes))
         for code, liste in par_dep.items():
             nom_dep = liste[0].get("dep_nom") or code
             region = liste[0].get("region") or ""
             ecrire(os.path.join(out, url_dep(lang, code), "index.html"),
-                   page_departement(code, nom_dep, region, liste, lang, url_base, depot))
+                   page_departement(code, nom_dep, region, liste, lang, url_base, depot,
+                                    ville_de_site))
             urls[lang].append((url_dep(lang, code), "0.7"))
         for crit in axes:
             cle = crit["slug"][lang]
@@ -2187,7 +2231,8 @@ def main():
             urls[lang].append((url_ville(lang, final), "0.6"))
         for t in publiables:
             ecrire(os.path.join(out, url_site(lang, t["id"]), "index.html"),
-                   page_site(t, lang, voisins.get(t["id"], []), url_base, depot, maj))
+                   page_site(t, lang, voisins.get(t["id"], []), url_base, depot, maj,
+                             ville_de_site.get(t["id"])))
             images = [{"loc": f"{url_base}/{p['f']}",
                        "titre": nom_de(t, lang),
                        "legende": alt_photo(p, t, lang)}
