@@ -1,0 +1,17 @@
+# Cohorte suivie par le releve quotidien — une URL par gabarit de page.
+# Ne pas modifier : la comparaison dans le temps suppose une population stable.
+# Tiree le 2026-08-23 depuis https://pistes-athle.com/sitemap.xml
+https://pistes-athle.com/
+https://pistes-athle.com/departements/
+https://pistes-athle.com/contributeurs/
+https://pistes-athle.com/departement/00/
+https://pistes-athle.com/pistes/400m/
+https://pistes-athle.com/ville/oree-d-anjou/
+https://pistes-athle.com/site/I490690001/
+https://pistes-athle.com/en/
+https://pistes-athle.com/en/departments/
+https://pistes-athle.com/en/contributors/
+https://pistes-athle.com/en/department/00/
+https://pistes-athle.com/en/tracks/400m/
+https://pistes-athle.com/en/city/oree-d-anjou/
+https://pistes-athle.com/en/track/I490690001/
