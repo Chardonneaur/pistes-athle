@@ -1,0 +1,41 @@
+{
+  "id": "I441870004",
+  "surface": "cendree",
+  "longueur_piste": 400,
+  "acces_libre": true,
+  "agres": [
+    "longueur",
+    "poids"
+  ],
+  "note": "Visite sur place le 23 août 2026. Revêtement confirmé au sol : cendrée, sur tout l'anneau — pas d'enrobé ni de synthétique. Aucune ligne de couloir n'est tracée nulle part sur la piste : le marquage a entièrement disparu, on ne devine ni corde ni séparations, et le champ « couloirs » reste donc vide plutôt que renseigné à une valeur inventée. Le développement de 400 m déclaré au recensement a été retrouvé sur un tour à la montre GPS le jour de la visite ; ce n'est pas une mesure au décamètre en couloir 1, mais aucune raison ne conduit à mettre le chiffre en doute. La longue ligne droite, qui permettait le 100 m et le 110 m haies, est envahie de chardons et de touffes d'herbe sur une bonne partie de sa largeur. Le sautoir en longueur est en place : couloir d'élan en enrobé très délavé, bac de sable dont le sable est sec, tassé et colonisé par la végétation ; la planche d'appel n'a pas été identifiée. L'aire de lancer du poids est une dalle de béton fissurée, dont le cercle ne se lit plus qu'en devinant. Aucun sautoir en hauteur, aucun sautoir à la perche, aucune cage de lancer du disque ou du marteau, aucun couloir de javelot repérés le jour de la visite. Les agrès listés ici sont donc ceux vus, y compris hors d'usage : un agrès dégradé reste un agrès, son état est décrit ici et non traduit en booléen. Le terrain de football central est, lui, tondu et entretenu — c'est l'usage vivant du site. Tribune couverte le long de la ligne droite (289 places au recensement). Deux divergences avec le recensement méritent d'être dites. Le recensement déclare l'équipement en accès non libre : le 23 août 2026, le portail était ouvert et on entre sans rien franchir, d'où l'accès libre retenu ici — une déclaration ancienne ne vaut pas contre une visite, mais rien ne garantit que le portail soit ouvert tous les jours. Le recensement déclare aussi l'équipement sans éclairage, et la fiche l'affiche donc ainsi : des mâts sont pourtant en place autour du terrain, visibles sur les photos ; ils n'ont pas été vus allumés et rien ne dit qu'ils éclairent l'anneau plutôt que le seul terrain de football, ce qui laisse la déclaration debout jusqu'à vérification.\n\nCe que dit la mairie. Site officiel relevé le 23 août 2026 par l'annuaire de l'administration (DILA) : www.saintpereenretz.fr. Dix actes du conseil municipal y ont été lus, pour les séances des 2, 20 et 26 mars, 2 avril et 29 juin 2026 : aucune délibération ne porte sur la piste, sur sa réfection ou sur des travaux d'athlétisme. Les seules décisions touchant aux équipements sportifs sur cette période sont deux conventions d'utilisation des équipements sportifs communaux, l'une avec le LEAP Saint-Gabriel Nantes Océan, l'autre avec la MFR, approuvées à l'unanimité le 29 juin 2026 (délibérations 2026/8.1.5/051 et 2026/8.1.5/052) ; le document publié ne précise pas quels équipements sont concernés, et rien ne permet d'en déduire que la piste est comprise. Les listes de délibérations de la séance du 28 mai 2026 sont publiées en PDF scanné, sans couche texte : elles n'ont pas pu être lues et restent à ouvrir à l'œil. Aucun aménagement voté ne vient donc contredire l'état constaté sur place — mais une délibération non trouvée ne prouve pas qu'il n'y ait pas de projet.",
+  "photos": [
+    {
+      "fichier": "01-anneau-cendree-sans-marquage-complexe-sportif-du-parc-du-grand-fay-saint-pere-en-retz.jpg",
+      "legende": "L'anneau en cendrée en sortie de virage, sans aucune ligne de couloir, bordure béton côté extérieur",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-sautoir-longueur-bac-envahi-complexe-sportif-du-parc-du-grand-fay-saint-pere-en-retz.jpg",
+      "legende": "Le couloir d'élan du saut en longueur, enrobé délavé, et son bac de sable colonisé par l'herbe",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-ligne-droite-chardons-complexe-sportif-du-parc-du-grand-fay-saint-pere-en-retz.jpg",
+      "legende": "La longue ligne droite du 100 m et du 110 m haies, envahie de chardons, tribune couverte à droite",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "04-aire-lancer-poids-complexe-sportif-du-parc-du-grand-fay-saint-pere-en-retz.jpg",
+      "legende": "L'aire de lancer du poids : dalle béton fissurée, cercle à peine lisible, terrain de football en fond",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-23",
+      "note": 3,
+      "texte": "Une très vieille piste en cendrée de 400 m, avec de longues lignes droites pour le 100 m et le 110 m haies, un sautoir en longueur et une aire de lancer du poids. Mais l'athlétisme a quitté ce stade depuis longtemps : plus une seule ligne de couloir sur l'anneau, des chardons en pleine ligne droite, le sable du bac de saut envahi d'herbe, le cercle de lancer à peine lisible sur sa dalle fissurée. Ce qui reste entretenu, c'est le terrain de football au centre ; l'anneau sert surtout de chemin autour. Pour un footing ou du fractionné sans exigence de chrono, ça tient encore, et la cendrée est douce aux jambes ; pour du travail de vitesse, de haies ou de concours, il n'y a plus rien. Portail ouvert, accès libre le jour de la visite."
+    }
+  ]
+}

@@ -56,6 +56,10 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 > — la méthode : quatre sources à croiser, six façons de se tromper, et ce que le
 > balayage de la Loire-Atlantique et du Pays de Retz a donné.
 
+> 🏛️ **[Ce que dit la mairie](docs/ce-que-dit-la-mairie.md)** — dater un changement
+> plutôt que décrire un état : lire les délibérations des conseils municipaux, et
+> distinguer les trois silences qui n'ont pas le même sens.
+
 ## Bilingue, et trouvable
 
 L'application est une page unique qui rend 7 100 sites en JavaScript : un moteur de
@@ -277,6 +281,7 @@ scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couverture
 scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
+scripts/conseils_municipaux.py  délibérations des conseils municipaux : file de lecture
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
 data/photos/<id>/           photos optimisées, une par site
 data/tracks.json            jeu de données publié (généré, non versionné)
