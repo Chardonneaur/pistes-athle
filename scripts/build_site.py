@@ -17,7 +17,7 @@ import html
 import json
 import math
 import os
-from urllib.parse import quote_plus
+from urllib.parse import quote_plus, urlsplit
 import re
 import shutil
 from datetime import date
@@ -29,7 +29,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
 
 # URL ecrite en dur dans index.html ; remplacee partout si --url differe.
-URL_DEFAUT = "https://chardonneaur.github.io/pistes-athle"
+URL_DEFAUT = "https://pistes-athle.com"
+# Le depot d'origine publie sur son domaine ; un fork n'a que son github.io.
+DEPOT_ORIGINE = "chardonneaur/pistes-athle"
 
 
 def url_du_site(explicite=None):
@@ -38,12 +40,26 @@ def url_du_site(explicite=None):
     if os.environ.get("SITE_URL"):
         return os.environ["SITE_URL"].rstrip("/")
     depot = os.environ.get("GITHUB_REPOSITORY")           # « proprietaire/depot »
-    if depot and "/" in depot:
+    # L'inference ne vaut que pour un fork. Sur le depot d'origine, elle
+    # rendrait l'URL github.io et ecraserait le domaine : GITHUB_REPOSITORY est
+    # toujours defini dans Actions, donc URL_DEFAUT n'y serait jamais lu.
+    if depot and "/" in depot and depot.lower() != DEPOT_ORIGINE:
         proprio, nom = depot.split("/", 1)
         if nom.lower() == f"{proprio.lower()}.github.io":
             return f"https://{proprio.lower()}.github.io"
         return f"https://{proprio.lower()}.github.io/{nom}"
     return URL_DEFAUT
+
+
+def domaine_personnalise(url_base):
+    """Le domaine a declarer a GitHub Pages, ou None s'il n'y en a pas.
+
+    GitHub relit le fichier CNAME publie a chaque deploiement : sans lui, un
+    deploiement efface le domaine configure a la main dans les reglages. Un
+    fork publie sur github.io n'en veut pas — il revendiquerait un domaine
+    qui ne lui appartient pas, et GitHub refuserait le deploiement."""
+    hote = urlsplit(url_base).netloc
+    return None if not hote or hote.endswith("github.io") else hote
 
 
 # --------------------------------------------------------------------- langues
@@ -2248,6 +2264,9 @@ def main():
         ecrire(os.path.join(out, f"sitemap-{lang}.xml"), sitemap(urls[lang], url_base, maj))
     ecrire(os.path.join(out, "sitemap.xml"),
            sitemap_index([f"sitemap-{l}.xml" for l in T], url_base, maj))
+    domaine = domaine_personnalise(url_base)
+    if domaine:
+        ecrire(os.path.join(out, "CNAME"), domaine + "\n")
     ecrire(os.path.join(out, "robots.txt"), robots(url_base))
     ecrire(os.path.join(out, "404.html"), page_404(url_base, len(publiables)))
     avec_piste = sum(1 for t in publiables if t["piste"])
