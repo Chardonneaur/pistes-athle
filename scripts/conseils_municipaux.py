@@ -29,7 +29,11 @@ docs/trouver-les-pistes-manquantes.md, et elle ne souffre pas d'exception ici.
 
 Le script distingue donc trois silences, qui ne veulent pas dire la meme chose :
 la commune n'a rien vote, la commune n'a rien publie, ou elle a publie des PDF
-scannes sans couche texte - que seul un oeil humain peut lire.
+scannes sans couche texte. Ce dernier cas n'est plus une impasse : avec --ocr,
+les scans sont rasterises et passes a tesseract, ce qui transforme un « on n'a
+pas pu lire » en « on a lu, il n'y a rien ». L'OCR se trompe, lui : tout ce qui
+en vient est signale comme tel dans la sortie et dans le JSON, et se relit a
+l'oeil avant d'etre ecrit dans une fiche.
 
 Annuaire de l'administration, DILA - Licence Ouverte 2.0.
 Base officielle des codes geographiques / geo.api.gouv.fr - Licence Ouverte 2.0.
@@ -40,8 +44,10 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import unicodedata
 import urllib.error
@@ -68,6 +74,15 @@ POIDS_MAX = 12 * 1024 * 1024
 
 # En dessous, il n'y a pas de couche texte : le PDF est un scan.
 TEXTE_MIN = 200
+
+# L'OCR coute cher : ~3 s par page. Un proces-verbal de conseil depasse rarement
+# la quarantaine de pages, et au-dela c'est un dossier annexe qu'on ne lit pas.
+OCR_PAGES = 40
+# 200 dpi en niveaux de gris suffit a du texte de traitement de texte scanne ;
+# 300 dpi double le temps sans rien apporter ici.
+OCR_DPI = 200
+# Vingt pages a l'oeil prennent une minute et demie ; on laisse de la marge.
+OCR_TIMEOUT = 600
 
 # Les pages d'un site de mairie qui menent aux deliberations.
 PISTE_PAGE = re.compile(
@@ -302,28 +317,112 @@ def documents(base, cache_dir, insee):
 # 3. Lire les PDF et y chercher le stade
 # --------------------------------------------------------------------------
 
-def texte_pdf(chemin, _memo={}):
-    """Une commune porte souvent plusieurs stades : on n'extrait qu'une fois."""
-    if chemin in _memo:
-        return _memo[chemin]
-    _memo[chemin] = _texte_pdf(chemin)
-    return _memo[chemin]
+def texte_pdf(chemin, ocr=False, ocr_pages=OCR_PAGES, _memo={}):
+    """Une commune porte souvent plusieurs stades : on n'extrait qu'une fois.
+
+    Rend (texte, par_ocr). `par_ocr` dit que le texte sort de tesseract et non
+    d'une couche texte : il se lit avec les reserves qui vont avec.
+    """
+    cle = (chemin, bool(ocr), ocr_pages)
+    if cle not in _memo:
+        _memo[cle] = _texte_pdf(chemin, ocr, ocr_pages)
+    return _memo[cle]
 
 
-def _texte_pdf(chemin):
+def _texte_pdf(chemin, ocr, ocr_pages):
     try:
         r = subprocess.run(["pdftotext", "-layout", chemin, "-"],
                            capture_output=True, text=True, timeout=90)
         if r.returncode == 0 and len(r.stdout.strip()) >= TEXTE_MIN:
-            return r.stdout
+            return r.stdout, False
     except (OSError, subprocess.SubprocessError):
         pass
     try:
         import pypdf
         pages = pypdf.PdfReader(chemin).pages
-        return "\n".join(p.extract_text() or "" for p in pages)
+        texte = "\n".join(p.extract_text() or "" for p in pages)
+        if len(texte.strip()) >= TEXTE_MIN:
+            return texte, False
     except Exception:
+        texte = ""
+    if ocr:
+        lu = texte_ocr(chemin, ocr_pages)
+        if len(lu.strip()) >= TEXTE_MIN:
+            return lu, True
+    return texte, False
+
+
+# --------------------------------------------------------------------------
+# 3 bis. Lire a l'oeil les PDF scannes
+# --------------------------------------------------------------------------
+
+def outils_ocr(_memo={}):
+    """pdftoppm et tesseract sont-ils la, et dans quelle langue lit-on ?
+
+    Le pack francais donne un texte nettement plus propre, mais l'anglais suffit
+    a reperer « stade », « piste » ou « athletisme » : ce sont des mots dont les
+    lettres ne changent pas d'un modele a l'autre. On prend donc ce qu'il y a.
+    """
+    if "ok" not in _memo:
+        _memo["ok"] = all(shutil.which(x) for x in ("pdftoppm", "tesseract"))
+        _memo["langue"] = None
+        if _memo["ok"]:
+            try:
+                r = subprocess.run(["tesseract", "--list-langs"],
+                                   capture_output=True, text=True, timeout=30)
+                dispo = set((r.stdout + r.stderr).split())
+                _memo["langue"] = "fra" if "fra" in dispo else "eng"
+            except (OSError, subprocess.SubprocessError):
+                _memo["langue"] = "eng"
+    return _memo["ok"], _memo["langue"]
+
+
+def texte_ocr(chemin, ocr_pages):
+    """Rasterise le PDF et le passe a tesseract. Le resultat est mis en cache.
+
+    Le cache est un `.ocr.txt` pose a cote du PDF telecharge : relancer le
+    script sur la meme commune ne repaie pas la minute d'OCR.
+    """
+    cache = chemin + ".ocr.txt"
+    if os.path.exists(cache):
+        try:
+            with open(cache, encoding="utf-8") as f:
+                return f.read()
+        except OSError:
+            pass
+
+    ok, langue = outils_ocr()
+    if not ok:
         return ""
+
+    morceaux = []
+    with tempfile.TemporaryDirectory(prefix="pistes-ocr-") as tmp:
+        prefixe = os.path.join(tmp, "p")
+        try:
+            subprocess.run(["pdftoppm", "-r", str(OCR_DPI), "-gray", "-png",
+                            "-f", "1", "-l", str(ocr_pages), chemin, prefixe],
+                           capture_output=True, timeout=OCR_TIMEOUT)
+        except (OSError, subprocess.SubprocessError):
+            return ""
+        for page in sorted(f for f in os.listdir(tmp) if f.endswith(".png")):
+            try:
+                r = subprocess.run(["tesseract", os.path.join(tmp, page), "-",
+                                    "-l", langue, "--psm", "6"],
+                                   capture_output=True, text=True,
+                                   timeout=OCR_TIMEOUT)
+            except (OSError, subprocess.SubprocessError):
+                continue
+            if r.returncode == 0:
+                morceaux.append(r.stdout)
+
+    texte = "\n".join(morceaux)
+    if texte.strip():
+        try:
+            with open(cache, "w", encoding="utf-8") as f:
+                f.write(texte)
+        except OSError:
+            pass
+    return texte
 
 
 def date_seance(url, texte):
@@ -392,7 +491,7 @@ def mots_du_nom(nom):
 
 # --------------------------------------------------------------------------
 
-def etudier(site, cache_dir, max_docs, depuis):
+def etudier(site, cache_dir, max_docs, depuis, ocr=False, ocr_pages=OCR_PAGES):
     fiche = {"id": site["id"], "nom": site["nom"], "ville": site["ville"],
              "mairie": None, "documents": [], "illisibles": [], "signaux": []}
     insee = insee_du_site(site)
@@ -425,7 +524,7 @@ def etudier(site, cache_dir, max_docs, depuis):
         if not os.path.exists(chemin):
             if lire(url, chemin, binaire=True, timeout=60) is None:
                 continue
-        texte = texte_pdf(chemin)
+        texte, par_ocr = texte_pdf(chemin, ocr, ocr_pages)
         date = date_seance(url, texte)
         if depuis and date and date < depuis:
             continue
@@ -436,18 +535,20 @@ def etudier(site, cache_dir, max_docs, depuis):
         if corps in vus:
             continue
         vus.add(corps)
-        lus.append({"url": url, "date": date})
+        lus.append({"url": url, "date": date, "ocr": par_ocr})
         for s in signaux(texte, noms):
             if s["extrait"][:60] in extraits:
                 continue
             extraits.add(s["extrait"][:60])
-            s.update(url=url, date=date)
+            s.update(url=url, date=date, ocr=par_ocr)
             fiche["signaux"].append(s)
 
     fiche["documents"] = lus
     fiche["signaux"].sort(key=lambda s: s["date"], reverse=True)
     if not fiche["signaux"]:
-        fiche["silence"] = (f"{len(lus)} acte(s) lu(s), rien sur le stade"
+        vu_ocr = sum(1 for d in lus if d.get("ocr"))
+        detail = f" (dont {vu_ocr} par OCR)" if vu_ocr else ""
+        fiche["silence"] = (f"{len(lus)} acte(s) lu(s){detail}, rien sur le stade"
                             if lus else "aucun acte lisible")
     return fiche
 
@@ -463,17 +564,23 @@ def raconter(f):
         # ce qui permet d'ecrire « rien vote entre telle et telle seance »
         # plutot que « rien vote », qu'aucune lecture ne peut etablir.
         dates = sorted({d["date"] for d in f["documents"] if d["date"]}, reverse=True)
+        vu_ocr = sum(1 for d in f["documents"] if d.get("ocr"))
         print(f"  {len(f['documents'])} acte(s) lu(s)"
+              + (f", dont {vu_ocr} scanne(s) lu(s) par OCR" if vu_ocr else "")
               + (f" — seances du {', '.join(dates)}" if dates else ""))
     if f.get("signaux"):
         print(f"  {len(f['signaux'])} passage(s) a lire :")
         for s in f["signaux"]:
-            print(f"\n   {s['date'] or '(date ?)'}  [{s['vocabulaire']}]")
+            marque = "  [OCR — a relire a l'oeil]" if s.get("ocr") else ""
+            print(f"\n   {s['date'] or '(date ?)'}  [{s['vocabulaire']}]{marque}")
             print(f"      … {s['extrait']}")
             print(f"      {s['url']}")
     if f.get("illisibles"):
+        ok, _ = outils_ocr()
+        raison = ("relancez avec --ocr pour les lire" if ok else
+                  "installez pdftoppm et tesseract, puis relancez avec --ocr")
         print(f"\n  {len(f['illisibles'])} PDF sans couche texte (scan) — "
-              f"a ouvrir a l'oeil, le script ne peut rien en dire :")
+              f"{raison} :")
         for d in f["illisibles"][:5]:
             print(f"      {d['date'] or '(date ?)'}  {d['url']}")
     if f.get("silence"):
@@ -491,6 +598,10 @@ def main():
     p.add_argument("--limite", type=int, default=0, help="nombre de sites (departement)")
     p.add_argument("--docs", type=int, default=12, help="PDF lus par commune (defaut 12)")
     p.add_argument("--depuis", default="", help="ignorer les seances avant AAAA-MM-JJ")
+    p.add_argument("--ocr", action="store_true",
+                   help="lire les PDF scannes avec tesseract (~3 s par page)")
+    p.add_argument("--ocr-pages", type=int, default=OCR_PAGES,
+                   help=f"pages ocerisees par PDF (defaut {OCR_PAGES})")
     p.add_argument("--cache-dir", default=os.path.join(ROOT, ".work", "conseils"))
     p.add_argument("--json", help="ecrire le detail dans ce fichier")
     args = p.parse_args()
@@ -513,9 +624,19 @@ def main():
     print(f"{len(sites)} site(s). Les deliberations disent des projets votes, "
           f"jamais un etat\nconstate : rien de ce qui suit ne s'ecrit dans un booleen.")
 
+    if args.ocr:
+        ok, langue = outils_ocr()
+        if not ok:
+            sys.exit("--ocr demande pdftoppm (poppler-utils) et tesseract, "
+                     "absents de cette machine.")
+        print(f"OCR actif ({langue}, {args.ocr_pages} pages max par PDF) : les scans "
+              f"seront lus,\nmais l'OCR se trompe — tout ce qui en vient est marque "
+              f"et se relit a l'oeil.")
+
     fiches = []
     for s in sites:
-        f = etudier(s, args.cache_dir, args.docs, args.depuis)
+        f = etudier(s, args.cache_dir, args.docs, args.depuis,
+                    args.ocr, args.ocr_pages)
         raconter(f)
         fiches.append(f)
 
@@ -523,11 +644,19 @@ def main():
     # Une commune porte souvent plusieurs stades et le meme PDF revient dans
     # chaque fiche : on compte les fichiers, pas les occurrences.
     scans = {d["url"] for f in fiches for d in (f.get("illisibles") or [])}
+    ocerises = {d["url"] for f in fiches for d in (f.get("documents") or [])
+                if d.get("ocr")}
     muets = {f["insee"] for f in fiches
              if not f.get("mairie") or not f["mairie"].get("site")}
     print(f"\n{'=' * 78}\n{avec} site(s) avec un passage a lire, "
           f"{len(scans)} PDF scanne(s) a ouvrir a l'oeil, "
           f"{len(muets)} commune(s) sans site connu de l'annuaire.")
+    if ocerises:
+        print(f"{len(ocerises)} PDF scanne(s) lu(s) par OCR : leur contenu est "
+              f"reconstitue, pas extrait.\nRelisez a l'oeil avant d'ecrire quoi que "
+              f"ce soit dans une fiche.")
+    elif scans and not args.ocr:
+        print("Relancez avec --ocr pour lire les scans plutot que de les signaler.")
 
     if args.json:
         os.makedirs(os.path.dirname(os.path.abspath(args.json)), exist_ok=True)
