@@ -1,0 +1,33 @@
+{
+  // Worker de journalisation des robots — voir worker.js pour le pourquoi.
+  //
+  // Deploiement :
+  //   npx wrangler deploy --config logs/wrangler.jsonc
+  //
+  // Le schema s'applique avec :
+  //   npx wrangler d1 execute pistes-athle-logs --remote --file logs/schema.sql
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pistes-athle-logs",
+  "main": "worker.js",
+  "compatibility_date": "2026-08-23",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // Les deux hotes servis par GitHub Pages. www redirige vers l'apex, mais un
+  // robot qui frappe www doit tout de meme etre compte.
+  "routes": [
+    { "pattern": "pistes-athle.com/*", "zone_name": "pistes-athle.com" },
+    { "pattern": "www.pistes-athle.com/*", "zone_name": "pistes-athle.com" }
+  ],
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pistes-athle-logs",
+      "database_id": "041cbf80-e411-487f-be2b-09195ed94c16"
+    }
+  ],
+
+  // Le Worker voit chaque requete du site : echantillonner suffit largement,
+  // et seules les erreurs de journalisation ecrivent dans les traces.
+  "observability": { "enabled": true, "head_sampling_rate": 0.05 }
+}
