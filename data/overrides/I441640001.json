@@ -1,0 +1,27 @@
+{
+  "id": "I441640001",
+  "surface": "bitume",
+  "couloirs": 2,
+  "acces_note": "Visite du 23 août 2026 en soirée : accès libre confirmé, on entre sans rien franchir, conformément à ce que déclare le recensement. Le terrain multisport est ceinturé d'une barrière métallique et d'un grillage ; l'anneau court à l'extérieur de cette clôture et reste accessible indépendamment. Aucun panneau d'horaires ni de règlement n'a été vu.",
+  "note": "Visite sur place le 23 août 2026, en soirée. Revêtement confirmé au sol : bitume, un enrobé sombre, homogène et d'aspect récent, sans fissure ni nid-de-poule. Deux couloirs sont tracés, marquage blanc net et frais — le recensement ne renseigne aucun nombre de couloirs pour ce site.\n\nCe que la fiche ne pouvait pas dire, et qui décide de tout : l'anneau fait le tour d'un terrain multisport clos, et la bordure béton qui ceinture la plateforme du city-stade empiète sur le couloir 1. On court donc, côté corde, le long d'un rebord surélevé doublé d'une barrière métallique. C'est sans conséquence au trot ; à vitesse de sprint, c'est un risque de cheville et de chute, et cela retire à l'anneau l'essentiel de son intérêt pour l'athlétisme. Le couloir 2 reste dégagé, mais il est alors le seul.\n\nLe développement n'a pas été mesuré et n'est renseigné nulle part : ni le recensement, ni OpenStreetMap, ni la visite ne le donnent, et aucun chiffre n'est donc écrit ici. C'est visiblement un petit anneau, très en deçà d'un 400 m.\n\nAucun agrès d'athlétisme n'a été repéré le jour de la visite : pas de sautoir, pas d'aire de lancer, pas de ligne droite distincte de l'anneau. Le champ « agrès » reste vide plutôt que renseigné à une liste vide : l'équipement est un city-stade doté d'une piste périphérique, et non un stade d'athlétisme. Le site porte par ailleurs un panier de basket et un terrain de jeu clos ; le bourg et ses maisons bordent immédiatement l'enceinte.",
+  "photos": [
+    {
+      "fichier": "01-anneau-le-long-du-city-stade-stade-municipal-des-chataigniers-saint-hilaire-de-chaleons.jpg",
+      "legende": "L'anneau le long du terrain multisport : la bordure béton du city-stade et sa barrière métallique empiètent sur le couloir 1",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-virage-anneau-neuf-stade-municipal-des-chataigniers-saint-hilaire-de-chaleons.jpg",
+      "legende": "Le virage : enrobé sombre d'aspect récent, deux couloirs au marquage blanc net, bordure béton côté extérieur",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-23",
+      "note": 1,
+      "texte": "Une toute petite piste en goudron, qui fait le tour d'un terrain de basket. Le problème est là, et il est rédhibitoire : le rebord qui borde le city-stade vient empiéter sur le couloir 1, si bien qu'on court à la corde le long d'une bordure surélevée et d'une barrière. Au trot ça passe, mais dès qu'on veut sprinter c'est dangereux. Deux couloirs, aucun autre agrès, rien d'autre autour. Le revêtement est propre et d'aspect récent, ce n'est pas ce qu'on lui reproche ; mais je ne pense pas qu'on puisse en tirer quoi que ce soit pour de l'athlétisme. Accès libre, rien à franchir."
+    }
+  ]
+}

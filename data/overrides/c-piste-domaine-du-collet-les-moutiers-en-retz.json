@@ -9,5 +9,28 @@
   "piste": true,
   "lat": 47.03403,
   "lon": -1.98248,
-  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025 : anneau rouge marqué en couloirs autour d'un petit terrain. Absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente — d'où un développement non estimé : personne ne l'a ni tracé ni mesuré. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. L'anneau se trouve à l'intérieur du Domaine du Collet, un village de vacances : l'accès est vraisemblablement réservé aux résidents, ce qui reste à vérifier."
+  "surface": "bitume",
+  "couloirs": 2,
+  "acces_note": "L'anneau se trouve à l'intérieur du Domaine du Collet, un camping et village de vacances. Visite du 23 août 2026 : l'accès est réservé aux résidents, ce qui était jusqu'ici une hypothèse tirée de la situation du site et devient un constat. Aucun booléen d'accès n'est renseigné pour autant : un équipement privé dont l'usage est réservé à une clientèle n'est ni un stade ouvert au public, ni un stade communal fermé, et la fiche ne prétend pas trancher entre les deux. Qui n'est pas résident ne doit pas compter y courir.",
+  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025. Il reste absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente. Visite sur place le 23 août 2026 : ce qui suit remplace les déductions d'orthophoto par un constat.\n\nRevêtement foulé au pied : **enrobé coloré, dur comme du goudron, et non un synthétique**. C'est le démenti d'une déduction que la couleur rendait naturelle — l'anneau est rouge sur l'orthophoto comme au sol, et n'importe qui en aurait conclu au tartan. Il n'en est rien, et c'est exactement le piège que l'enrobé coloré tend à la lecture aérienne. La teinte rouge est délavée par larges plaques, laissant le support apparaître ; le marquage blanc, lui, est net et bien entretenu.\n\nDeux couloirs, comptés sur place, correctement tracés et en bon état. Le développement n'a pas été mesuré et reste inconnu : ni le recensement, ni OpenStreetMap, ni la visite ne le donnent, et aucun chiffre n'est écrit ici. C'est un très petit anneau, dont un tour se boucle en quelques dizaines de secondes.\n\nAucun agrès d'athlétisme n'a été repéré : ni sautoir, ni aire de lancer, ni ligne droite distincte de l'anneau. Le champ « agrès » reste vide plutôt que renseigné à une liste vide. L'anneau entoure un terrain multisport clos doté d'un panier de basket, et longe un court de tennis ; le reste de l'enceinte est un village de vacances, avec mobil-homes, structure gonflable et pins maritimes. L'usage visé est manifestement celui d'un équipement de loisir pour les enfants du camping, pas celui d'un équipement d'entraînement.",
+  "photos": [
+    {
+      "fichier": "01-ligne-droite-deux-couloirs-piste-du-domaine-du-collet-les-moutiers-en-retz-les-moutiers-en-retz.jpg",
+      "legende": "La ligne droite et ses deux couloirs en enrobé coloré rouge, délavé par plaques, le long du terrain multisport du camping",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-virage-enrobe-colore-piste-du-domaine-du-collet-les-moutiers-en-retz-les-moutiers-en-retz.jpg",
+      "legende": "Le virage : marquage blanc net sur enrobé coloré, court de tennis à gauche et mobil-homes du village de vacances en fond",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-23",
+      "note": 1,
+      "texte": "Une petite piste de deux couloirs, dans l'enceinte du Domaine du Collet — un camping, donc normalement on ne devrait même pas pouvoir y accéder : c'est réservé aux résidents. Les couloirs sont de qualité, bien tracés et en bon état, et c'est ce qu'il y a de mieux ici. Attention en revanche au revêtement : c'est de l'enrobé coloré, dur sous le pied, pas du tartan, malgré le rouge qui donne le change. Pour des enfants qui voudraient se challenger sur quelques tours, c'est idéal et c'est visiblement fait pour eux. Pour un adulte, à moins de vouloir attraper le tournis, il n'y a pas grand-chose à y faire."
+    }
+  ]
 }
