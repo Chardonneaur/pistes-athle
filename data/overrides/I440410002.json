@@ -1,0 +1,27 @@
+{
+  "id": "I440410002",
+  "surface": "bitume",
+  "couloirs": 2,
+  "longueur_probable": 116,
+  "acces_note": "Visite du 24 août 2026 en fin de journée : accès libre confirmé, on entre sans rien franchir, conformément à ce que déclare le recensement. Le terrain multisport que l'anneau ceinture est, lui, clos par un grillage ; l'anneau court à l'extérieur de cette clôture et reste accessible indépendamment.",
+  "note": "Visite sur place le 24 août 2026, en fin de journée. Revêtement confirmé au sol : bitume, un enrobé sombre en bon état. Le petit anneau fait le tour d'un terrain multisport clos, doté d'un panier de basket et d'une clôture verte ; il est bordé d'une haie d'un côté et donne sur le grand stade de l'autre.\n\nDeux couloirs autour de l'anneau, mais trois en ligne droite — c'est la configuration classique des pistes d'athlétisme, où la ligne droite porte plus de couloirs que les virages. Le champ « couloirs » retient donc 2, qui est ce qu'on peut courir sur un tour complet ; les trois couloirs de la ligne droite sont dits ici, et non traduits dans un nombre qui laisserait croire qu'on peut tourner à trois de front.\n\nLe développement n'est pas renseigné au recensement et n'a pas été mesuré sur place. OpenStreetMap trace l'anneau (relation/17939092) : son bord intérieur mesure 115,7 m, d'où le développement probable retenu. Son bord extérieur donne 163,5 m, mais l'écart entre les deux — près de huit mètres de largeur — montre que le tracé extérieur englobe toute l'aire enrobée autour du terrain, et pas seulement les couloirs : c'est le bord intérieur qui approche la ligne de course.\n\nAucun agrès d'athlétisme n'a été repéré : ni sautoir, ni aire de lancer. C'est un anneau de course posé autour d'un city-stade, et l'usage visé est manifestement celui d'un équipement de proximité.\n\nÀ ne pas confondre avec les deux autres pistes de la commune. Le Stade Municipal (I440410001) est le grand anneau en cendrée d'environ 400 m, à cinquante mètres d'ici. Et une troisième piste, non recensée, se trouve rue de Villegaie à environ 700 m — voir la fiche « Piste de La Chevrolière », connue à ce jour par la seule orthophoto.",
+  "photos": [
+    {
+      "fichier": "01-anneau-autour-du-city-stade-complexe-sportif-hugues-martin-la-chevroliere.jpg",
+      "legende": "L'anneau en bitume contournant le terrain multisport clos et son panier de basket, le grand stade en cendrée visible au fond",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-virage-deux-couloirs-complexe-sportif-hugues-martin-la-chevroliere.jpg",
+      "legende": "Le virage : enrobé sombre et lignes blanches délimitant les deux couloirs de l'anneau, pavillons du bourg en fond",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-24",
+      "texte": "Je ne l'ai jamais utilisée : cet avis ne repose sur aucune séance, seulement sur ce que j'ai vu en passant, et je préfère le dire plutôt que de mettre une note. C'est un petit anneau de bitume qui fait le tour du city-stade, avec trois couloirs en ligne droite mais seulement deux autour de l'anneau. Le marquage est net et le revêtement en bon état. À vue, ça peut servir à des enfants ou à quelques accélérations, pas à une séance construite — d'autant que le vrai 400 m en cendrée est à cinquante mètres de là."
+    }
+  ]
+}

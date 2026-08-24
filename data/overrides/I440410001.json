@@ -1,0 +1,27 @@
+{
+  "id": "I440410001",
+  "surface": "cendree",
+  "longueur_probable": 400,
+  "acces_note": "Visite du 24 août 2026 en fin de journée : accès libre confirmé, on entre sans rien franchir, conformément à ce que déclare le recensement. Aucun panneau d'horaires ni de règlement n'a été vu.",
+  "note": "Visite sur place le 24 août 2026, en fin de journée. Revêtement confirmé au sol : cendrée, un stabilisé rouge-brun sur tout l'anneau — pas d'enrobé, pas de synthétique. L'anneau ceinture un terrain de football en herbe entretenu, bordé d'abris de touche ; des mâts d'éclairage sont en place et le bourg touche l'enceinte.\n\nLe développement n'est pas renseigné au recensement. Le contributeur le donne pour 400 m sans l'avoir mesuré, et OpenStreetMap corrobore : le bord intérieur du tracé (relation/7713209) mesure 398,3 m, ce qui est la corde d'un 400 m, son bord extérieur 455,0 m. Deux convergences ne font pas une mesure : le chiffre est écrit en développement probable, et une mesure au décamètre en couloir 1, à 30 cm de la corde, l'effacera le jour où elle sera faite.\n\nAucune ligne de couloir n'est tracée, nulle part sur l'anneau : le champ « couloirs » reste vide plutôt que renseigné à une valeur inventée. Aucun agrès d'athlétisme n'a été repéré le jour de la visite — ni sautoir en longueur, en hauteur ou à la perche, ni aire de lancer, ni rivière de steeple. Le champ « agrès » reste donc vide lui aussi : c'est un anneau de course autour d'un terrain de football, et rien de plus.\n\nÀ ne pas confondre avec les deux autres pistes de la commune. Le Complexe Sportif Hugues Martin (I440410002) est un second anneau, en bitume, à cinquante mètres d'ici, autour du city-stade. Et une troisième piste, non recensée, se trouve rue de Villegaie à environ 700 m — voir la fiche « Piste de La Chevrolière », connue à ce jour par la seule orthophoto.",
+  "photos": [
+    {
+      "fichier": "01-cendree-abris-touche-stade-municipal-la-chevroliere.jpg",
+      "legende": "L'anneau en cendrée le long du terrain de football en herbe, abris de touche et pavillons du bourg en fond",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-ligne-droite-cendree-stade-municipal-la-chevroliere.jpg",
+      "legende": "La ligne droite en cendrée, stabilisé rouge-brun sans aucune ligne de couloir, but de football à gauche",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-24",
+      "note": 3,
+      "texte": "J'aime beaucoup cette piste, même si elle n'a rien d'exceptionnel : un vrai tour de 400 m en cendrée autour du terrain de football, en accès libre, et c'est déjà beaucoup pour une commune de cette taille. Je n'ai pas mesuré le tour, mais que ce soit un 400 m ne fait aucun doute. En revanche il n'y a aucun agrès — ni sautoir, ni aire de lancer — et pas la moindre ligne de couloir sur l'anneau. Pour du footing et du fractionné, elle fait très bien le travail, et la cendrée reste douce aux jambes ; pour du travail de vitesse en couloir ou des concours, il faut aller ailleurs."
+    }
+  ]
+}
