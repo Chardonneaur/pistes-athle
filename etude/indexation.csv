@@ -13,3 +13,17 @@ releve,horodatage,url,gabarit,verdict,etat_couverture,dernier_crawl,recuperation
 2026-08-23,2026-08-23T07:59:39+00:00,https://pistes-athle.com/en/tracks/400m/,/en/tracks/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
 2026-08-23,2026-08-23T07:59:39+00:00,https://pistes-athle.com/en/city/oree-d-anjou/,/en/city/,NEUTRAL,Discovered - currently not indexed,,PAGE_FETCH_STATE_UNSPECIFIED,
 2026-08-23,2026-08-23T07:59:39+00:00,https://pistes-athle.com/en/track/I490690001/,/en/track/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/,/ (accueil),PASS,Submitted and indexed,2026-08-23T09:32:41Z,SUCCESSFUL,https://pistes-athle.com/
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/departements/,/departements/,NEUTRAL,Discovered - currently not indexed,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/contributeurs/,/contributeurs/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/departement/00/,/departement/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/pistes/400m/,/pistes/,NEUTRAL,Discovered - currently not indexed,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/ville/oree-d-anjou/,/ville/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/site/I490690001/,/site/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/,/en/ (accueil),PASS,Submitted and indexed,2026-08-23T10:45:15Z,SUCCESSFUL,https://pistes-athle.com/en/
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/departments/,/en/departments/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/contributors/,/en/contributors/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/department/00/,/en/department/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/tracks/400m/,/en/tracks/,NEUTRAL,Discovered - currently not indexed,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/city/oree-d-anjou/,/en/city/,NEUTRAL,URL is unknown to Google,,PAGE_FETCH_STATE_UNSPECIFIED,
+2026-08-24,2026-08-24T12:01:28+00:00,https://pistes-athle.com/en/track/I490690001/,/en/track/,NEUTRAL,Discovered - currently not indexed,,PAGE_FETCH_STATE_UNSPECIFIED,
