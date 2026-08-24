@@ -30,6 +30,32 @@ En cron, tous les jours à 6 h :
 | `performance.csv` | clics et impressions par jour | API Search Analytics |
 | `requetes.csv` | les requêtes qui amènent du monde, dans leur ordre d'apparition | API Search Analytics |
 | `robots.csv` | par robot : passages, pages distinctes, **première visite** | base D1 alimentée par `logs/` |
+| `citations.csv` | les passages qui ressemblent à une citation, un par ligne | base D1, via `citations.py` |
+
+## Être exploré n'est pas être cité
+
+`robots.csv` compte les passages ; `citations.csv` isole ceux qui disent quelque
+chose d'un **usage**. Trois familles, par ordre de proximité avec une réponse
+rendue à quelqu'un :
+
+- **exploration** — la constitution d'un corpus : GPTBot, ClaudeBot, Googlebot.
+  Ils passent une fois, prennent tout, et ne disent rien de l'usage.
+- **index de réponse** — l'index propre au moteur de réponse, celui d'où les
+  citations sont tirées : OAI-SearchBot, PerplexityBot, Claude-SearchBot. Y
+  figurer est la *condition* d'être cité, ce n'en est pas la preuve.
+- **à la demande** — la page est allée être lue *parce qu'un humain venait de
+  poser une question* : ChatGPT-User, Claude-User, Perplexity-User,
+  MistralAI-User. C'est le signal le plus proche d'une citation qu'un site
+  puisse observer depuis ses propres journaux.
+
+D'où le grain : l'exploration se compte, les deux autres familles s'énumèrent
+une ligne par passage. Elles sont rares, et chacune désigne **une page** —
+savoir quelle fiche un assistant est allé lire vaut plus que leur nombre.
+
+Ce que cette mesure ne dit pas : elle voit la page *aller être lue*, pas la
+réponse rendue. Un assistant peut citer de mémoire sans rien demander, et
+peut demander sans citer. Une mesure directe — poser les questions et relever
+les sources citées — demanderait une clé d'API par assistant.
 
 ## La cohorte ne se modifie pas
 
