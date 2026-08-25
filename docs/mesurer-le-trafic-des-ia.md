@@ -154,6 +154,101 @@ Le rapport le plus intéressant côté Matomo est **AI-Favoured Pages** : les pa
 que les IA vont chercher et que les humains ne demandent pas. C'est là que se lit
 la différence entre ce qu'un annuaire *publie* et ce qu'une IA *utilise*.
 
+## Analyser : par où commencer
+
+### La première chose à savoir, sinon tout paraît cassé
+
+**Les rapports IA de Matomo vont sembler presque vides, et c'est normal.**
+Relevé du 25 août 2026, deux jours après la pose du journal D1 :
+
+| | Requêtes en 2 jours | Visible dans Matomo |
+|---|---:|---|
+| ClaudeBot | 28 655 | ❌ |
+| GPTBot | 28 483 | ❌ |
+| GoogleOther | 2 334 | ❌ (moteur) |
+| Googlebot | 2 089 | ❌ (moteur) |
+| OAI-SearchBot | 34 | ❌ |
+| **ChatGPT-User** | **8** | ✅ |
+| **Claude-User** | **2** | ✅ |
+
+Matomo voit **10 requêtes sur 61 600**, soit 0,016 %. Ce n'est pas un défaut de
+réglage : ce sont les deux seuls agents à s'être déclarés comme agissant pour
+quelqu'un. Tout le reste est de l'exploration de corpus, et Matomo ne la traite
+pas. Ouvrir « AI Chatbots » en s'attendant au volume du crawl mène à conclure
+que la mesure ne marche pas, alors qu'elle fait exactement son travail.
+
+**Répartition des rôles**, à garder en tête à chaque question :
+
+- **D1 répond au « combien » et au « qui est arrivé en premier ».** C'est
+  l'instrument de l'étude.
+- **Matomo répond au « et alors ? ».** Est-ce que ça rapporte quelqu'un ?
+
+### Les cinq questions, et où les poser
+
+**1. Est-ce qu'être lu par une IA amène quelqu'un ?**
+`AI Assistants › AI Chatbots Overview`. La métrique qui compte est le
+**Click-through rate** = *Acquired visits* ÷ *Requests*. C'est le seul chiffre
+qui relie la lecture par une IA à une visite humaine. Tout le reste est du
+volume.
+
+**2. Quelles pages les IA vont-elles chercher que les humains ignorent ?**
+`AI Assistants › AI-Favoured Pages`, à lire en regard de `Human-Favoured Pages`.
+C'est le rapport le plus intéressant du lot, parce qu'il est le seul à comparer
+deux populations sur le même contenu. Il dit l'écart entre ce que l'annuaire
+*publie* et ce qu'une IA *utilise*.
+
+**3. Les robots tombent-ils sur des pages cassées ?**
+`AI Assistants › Broken Pages and Documents`. À surveiller après chaque
+renommage d'identifiant : une fiche déplacée casse une citation déjà faite.
+
+**4. Combien de visiteurs humains arrivent d'une IA ?**
+`Acquisition › Assistants IA`. Côté segments, c'est là que ça devient
+exploitable — ces visites-là sont de vraies visites :
+
+```
+referrerType==ai                 toutes les arrivées depuis une IA
+referrerType==ai;referrerName==ChatGPT      depuis ChatGPT seulement
+aiAgentName!=                    les visites portant un nom d'agent
+```
+
+Croiser `referrerType==ai` avec n'importe quel rapport de comportement répond à
+« que font les gens envoyés par une IA, une fois arrivés ? » — profondeur,
+pages de sortie, durée. C'est impossible côté robots, dont les requêtes
+`recMode=1` ne créent pas de visite et échappent donc à tout segment.
+
+**5. Ce que les IA explorent vraiment.**
+Pas dans Matomo — dans D1. Relevé du 25 août, par gabarit de page :
+
+| gabarit | corpus IA | agents IA | moteurs |
+|---|---:|---:|---:|
+| `/site/` | 14 320 | 2 | 716 |
+| `/en/track/` | 14 300 | 0 | 357 |
+| `/api/` | 9 292 | 0 | 30 |
+| `/ville/` | 7 717 | 0 | 643 |
+| `/en/city/` | 7 714 | 0 | 2 339 |
+
+Deux faits s'y lisent, qu'aucun rapport Matomo ne donnera. D'abord `/api/` :
+9 292 requêtes de robots IA contre 30 de moteurs. **L'API est lue presque
+exclusivement par des IA** — c'est la validation la plus nette de l'hypothèse du
+projet. Ensuite la version anglaise, explorée à parité avec la française par les
+IA (14 300 contre 14 320), alors que les moteurs la traitent à part.
+
+### Interroger par programme
+
+Les rapports archivés se lisent avec `BotTracking.*` (voir la liste des méthodes
+plus haut) et acceptent `period`/`date` comme n'importe quel rapport Matomo.
+Attention à `period=range` avec `date=lastN` : N s'y compte en **jours** et rend
+**un** agrégat, alors que `period=day&date=lastN` rend une ligne **par jour** —
+c'est la seconde forme qu'il faut pour une courbe d'évolution.
+
+### Le piège des premières semaines
+
+Ne pas conclure sur un CTR calculé sur 10 requêtes. Le dénominateur des rapports
+Matomo est minuscule tant que les agents conversationnels ne sont pas venus en
+nombre, et un seul clic ferait passer le taux de 0 % à 10 %. Les volumes
+exploitables sont dans D1 ; Matomo demandera des semaines avant de dire quelque
+chose de stable sur l'acquisition.
+
 ## Ce qui reste non mesuré
 
 À dire franchement, parce que l'omission serait une affirmation fausse :
