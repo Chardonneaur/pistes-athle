@@ -23,7 +23,7 @@ import shutil
 from datetime import date
 
 import build_api
-from build_api import DISCIPLINES, SURFACE_EN, slug
+from build_api import DISCIPLINES, MATOMO_HEAD, SURFACE_EN, slug
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
@@ -643,6 +643,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
     # sans crossorigin : une image et une feuille de style sont demandees
     # hors CORS, et une connexion CORS preouverte ne leur servirait pas.
     liens = "".join(f'<link rel="preconnect" href="{o}">\n' for o in preconnect)
+    mesure = MATOMO_HEAD.format(r=r)
     return f"""<!DOCTYPE html>
 <html lang="{T[lang]['html_lang']}">
 <head>
@@ -665,6 +666,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
 {liens}<link rel="stylesheet" href="{r}assets/page.css?v=11">
+{mesure}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
 {blocs}
@@ -1875,6 +1877,9 @@ def page_404(url_base, total):
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="{url_base}/assets/page.css?v=11">
+<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="{url_base}/assets/matomo.js?v=1" defer></script>
 </head>
 <body>
 <header class="page-bar">

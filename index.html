@@ -32,6 +32,12 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
 <link rel="stylesheet" href="assets/style.css?v=11">
+<!-- Mesure d'audience sans cookie : voir assets/matomo.js. Le preconnect ouvre
+     DNS et TLS vers le CDN Matomo pendant la lecture du <head>, pour que la
+     mesure ne retarde jamais l'affichage. -->
+<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="assets/matomo.js?v=1" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

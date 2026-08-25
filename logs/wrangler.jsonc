@@ -19,6 +19,22 @@
     { "pattern": "www.pistes-athle.com/*", "zone_name": "pistes-athle.com" }
   ],
 
+  // Matomo — voir `mesurer()` dans worker.js et docs/mesurer-le-trafic-des-ia.md.
+  // Rien de secret ici : l'identifiant de site est deja public dans
+  // assets/matomo.js, que sert chaque page.
+  "vars": {
+    "MATOMO_URL": "https://ronanchardonneau.matomo.cloud/",
+    "MATOMO_SITE_ID": "149",
+    // VERIFIE LE 25/08/2026 : Matomo ECARTE silencieusement les hits dont
+    // l'user-agent n'est pas dans sa liste de chatbots. Un GPTBot envoye au
+    // meme instant qu'un ChatGPT-User n'apparait nulle part dans ses
+    // rapports, alors que les deux figurent bien en base D1.
+    // Laisser "0" : les robots de corpus sont deja mesures par D1, qui est
+    // de toute facon le bon outil pour eux (ordre de decouverte, couverture).
+    // Le passer a "1" ne ferait que depenser une sous-requete par passage.
+    "MATOMO_CORPUS": "0"
+  },
+
   "d1_databases": [
     {
       "binding": "DB",

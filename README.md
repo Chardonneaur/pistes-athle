@@ -43,7 +43,11 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 - **Installable** sur l'écran d'accueil (PWA) et **consultable hors-ligne** une fois chargée
 - **Bilingue français / anglais** : `/` en français, `/en/` en anglais, avec bascule dans l'en-tête
 - **Une page HTML par site**, lisible sans JavaScript, pour les moteurs de recherche et les agents IA
-- 100 % statique : hébergé gratuitement sur GitHub Pages, aucun serveur, aucun tracker
+- 100 % statique : hébergé gratuitement sur GitHub Pages, aucun serveur
+- **Mesure d'audience sans cookie** (Matomo, hébergé en Europe) : aucun cookie déposé,
+  aucun identifiant conservé, le refus « Do Not Track » respecté — donc aucun bandeau
+  de consentement. Elle sert à répondre à une question précise : **les agents IA
+  lisent-ils cet annuaire, et envoient-ils des gens dessus ?**
 
 > 📄 **[Étude préalable](docs/etude-prealable.md)** — pourquoi ce projet n'existe pas
 > déjà, et pourquoi la réutilisation des données du ministère est juridiquement solide.
@@ -55,6 +59,10 @@ lancer du poids ? Est-ce éclairé ? Peut-on y entrer sans licence ?
 > 🧭 **[Trouver les pistes que le recensement ignore](docs/trouver-les-pistes-manquantes.md)**
 > — la méthode : quatre sources à croiser, six façons de se tromper, et ce que le
 > balayage de la Loire-Atlantique et du Pays de Retz a donné.
+
+> 📈 **[Mesurer le trafic des IA](docs/mesurer-le-trafic-des-ia.md)** — pourquoi un
+> traceur posé dans la page ne voit *aucun* robot, les trois journaux qui couvrent
+> chacun une population différente, et ce que Matomo accepte — ou jette en silence.
 
 > 🏛️ **[Ce que dit la mairie](docs/ce-que-dit-la-mairie.md)** — dater un changement
 > plutôt que décrire un état : lire les délibérations des conseils municipaux, et

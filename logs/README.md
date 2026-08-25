@@ -6,6 +6,12 @@ aucune mesure côté navigateur ne les voit jamais, et Search Console ne parle
 que de Google. Ce Worker, posé devant le site depuis que le domaine passe par
 Cloudflare, est le seul endroit d'où l'on puisse les observer.
 
+Depuis le 25 août 2026, ce Worker alimente **deux** journaux à partir de la
+même observation : la base D1 décrite ici, qui garde **tous** les robots parce
+que la comparaison IA / moteur est le sujet de l'étude, et Matomo, qui ne reçoit
+que les **agents IA** — voir [docs/mesurer-le-trafic-des-ia.md](../docs/mesurer-le-trafic-des-ia.md).
+Les deux sorties sont indépendantes : une panne de l'une n'affecte pas l'autre.
+
 ## Ce qu'il journalise, et ce qu'il ignore
 
 **Uniquement les robots.** Les visites humaines traversent sans laisser la
@@ -59,6 +65,16 @@ npx wrangler d1 execute pistes-athle-logs --remote --command \
   "SELECT robot, COUNT(DISTINCT chemin) pages_distinctes
    FROM visites_robots GROUP BY robot ORDER BY pages_distinctes DESC;"
 ```
+
+## Pourquoi Matomo ne remplace pas cette base
+
+Vérifié le 25/08/2026 : Matomo **écarte silencieusement** tout hit dont
+l'user-agent n'est pas dans sa liste de chatbots. Un `GPTBot` envoyé au même
+instant qu'un `ChatGPT-User` n'apparaît nulle part dans ses rapports — les deux
+figurent pourtant bien ici. Les robots de corpus (`GPTBot`, `ClaudeBot`,
+`PerplexityBot`, `OAI-SearchBot`) ne sont donc mesurables **que** par cette
+base, qui est de toute façon la seule des deux à savoir répondre « qui a
+découvert le site en premier ».
 
 ## Ajouter un robot
 

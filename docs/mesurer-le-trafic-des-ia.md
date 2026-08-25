@@ -1,0 +1,171 @@
+# Mesurer le trafic des IA
+
+Ce projet avance une hypothèse : les agents IA explorent un annuaire structuré
+beaucoup plus vite qu'un moteur de recherche ne l'indexe. Tant qu'on ne la
+mesure pas, elle reste une intuition. Ce document décrit les trois instruments
+posés pour la mesurer, ce que chacun voit — et surtout **ce qu'il ne voit pas**.
+
+## Le piège : un traceur dans la page ne voit aucun robot
+
+Le réflexe est de coller un bout de JavaScript dans le `<head>` et de considérer
+l'affaire réglée. Elle ne l'est pas, et le raté est total plutôt que partiel.
+
+Un agent IA qui vient lire une fiche envoie une requête HTTP, reçoit du HTML, le
+lit, et s'en va. **Il n'exécute pas le JavaScript.** Pour lui, un traceur posé
+dans la page n'existe simplement pas. Compter les IA avec un traceur de page,
+c'est compter les poissons avec un filet à papillons : l'outil n'est pas
+imprécis, il est hors sujet.
+
+D'où une mesure en deux endroits, et trois journaux.
+
+## Instrument 1 — `assets/matomo.js` : les humains envoyés par une IA
+
+Chargé par toutes les pages du site. Il voit les **humains**, y compris — et
+c'est là son intérêt ici — ceux qui arrivent après avoir lu une réponse de
+ChatGPT, Perplexity, Claude ou Gemini. Matomo les reconnaît au référent et les
+range dans **Acquisition › Assistants IA**.
+
+Ce qu'il mesure : le clic, pas la lecture. Quelqu'un a demandé « où courir près
+de Nantes ? », l'IA a cité l'annuaire, la personne a cliqué. C'est le bout
+visible de la chaîne.
+
+Configuration : sans cookie (`disableCookies`), « Do Not Track » respecté. Pas
+de cookie, donc pas de bandeau de consentement — et la promesse de discrétion du
+site reste tenable telle qu'elle est écrite.
+
+Sa limite, à retenir : l'application est une page unique. Toute la navigation
+dans la carte et les filtres se déroule sous une seule URL, `/`. Les pages
+statiques (`/site/…`, `/departement/…`) sont mesurées finement ; l'usage de
+l'application, non. C'est un choix, pas un oubli : mesurer chaque changement de
+filtre noierait les rapports.
+
+## Instrument 2 — `logs/worker.js` : les robots eux-mêmes
+
+C'est la moitié qui compte pour l'hypothèse du projet, et la seule façon de
+l'obtenir est de mesurer **avant** la page, là où la requête passe. Le site est
+publié sur GitHub Pages, qui ne donne aucun log d'accès, mais `pistes-athle.com`
+est servi à travers Cloudflare : un Worker s'intercale sur ce trajet.
+
+**Un seul Worker, deux sorties.** Cloudflare n'admet qu'un Worker par route : la
+mesure Matomo est donc greffée sur le journal des robots existant, pas posée à
+côté. Les deux sorties sont indépendantes — une panne de Matomo n'empêche pas
+l'écriture en base, et réciproquement.
+
+| Sortie | Reçoit | Répond à |
+|---|---|---|
+| **Base D1** (`visites_robots`) | **tous** les robots, Googlebot compris | Qui a découvert le site en premier ? à quelle cadence ? quelle couverture ? |
+| **Matomo** (`recMode=1`) | les **agents IA** seulement | Quelles pages les IA vont-elles chercher ? envoient-elles des gens ? |
+
+D1 garde Googlebot et Bingbot parce que **la comparaison IA / moteur est tout le
+sujet de l'étude**. Matomo ne les reçoit pas : ce sont des moteurs, pas des IA,
+et les envoyer polluerait un rapport intitulé « Chatbots IA ».
+
+`recMode=1` est le mode « sans visite » : il n'ouvre ni visite, ni session, ni
+attribution. Les statistiques humaines restent intactes, les deux mesures ne se
+mélangent jamais.
+
+### Ce que Matomo accepte, et ce qu'il jette — vérifié le 25/08/2026
+
+**Matomo écarte silencieusement tout hit dont l'user-agent n'est pas dans sa
+liste de chatbots.** Sans erreur, sans trace : le hit part, il est accepté en
+HTTP 200, et il n'apparaît nulle part.
+
+La vérification était simple. Trois requêtes envoyées au même instant sur
+`/departements/` :
+
+```
+D1     : Googlebot, GPTBot, ChatGPT-User   → les 3 ont atteint le Worker
+Matomo : ChatGPT                            → GPTBot envoyé, puis jeté
+```
+
+Conséquence pratique, encodée dans `MATOMO_CORPUS="0"` :
+
+| | Exemples | Matomo | D1 |
+|---|---|---|---|
+| **Agents** — cherchent une page **pour répondre à quelqu'un**, maintenant | `ChatGPT-User`, `Claude-User`, `Perplexity-User` | ✅ nommés | ✅ |
+| **Robots de corpus** — constituent un fonds, décident si l'annuaire sera *citable* demain | `GPTBot`, `ClaudeBot`, `PerplexityBot`, `OAI-SearchBot` | ❌ jetés | ✅ |
+
+Ce n'est pas une perte : D1 est de toute façon le seul des deux à savoir
+répondre « qui a découvert le site en premier ». Envoyer les robots de corpus à
+Matomo dépenserait une sous-requête par passage pour zéro donnée. La liste reste
+dans `worker.js` pour documenter ce qui a été essayé, et pour le jour où Matomo
+élargira la sienne.
+
+### Un réglage à signaler
+
+Le Worker envoie `/api/index.json` et `/llms.txt` à Matomo, que son réglage par
+défaut écarterait comme fichiers statiques. Ce sont précisément les adresses
+qu'un agent bien élevé demande en premier. Les exclure reviendrait à ne pas voir
+ce qu'on cherche à mesurer. (La base D1, elle, garde tout, habillage compris.)
+
+Les redirections (3xx) ne sont pas envoyées à Matomo : `www.pistes-athle.com`
+renvoie un 301 vers l'apex, et compter les deux ferait deux lignes pour une
+seule lecture. D1 les garde — un robot qui frappe `www` reste un fait.
+
+## Une règle de conception : la mesure ne coûte jamais une page
+
+Le Worker est sur le chemin de **toutes** les visites du site. Les deux sorties
+partent dans `waitUntil()`, après l'envoi de la réponse, et chacune avale ses
+propres pannes. Une mesure ratée est un trou dans un graphique ; une exception
+serait une page blanche. On choisit le trou.
+
+Les routes sont en `request_limit_fail_open` : au-delà des 100 000 requêtes/jour
+du plan gratuit, les requêtes contournent le Worker au lieu de recevoir une page
+d'erreur 1027. Le site ne peut pas tomber à cause de sa propre mesure.
+
+## Vérifier une installation : la vue temps réel
+
+Piège à connaître, il coûte une demi-heure de doute. Les rapports « Chatbots
+IA » sont **archivés** : sur Matomo Cloud l'archivage passe par cron, et une
+requête tout juste envoyée y affiche encore `0`. Ce zéro ne veut pas dire que la
+mesure a échoué.
+
+Deux méthodes d'API répondent, elles, **sans archivage** :
+
+- `BotTracking.getAIChatbotsRealTime` — quels agents, combien de requêtes
+- `BotTracking.getTopPageUrlsRealTime` — quelles pages ils sont venus lire
+
+Ce sont elles qu'il faut interroger juste après un déploiement. Une requête de
+contrôle sur le site suffit :
+
+```sh
+curl -s -o /dev/null -H 'user-agent: ChatGPT-User/1.0' \
+  https://pistes-athle.com/departements/
+```
+
+puis la vue temps réel, qui doit faire apparaître `ChatGPT` avec cette URL. Le
+rapport archivé suivra au prochain passage du cron.
+
+## Où regarder
+
+| Question | Où |
+|---|---|
+| Qui a découvert le site en premier ? | **D1** — `logs/README.md`, § Interroger |
+| Quelle couverture chaque robot a-t-il atteinte ? | **D1** |
+| Les IA lisent-elles le site, et lesquelles ? | Matomo › AI Assistants › **AI Chatbots** |
+| Quelles pages lisent-elles ? | Matomo › AI Assistants › **Pages** |
+| Que lisent-elles que les humains ignorent ? | Matomo › AI Assistants › **AI-Favoured Pages** |
+| Envoient-elles des gens ? | Matomo › **AI Chatbots Overview**, colonne *Acquired visits* |
+| Combien de visiteurs viennent d'une IA ? | Matomo › Acquisition › **Assistants IA** |
+| Les robots tombent-ils sur des pages cassées ? | Matomo › **Broken Pages and Documents** |
+| Une installation vient d'être déployée, marche-t-elle ? | `BotTracking.getAIChatbotsRealTime` |
+
+Le rapport le plus intéressant côté Matomo est **AI-Favoured Pages** : les pages
+que les IA vont chercher et que les humains ne demandent pas. C'est là que se lit
+la différence entre ce qu'un annuaire *publie* et ce qu'une IA *utilise*.
+
+## Ce qui reste non mesuré
+
+À dire franchement, parce que l'omission serait une affirmation fausse :
+
+- **Les citations sans clic.** Une IA qui lit l'annuaire, s'en sert pour
+  répondre, et ne fournit aucun lien : elle apparaît en requête robot, jamais en
+  visite. C'est probablement le gros du volume, et il est invisible par
+  construction.
+- **Les agents qui ne se déclarent pas.** La détection se fait sur le
+  *User-Agent*, une chaîne que rien n'oblige à être sincère. Ces journaux disent
+  ce qu'un client a *affirmé* être, pas ce qu'il est.
+- **`chardonneaur.github.io`.** Le Worker ne couvre que `pistes-athle.com` et
+  `www.pistes-athle.com` ; une requête arrivant par l'adresse GitHub Pages
+  échappe à Cloudflare, donc aux deux journaux.
+- **L'usage de l'application.** Carte et filtres vivent sous une seule URL.

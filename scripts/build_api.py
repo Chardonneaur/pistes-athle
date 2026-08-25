@@ -630,6 +630,15 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
     }
 
 
+# Mesure d'audience — le meme bandeau de <head> sur toutes les pages du site,
+# generees ici, par build_site.py, ou ecrites a la main dans index.html. Le
+# script lui-meme est assets/matomo.js : c'est la que se lit la configuration.
+# `{r}` est le chemin relatif vers la racine du site depuis la page courante.
+MATOMO_HEAD = """<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="{r}assets/matomo.js?v=1" defer></script>"""
+
+
 PAGE_HTML = """<!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -641,6 +650,9 @@ PAGE_HTML = """<!DOCTYPE html>
 <link rel="canonical" href="{url_base}/api/tracks/">
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="stylesheet" href="../../assets/page.css?v=10">
+<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="../../assets/matomo.js?v=1" defer></script>
 <script type="application/json" id="capabilities">{capacites}</script>
 </head>
 <body>

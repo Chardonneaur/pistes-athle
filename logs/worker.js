@@ -12,6 +12,21 @@
  *
  * La reponse part avant l'ecriture en base (`waitUntil`), et une panne de la
  * base ne peut pas empecher une page de s'afficher.
+ *
+ * DEUX SORTIES, UN SEUL PASSAGE
+ * -----------------------------
+ * Depuis l'installation de Matomo, ce Worker alimente deux journaux a partir
+ * de la meme observation :
+ *
+ *   - la base D1, qui repond a la question de l'etude : qui a decouvert le
+ *     site en premier, et a quelle cadence ? Elle garde TOUS les robots,
+ *     Googlebot compris, parce que la comparaison IA / moteur est le sujet.
+ *   - Matomo, qui ne recoit que les robots d'IA, en `recMode=1`. Ce mode
+ *     n'ouvre ni visite ni session : les statistiques humaines restent
+ *     intactes, les deux mesures ne se melangent jamais.
+ *
+ * Les deux sorties sont independantes : une panne de Matomo n'empeche pas
+ * l'ecriture en base, et reciproquement.
  */
 
 // Le nom canonique du robot, et le fragment d'user-agent qui le designe.
@@ -21,12 +36,17 @@ const ROBOTS = [
   ["GPTBot", "gptbot"],
   ["OAI-SearchBot", "oai-searchbot"],
   ["ChatGPT-User", "chatgpt-user"],
+  ["GoogleAgent", "googleagent"],
+  ["NovaAct", "novaact"],
   ["ClaudeBot", "claudebot"],
   ["Claude-User", "claude-user"],
   ["Claude-SearchBot", "claude-searchbot"],
   ["anthropic-ai", "anthropic-ai"],
   ["PerplexityBot", "perplexitybot"],
   ["Perplexity-User", "perplexity-user"],
+  ["Gemini-Deep-Research", "gemini-deep-research"],
+  ["Google-NotebookLM", "google-notebooklm"],
+  ["Google-GeminiNotebook", "google-gemininotebook"],
   ["Google-Extended", "google-extended"],
   ["GoogleOther", "googleother"],
   ["Googlebot", "googlebot"],
@@ -39,6 +59,10 @@ const ROBOTS = [
   ["Bytespider", "bytespider"],
   ["CCBot", "ccbot"],
   ["MistralAI-User", "mistralai-user"],
+  ["MistralAI-Crawler", "mistralai-crawler"],
+  ["DuckAssistBot", "duckassistbot"],
+  ["AI2Bot", "ai2bot"],
+  ["Firecrawl", "firecrawl"],
   ["cohere-ai", "cohere-ai"],
   ["YouBot", "youbot"],
   ["DuckDuckBot", "duckduckbot"],
@@ -49,6 +73,42 @@ const ROBOTS = [
 ];
 
 const AGENT_MAX = 300;
+
+/* Parmi les robots ci-dessus, ceux que Matomo doit recevoir. Googlebot,
+   Bingbot ou YandexBot n'y sont pas : ce sont des moteurs, pas des IA, et les
+   envoyer polluerait un rapport intitule « Chatbots IA ». Ils restent
+   evidemment en base D1, ou la comparaison avec les IA est tout le sujet.
+
+   Deux familles, parce qu'elles ne disent pas la meme chose :
+   - AGENTS : ils cherchent une page POUR REPONDRE A QUELQU'UN, maintenant.
+     Ce sont ceux que Matomo nomme nativement dans ses rapports.
+   - CORPUS : ils constituent un fonds. Ils decident si l'annuaire sera
+     citable demain. VERIFIE LE 25/08/2026 : Matomo les JETTE — un hit dont
+     l'user-agent n'est pas dans sa liste de chatbots disparait sans erreur.
+     D'ou MATOMO_CORPUS="0" par defaut : ces robots-la sont mesures par D1,
+     qui est de toute facon le seul des deux a savoir repondre « qui a
+     decouvert le site en premier ». L'ensemble reste ici pour documenter
+     ce qui a ete essaye, et pour le jour ou Matomo elargira sa liste. */
+const MATOMO_AGENTS = new Set([
+  "ChatGPT-User", "Claude-User", "Perplexity-User", "MistralAI-User",
+  "Gemini-Deep-Research", "Google-NotebookLM", "Google-GeminiNotebook",
+  "GoogleAgent", "NovaAct",
+]);
+const MATOMO_CORPUS = new Set([
+  "GPTBot", "OAI-SearchBot", "ClaudeBot", "Claude-SearchBot", "anthropic-ai",
+  "PerplexityBot", "Google-Extended", "Applebot-Extended", "meta-externalagent",
+  "Amazonbot", "Bytespider", "CCBot", "cohere-ai", "YouBot", "Diffbot",
+  "MistralAI-Crawler", "DuckAssistBot", "AI2Bot", "Firecrawl",
+]);
+
+/* L'habillage n'apprend rien sur ce qu'un robot a lu. Volontairement plus
+   permissif que le reglage par defaut de Matomo, qui ecarte aussi .json et
+   .txt : ici /api/index.json et /llms.txt sont justement les adresses qu'un
+   agent bien eleve demande en premier. Les exclure reviendrait a ne pas voir
+   ce qu'on cherche a mesurer. (La base D1, elle, garde tout.) */
+const HABILLAGE = /^[^?]+\.(?:css|js|mjs|map|webmanifest|manifest|png|jpe?g|gif|webp|avif|svg|ico|bmp|tiff?|woff2?|ttf|otf|eot|wasm)(?:\?|$)/i;
+const DOCUMENTS = /^[^?]+\.(?:pdf|docx?|xlsx?|pptx?|csv|epub|zip|gz|tgz|tar)(?:\?|$)/i;
+const MATOMO_DELAI_MS = 5000;
 
 /** Le nom du robot, ou null pour tout le reste — humains compris. */
 function robot(agent) {
@@ -111,12 +171,86 @@ async function journaliser(requete, reponse, env) {
   }
 }
 
+/** Horodatage attendu par Matomo : « AAAA-MM-JJ HH:MM:SS », en UTC. */
+function horodatage(date) {
+  const p = (n) => String(n).padStart(2, "0");
+  return `${date.getUTCFullYear()}-${p(date.getUTCMonth() + 1)}-${p(date.getUTCDate())} `
+       + `${p(date.getUTCHours())}:${p(date.getUTCMinutes())}:${p(date.getUTCSeconds())}`;
+}
+
+/**
+ * Envoie une requete robot a Matomo, en mode « sans visite ».
+ *
+ * Le contrat de parametres est celui du worker officiel de Matomo
+ * (matomo-org/tracker-cloudflare) : idsite, rec, recMode, url, source, cdt,
+ * ua, http_status, bw_bytes, pf_srv, download.
+ */
+async function mesurer(requete, reponse, dureeMs, env) {
+  if (!env.MATOMO_URL || !env.MATOMO_SITE_ID) return;
+  if (requete.method.toUpperCase() !== "GET") return;
+
+  const agent = requete.headers.get("user-agent") || "";
+  const nom = robot(agent);
+  if (!nom) return;
+  const corpus = (env.MATOMO_CORPUS ?? "1") !== "0";
+  if (!MATOMO_AGENTS.has(nom) && !(corpus && MATOMO_CORPUS.has(nom))) return;
+
+  // Une redirection n'est pas un contenu lu. www.pistes-athle.com renvoie un
+  // 301 vers l'apex : la compter ferait deux lignes pour une seule lecture.
+  if (reponse.status >= 300 && reponse.status < 400) return;
+
+  const url = requete.url;
+  if (HABILLAGE.test(url)) return;
+
+  const p = {
+    idsite: env.MATOMO_SITE_ID,
+    rec: 1,
+    recMode: 1,
+    url,
+    source: "Cloudflare",
+    cdt: horodatage(new Date(Date.now() - dureeMs)),   // l'instant de la demande
+    ua: agent,
+    http_status: reponse.status,
+  };
+  const octets = Number.parseInt(reponse.headers.get("content-length") || "", 10);
+  if (!Number.isNaN(octets)) p.bw_bytes = octets;
+  if (dureeMs >= 0) p.pf_srv = Math.round(dureeMs);
+  if (DOCUMENTS.test(url)) p.download = url;
+
+  const cible = new URL(env.MATOMO_URL);
+  const chemin = (cible.pathname || "/").replace(/\/matomo\.php$/i, "/");
+  cible.pathname = (chemin.endsWith("/") ? chemin : chemin + "/") + "matomo.php";
+  cible.search = new URLSearchParams(
+    Object.entries(p).map(([k, v]) => [k, String(v)])).toString();
+  cible.hash = "";
+
+  const arret = new AbortController();
+  const minuteur = setTimeout(() => arret.abort(), MATOMO_DELAI_MS);
+  try {
+    await fetch(cible.toString(), { method: "GET", signal: arret.signal });
+  } catch (erreur) {
+    // Une mesure ratee est un trou dans un graphique. La page est deja partie.
+    console.log(JSON.stringify({
+      niveau: "erreur", ou: "mesurer", robot: nom, message: String(erreur),
+    }));
+  } finally {
+    clearTimeout(minuteur);
+  }
+}
+
 export default {
   async fetch(requete, env, ctx) {
     // Sur une route, fetch(requete) va a l'origine definie par le DNS de la
     // zone — GitHub Pages — et ne repasse pas par ce Worker.
+    const debut = Date.now();
     const reponse = await fetch(requete);
+    const duree = Date.now() - debut;
+
+    // Deux sorties independantes : chacune avale ses propres pannes, et
+    // aucune des deux ne retarde la reponse deja en route.
     ctx.waitUntil(journaliser(requete, reponse, env));
+    ctx.waitUntil(mesurer(requete, reponse, duree, env));
+
     return reponse;
   },
 };
