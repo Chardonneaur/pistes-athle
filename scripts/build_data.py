@@ -26,18 +26,73 @@ RAW_CACHE = os.path.join(ROOT, "data", ".res_raw.json")
 OUT = os.path.join(ROOT, "data", "tracks.json")
 OVERRIDES_DIR = os.path.join(ROOT, "data", "overrides")
 
-API = "https://equipements.sports.gouv.fr/api/explore/v2.1/catalog/datasets/data-es/exports/json"
+# LE 25/08/2026, le ministere a vide `data-es` et l'a scinde en trois jeux
+# joignables. L'ancien select rendait desormais une erreur 400 (« Unknown
+# field: inst_nom ») et la publication du site s'est arretee avec lui.
+#
+# Le decoupage : l'installation d'un cote (le stade), ses equipements de
+# l'autre (l'anneau, les sautoirs, les aires de lancer), et les activites en
+# troisieme — celles-ci ne disent que « Saut / Lancer / Course sur piste »,
+# trop grossier pour ce site, qui nomme les agres. On ne les lit pas.
+API_BASE = "https://equipements.sports.gouv.fr/api/explore/v2.1/catalog/datasets"
+API_EQUIP = f"{API_BASE}/data-es-equipement-dcf/exports/json"
+API_INST = f"{API_BASE}/data-es-installation-dcf/exports/json"
+FAMILLE = "Equipement d'athlétisme"
 
-FIELDS = [
-    "inst_numero", "inst_nom", "inst_adresse", "inst_cp", "new_name", "new_code",
-    "dep_code", "dep_nom", "reg_nom", "inst_uai",
-    "equip_numero", "equip_nom", "equip_type_name", "equip_coordonnees",
-    "equip_sol", "equip_nature", "equip_piste_nb", "equip_piste_long",
-    "equip_eclair", "equip_acc_libre", "equip_ouv_public_bool",
-    "equip_douche", "equip_vest_sport", "equip_sanit", "equip_trib_nb",
-    "equip_url", "equip_service_date", "equip_travaux_date",
-    "equip_prop_type", "equip_gest_type",
-]
+# Les deux tables de correspondance, du nouveau nom vers l'ancien. Traduire ici
+# plutot que partout ailleurs : aggregate(), detect_disciplines() et le reste du
+# fichier continuent de lire les noms qu'ils ont toujours lus, et la migration
+# tient dans fetch_raw(). Chaque ligne a ete verifiee sur les donnees, pas sur
+# l'intitule du champ — deux pieges en temoignent, signales ci-dessous.
+CHAMPS_INST = {
+    "numero": "inst_numero",
+    "nom": "inst_nom",
+    "adresse": "inst_adresse",
+    "cp": "inst_cp",
+    "commune": "new_name",
+    "insee": "new_code",
+    # PIEGE : `dep_code` vaut « 1 », « 5 », « 9 » — sans le zero. Le champ
+    # zero-comble est `dep_code_filled`, qui rend bien « 01 » et laisse 2A, 2B
+    # et 971 intacts. Prendre l'autre casserait l'URL de neuf departements,
+    # tous leurs liens internes et le plan de site.
+    "dep_code_filled": "dep_code",
+    "dep_nom": "dep_nom",
+    "reg_nom": "reg_nom",
+    "uai": "inst_uai",
+}
+CHAMPS_EQUIP = {
+    "installation_numero": "inst_numero",
+    "numero": "equip_numero",
+    "nom": "equip_nom",
+    "type": "equip_type_name",
+    "coordonnees": "equip_coordonnees",
+    "aire_nature_sol": "equip_sol",
+    "nature": "equip_nature",
+    # Intitule « Nombre de subdivision », mais c'est bien le nombre de
+    # couloirs : la distribution va de 0 a 8, comme celle du site.
+    "aire_couloirs_nb": "equip_piste_nb",
+    "piste_longueur": "equip_piste_long",
+    "aire_eclairage": "equip_eclair",
+    "acces_libre": "equip_acc_libre",
+    # PIEGE INVERSE : l'intitule devient « Arrete d'ouverture au public », un
+    # acte administratif, ce qui n'est pas « le public peut entrer ». Verifie
+    # le 25/08/2026 sur 593 sites communs a l'ancien et au nouveau jeu : 99 %
+    # d'accord avec l'ancien `equip_ouv_public_bool`, et AUCUN faux positif —
+    # les sept desaccords vont tous dans le sens prudent, l'ancien affirmait
+    # une ouverture que le nouveau tait. Sans ce report, toute fiche non
+    # « acces libre » afficherait « Non / reserve » : une affirmation negative
+    # batie sur un champ absent, exactement ce que ce projet s'interdit.
+    "arrete_ouverture": "equip_ouv_public_bool",
+    "douches": "equip_douche",
+    "sanitaires": "equip_sanit",
+    "vestiaires_sportifs_nb": "equip_vest_sport",
+    "places_tibune_nb": "equip_trib_nb",
+    "website": "equip_url",
+    "mise_en_service_date": "equip_service_date",
+    "derniers_travaux_date": "equip_travaux_date",
+    "proprietaire_principal_type": "equip_prop_type",
+    "gestionnaire_type": "equip_gest_type",
+}
 
 # --- normalisation des surfaces -------------------------------------------
 SURFACES = {
@@ -217,20 +272,75 @@ def app_version():
     return m.group(1)
 
 
+def _assainir(inst):
+    """Repare ce que le portail rend de travers.
+
+    `dep_code_filled` vaut la CHAINE « None » sur 71 installations — un None
+    Python stringifie quelque part en amont, chez eux. Non traite, il donnerait
+    un departement nomme « None », sa page /departement/None/ et sa ligne dans
+    l'annuaire. Vide, la fiche retombe sur « Departement non renseigne »,
+    exactement comme avant la migration.
+
+    (Le code INSEE de ces fiches, lui, est renseigne : on pourrait en deduire
+    le departement, ses deux premiers chiffres etant precisement cela. Ce
+    serait un gain reel, mais c'est une correction de donnee, pas un portage :
+    a faire a part, pour que ce changement-ci reste verifiable.)"""
+    if str(inst.get("dep_code_filled") or "").strip() in ("", "None"):
+        inst["dep_code_filled"] = None
+    return inst
+
+
+def _export(url, params, quoi):
+    """Un export complet du portail, rendu tel quel."""
+    req = urllib.request.Request(url + "?" + urllib.parse.urlencode(params),
+                                 headers={"User-Agent": "pistes-athle/1.0 (+github pages)"})
+    with urllib.request.urlopen(req, timeout=300) as r:
+        data = json.load(r)
+    print(f"   {len(data)} {quoi}")
+    return data
+
+
 def fetch_raw(offline=False):
+    """Les equipements d'athletisme, chacun porteur des champs de son installation.
+
+    Deux telechargements et une jointure la ou il n'y avait qu'un select : le
+    portail a scinde son jeu (voir API_BASE). La sortie garde exactement la
+    forme d'avant — une ligne par equipement, champs a l'ancien nom — pour que
+    tout ce qui suit dans ce fichier n'ait pas a savoir que le schema a change.
+    """
     if offline and os.path.exists(RAW_CACHE):
         print("-> lecture du cache local", RAW_CACHE)
         with open(RAW_CACHE, encoding="utf-8") as f:
             return json.load(f)
-    params = {
-        "where": 'equip_type_famille="Equipement d\'athlétisme"',
-        "select": ",".join(FIELDS),
+
+    print("-> telechargement Data ES (equipements puis installations) ...")
+    equipements = _export(API_EQUIP,
+                          {"where": f'famille="{FAMILLE}"',
+                           "select": ",".join(CHAMPS_EQUIP)},
+                          "equipements d'athletisme")
+    # Le portail ne sait pas joindre : on prend les installations en entier
+    # (37 Mo pour dix colonnes) et on ne garde que celles qui portent un
+    # equipement d'athletisme. Filtrer en amont demanderait une clause `in`
+    # de 7 000 identifiants, qu'aucune URL ne porte.
+    voulues = {e.get("installation_numero") for e in equipements}
+    installations = {
+        i["numero"]: _assainir(i)
+        for i in _export(API_INST, {"select": ",".join(CHAMPS_INST)}, "installations")
+        if i.get("numero") in voulues
     }
-    url = API + "?" + urllib.parse.urlencode(params)
-    print("-> telechargement Data ES ...")
-    req = urllib.request.Request(url, headers={"User-Agent": "pistes-athle/1.0 (+github pages)"})
-    with urllib.request.urlopen(req, timeout=180) as r:
-        data = json.load(r)
+    print(f"   {len(installations)} installations retenues")
+
+    data, orphelins = [], 0
+    for e in equipements:
+        inst = installations.get(e.get("installation_numero"))
+        if not inst:
+            orphelins += 1          # un equipement dont l'installation manque
+            continue
+        ligne = {ancien: inst.get(neuf) for neuf, ancien in CHAMPS_INST.items()}
+        ligne.update({ancien: e.get(neuf) for neuf, ancien in CHAMPS_EQUIP.items()})
+        data.append(ligne)
+    if orphelins:
+        print(f"   [!] {orphelins} equipement(s) sans installation, ignore(s)")
     print(f"   {len(data)} equipements d'athletisme recus")
     os.makedirs(os.path.dirname(RAW_CACHE), exist_ok=True)
     with open(RAW_CACHE, "w", encoding="utf-8") as f:

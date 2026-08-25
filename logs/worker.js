@@ -154,6 +154,21 @@ function redirection(url, methode) {
     return Response.redirect(cible.toString(), 301);
   }
 
+  /* Les neuf departements a un chiffre. Le portail du ministere servait un
+     code non comble — « 1 » pour l'Ain — et le site publiait /departement/1/.
+     Le champ zero-comble adopte le 25/08/2026 rend « 01 », la forme INSEE :
+     409 sites changent d'adresse de departement, et les anciennes sont
+     indexees. Elles menent ici a la nouvelle plutot qu'a un 404. */
+  if ((parts[0] === "departement" || (parts[0] === "en" && parts[1] === "department"))
+      && /^[1-9]$/.test(parts[parts[0] === "en" ? 2 : 1] || "")) {
+    const suite = [...parts];
+    const rang = parts[0] === "en" ? 2 : 1;
+    suite[rang] = "0" + suite[rang];
+    const cible = new URL(`/${suite.join("/")}/`, url);
+    cible.search = url.search;
+    return Response.redirect(cible.toString(), 301);
+  }
+
   const trouve = url.pathname.match(CRITERE_DEVINE);
   if (!trouve) return null;
   const anglais = Boolean(trouve[1]);
