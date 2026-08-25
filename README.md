@@ -81,6 +81,7 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/departement/<CODE>/` et `/en/department/<CODE>/` | les installations d'un département, groupées par commune |
 | `/departements/` et `/en/departments/` | l'annuaire des 108 départements, groupés par région |
 | `/contributeurs/` et `/en/contributors/` | le classement des contributeurs et toutes leurs contributions |
+| `/confidentialite/` et `/en/privacy/` | ce qui est mesuré, ce qui ne l'est pas, et pourquoi il n'y a pas de bandeau |
 | `/ville/<SLUG>/` et `/en/city/<SLUG>/` | les installations d'une commune, et celles à moins de 20 km |
 | `/pistes/<CRITÈRE>/` et `/en/tracks/<CRITERION>/` | développement, couloirs, accès libre, discipline, revêtement |
 | `/pistes/<CRITÈRE>/<DÉPARTEMENT>/` | le croisement des deux, quand il compte au moins trois installations |

@@ -198,6 +198,29 @@ async function load() {
   readHash();
 }
 
+/* --------------------------------------------- mesure des recherches */
+/* Ce que les gens cherchent — et surtout ce qu'ils cherchent EN VAIN — est la
+   seule donnée que ni le recensement ni OpenStreetMap ne contiennent : une
+   recherche qui ne rend rien désigne une piste absente de l'annuaire. Matomo
+   la range dans « Recherche interne », avec son nombre de résultats.
+   Mesurée à part de apply() : apply() tourne à chaque frappe, alors qu'une
+   recherche n'est finie qu'une fois qu'on s'arrête de taper. Et jamais deux
+   fois la même : effacer un caractère puis le retaper reste une recherche. */
+const MESURE_DELAI_MS = 1500;
+let mesureDeb, derniereMesure = '';
+function mesurerRecherche() {
+  clearTimeout(mesureDeb);
+  mesureDeb = setTimeout(() => {
+    const q = state.q.trim();
+    if (q.length < 3 || q === derniereMesure) return;
+    derniereMesure = q;
+    /* Si assets/matomo.js s'est tu (hors du site publié), _paq n'est qu'un
+       tableau que personne ne lit : pousser dedans ne coûte rien. */
+    (window._paq = window._paq || []).push(
+      ['trackSiteSearch', q, false, state.shown.length]);
+  }, MESURE_DELAI_MS);
+}
+
 /* Plus le score est bas, plus le site est pertinent pour la recherche saisie. */
 function pertinence(t, q, words) {
   const ville = norm(t.ville);
@@ -1092,7 +1115,7 @@ function init() {
     state.q = e.target.value;
     $('#q-clear').hidden = !state.q;
     clearTimeout(deb);
-    deb = setTimeout(() => { apply(); setHash(); }, 160);
+    deb = setTimeout(() => { apply(); setHash(); mesurerRecherche(); }, 160);
   });
   /* « 44 » ou « loire-atlantique » tapé dans la recherche désigne un
      département : à la validation, on le bascule dans son filtre plutôt que

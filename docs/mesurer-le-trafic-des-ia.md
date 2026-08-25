@@ -249,6 +249,63 @@ nombre, et un seul clic ferait passer le taux de 0 % à 10 %. Les volumes
 exploitables sont dans D1 ; Matomo demandera des semaines avant de dire quelque
 chose de stable sur l'acquisition.
 
+### Ce que les 404 racontent : les adresses qu'une IA devine
+
+C'est la requête la plus rentable de la base, et elle ne coûte rien :
+
+```bash
+npx wrangler d1 execute pistes-athle-logs --remote --command \
+  "SELECT chemin, COUNT(*) n, GROUP_CONCAT(DISTINCT robot) robots
+   FROM visites_robots WHERE statut = 404
+   GROUP BY chemin ORDER BY n DESC LIMIT 20;"
+```
+
+Un agent qui répond à quelqu'un ne suit pas toujours un lien : il **déduit** une
+adresse plausible. Quand il se trompe, le 404 ne lui apprend pas l'adresse
+correcte — il lui apprend que le site n'a pas la réponse. Deux cas relevés le
+25/08/2026, qui ne se corrigent pas de la même façon :
+
+- **L'adresse inventée.** `/criteres/piste-400m/`, demandée par ChatGPT-User à
+  06:31:47, puis par GPTBot **250 ms plus tard** sur la même mauvaise adresse :
+  l'agent répond, le crawler de corpus repasse derrière. Le segment n'a jamais
+  existé — les pages par critère sont sous `/pistes/` — et le slug non plus,
+  c'est `400m`. Remède : une 301 dans le Worker, et la **liste complète** des
+  slugs dans `llms.txt` plutôt que des exemples. Un agent ne devine que ce qu'on
+  ne lui a pas dit.
+- **Le lien réellement cassé.** `/en/contributeurs/`, pris par GPTBot *et*
+  ClaudeBot : la coquille anglaise servait les liens en segments français.
+  Corriger le gabarit ne suffit pas — un crawler garde l'adresse qu'il a lue.
+  D'où la table `SEGMENTS_EN` du Worker, qui rattrape les visiteurs déjà partis
+  avec la mauvaise.
+
+Le reste du relevé est du bruit instructif : `/.env`, `/.env.production`,
+`/.env.development` (ChatGPT-User, PerplexityBot, Bingbot — ils sondent les
+fichiers de configuration ; il n'y a rien à trouver sur un site statique), et
+onze demandes de la forme `/assets/${esc(BASE + p.f)}` — GPTBot lit `app.js`
+**comme du texte**, y repère des chaînes qui ressemblent à des chemins, et
+demande les gabarits non évalués. Rien à corriger, mais cela dit que le
+JavaScript du site est lu comme du contenu.
+
+### Le rythme, qui n'est pas celui d'un moteur
+
+Trois jours de journal, par jour et par robot :
+
+| | 23/08 | 24/08 | 25/08 |
+|---|---:|---:|---:|
+| ClaudeBot | 28 548 | 103 | 4 |
+| GPTBot | 28 480 | 1 | 3 |
+| GoogleOther | 1 185 | 921 | 300 |
+| Googlebot | 204 | 1 436 | 499 |
+
+ClaudeBot et GPTBot ont pris **le site entier le jour de sa découverte**,
+~28 500 requêtes chacun pour 23 766 URL au plan de site, puis se sont tus.
+Googlebot avance au contraire à rythme constant. Deux conséquences pratiques :
+un chiffre mensuel moyen ne veut rien dire ici, et le quota gratuit du Worker
+(100 000 requêtes/jour) est à portée — deux crawlers ont consommé 57 000
+requêtes en une journée. Au-delà, les routes basculent en
+`request_limit_fail_open` : le site reste debout, mais **le journal se tait**,
+et c'est le jour d'une nouvelle découverte qu'on perdrait.
+
 ## Ce qui reste non mesuré
 
 À dire franchement, parce que l'omission serait une affirmation fausse :
@@ -263,4 +320,9 @@ chose de stable sur l'acquisition.
 - **`chardonneaur.github.io`.** Le Worker ne couvre que `pistes-athle.com` et
   `www.pistes-athle.com` ; une requête arrivant par l'adresse GitHub Pages
   échappe à Cloudflare, donc aux deux journaux.
-- **L'usage de l'application.** Carte et filtres vivent sous une seule URL.
+- **L'usage de l'application.** Carte et filtres vivent sous une seule URL. La
+  recherche fait exception depuis le 25/08/2026 : `assets/app.js` la déclare à
+  Matomo (`trackSiteSearch`) une fois la frappe finie, avec son nombre de
+  résultats. Une recherche qui ne rend rien désigne une piste absente de
+  l'annuaire — c'est la seule donnée que ni le recensement ni OpenStreetMap ne
+  contiennent. Elle est annoncée sur la page de confidentialité.

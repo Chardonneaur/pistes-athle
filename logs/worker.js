@@ -110,6 +110,59 @@ const HABILLAGE = /^[^?]+\.(?:css|js|mjs|map|webmanifest|manifest|png|jpe?g|gif|
 const DOCUMENTS = /^[^?]+\.(?:pdf|docx?|xlsx?|pptx?|csv|epub|zip|gz|tgz|tar)(?:\?|$)/i;
 const MATOMO_DELAI_MS = 5000;
 
+/* Les seuls hotes dont une lecture est une lecture DU SITE. Sans ce garde, une
+   requete de test sur l'URL workers.dev du Worker part dans Matomo avec cet
+   hote-la, et le rapport « Chatbots IA » compte une page cassee du site qui
+   n'est pas une page du site. VU LE 25/08/2026 : deux hits
+   pistes-athle-ai-tracker.athle.workers.dev/site/TEST-WORKERS-DEV/ y sont
+   restes, en tete des « pages cassees ». La base D1, elle, garde tout : elle
+   a une colonne `hote` justement pour pouvoir faire le tri apres coup. */
+const HOTES_MESURES = new Set(["pistes-athle.com", "www.pistes-athle.com"]);
+
+/* Une adresse qu'aucun humain n'a tapee : c'est un agent qui l'a deduite.
+   VU LE 25/08/2026 : ChatGPT-User demande /criteres/piste-400m/, et prend un
+   404. Le segment n'a jamais existe (les pages par critere sont sous /pistes/)
+   et le slug non plus (c'est `400m`). Deux erreurs plausibles, la meme cause :
+   l'agent devine une adresse au lieu de suivre un lien. Une 301 le corrige et
+   lui sert la page ; un 404 lui apprend que le site n'a pas la reponse.
+   Le prefixe `piste-` / `track-` est retire pour la meme raison. */
+const CRITERE_DEVINE = /^\/(?:(en)\/)?(?:criteres?|criteria|criterion)\/([^/]+)\/?$/i;
+
+/* La coquille anglaise a servi des liens en segments francais : depuis /en/,
+   `contributeurs/` menait a /en/contributeurs/, qui n'existe pas. Corrige a la
+   generation, mais un crawler garde l'adresse qu'il a lue — VU LE 25/08/2026 :
+   GPTBot et ClaudeBot ont pris ce 404 tous les deux. Un correctif de gabarit ne
+   rattrape que les futurs lecteurs ; cette table rattrape les autres. */
+const SEGMENTS_EN = new Map([
+  ["contributeurs", "contributors"],
+  ["departements", "departments"],
+  ["departement", "department"],
+  ["pistes", "tracks"],
+  ["ville", "city"],
+  ["site", "track"],
+]);
+
+function redirection(url, methode) {
+  if (methode !== "GET" && methode !== "HEAD") return null;
+
+  const parts = url.pathname.split("/").filter(Boolean);
+  if (parts[0] === "en" && SEGMENTS_EN.has(parts[1])) {
+    const anglais = [...parts];
+    anglais[1] = SEGMENTS_EN.get(parts[1]);
+    const cible = new URL(`/${anglais.join("/")}/`, url);
+    cible.search = url.search;
+    return Response.redirect(cible.toString(), 301);
+  }
+
+  const trouve = url.pathname.match(CRITERE_DEVINE);
+  if (!trouve) return null;
+  const anglais = Boolean(trouve[1]);
+  const slug = trouve[2].toLowerCase().replace(/^(?:pistes?|tracks?)-/, "");
+  const cible = new URL(anglais ? `/en/tracks/${slug}/` : `/pistes/${slug}/`, url);
+  cible.search = url.search;
+  return Response.redirect(cible.toString(), 301);
+}
+
 /** Le nom du robot, ou null pour tout le reste — humains compris. */
 function robot(agent) {
   const bas = (agent || "").toLowerCase();
@@ -189,6 +242,8 @@ async function mesurer(requete, reponse, dureeMs, env) {
   if (!env.MATOMO_URL || !env.MATOMO_SITE_ID) return;
   if (requete.method.toUpperCase() !== "GET") return;
 
+  if (!HOTES_MESURES.has(new URL(requete.url).hostname)) return;
+
   const agent = requete.headers.get("user-agent") || "";
   const nom = robot(agent);
   if (!nom) return;
@@ -243,7 +298,10 @@ export default {
     // Sur une route, fetch(requete) va a l'origine definie par le DNS de la
     // zone — GitHub Pages — et ne repasse pas par ce Worker.
     const debut = Date.now();
-    const reponse = await fetch(requete);
+    // Une adresse devinee par un agent est corrigee ici, sans aller a
+    // l'origine : GitHub Pages ne sait pas rediriger.
+    const devinee = redirection(new URL(requete.url), requete.method.toUpperCase());
+    const reponse = devinee || await fetch(requete);
     const duree = Date.now() - debut;
 
     // Deux sorties independantes : chacune avale ses propres pannes, et

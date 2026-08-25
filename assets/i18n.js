@@ -56,6 +56,7 @@ const FR = {
     // liens de pied de page (index.html)
     nav_annuaire: 'Annuaire par département',
     nav_contributeurs: 'Les contributeurs',
+    nav_prive:    'Confidentialité',
     nav_source:   'Source des données',
     nav_code:     'Code source',
 
@@ -244,6 +245,11 @@ const FR = {
          Une page HTML par site est publiée sous <code>/site/</code> pour les moteurs de recherche
          et les agents IA, et <a href="llms.txt">llms.txt</a> décrit l’ensemble.</p>
 
+      <h3>Vie privée</h3>
+      <p>Aucun cookie, aucune publicité, aucun profil. La mesure d’audience est anonyme et
+         ne mesure pas du tout un navigateur qui envoie « Do Not Track ».
+         <a href="confidentialite/">Ce qui est mesuré, et ce qui ne l’est pas</a>.</p>
+
       <p class="src">Fond de carte © contributeurs
          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.
          Code source&nbsp;: <a href="https://github.com/${repo}" target="_blank" rel="noopener">github.com/${repo}</a></p>
@@ -295,6 +301,7 @@ const EN = {
 
     nav_annuaire: 'Browse by department',
     nav_contributeurs: 'Contributors',
+    nav_prive:    'Privacy',
     nav_source:   'Data source',
     nav_code:     'Source code',
 
@@ -481,6 +488,11 @@ const EN = {
       <p>The whole dataset is a single JSON file: <a href="../data/tracks.json">data/tracks.json</a>.
          One HTML page per venue is published under <code>/en/track/</code> for search engines
          and AI agents, and <a href="../llms.txt">llms.txt</a> describes the whole site.</p>
+
+      <h3>Privacy</h3>
+      <p>No cookie, no advertising, no profile. Audience measurement is anonymous, and a browser
+         sending “Do Not Track” is not measured at all.
+         <a href="privacy/">What is measured, and what is not</a>.</p>
 
       <p class="src">Map tiles © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
          contributors. Source code: <a href="https://github.com/${repo}" target="_blank" rel="noopener">github.com/${repo}</a></p>

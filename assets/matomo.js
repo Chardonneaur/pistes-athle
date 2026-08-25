@@ -10,7 +10,7 @@
  *
  * L'autre moitié — les robots qui viennent lire les pages sans jamais ouvrir
  * un navigateur — n'est PAS mesurable ici : un crawler n'exécute pas ce
- * script. Elle se mesure au bord du réseau, dans api/ai-tracker.js.
+ * script. Elle se mesure au bord du réseau, dans logs/worker.js.
  *
  * SANS COOKIE, DONC SANS BANDEAU
  * ------------------------------
@@ -25,6 +25,14 @@
  * cette configuration existe.
  */
 (function () {
+  /* Le tracker ne doit connaître que le site publié. Sans ce garde, une page
+     ouverte depuis localhost pendant une vérification part dans les rapports,
+     où elle se range sous son chemin comme si elle avait été lue en ligne —
+     VU LE 25/08/2026 : quatre vues de localhost:8777/confidentialite/, qui
+     ressemblent à s'y méprendre à du trafic sur la page en ligne. */
+  var HOTES = ['pistes-athle.com', 'www.pistes-athle.com', 'chardonneaur.github.io'];
+  if (HOTES.indexOf(location.hostname) === -1) return;
+
   var HOTE = 'https://ronanchardonneau.matomo.cloud/';
   var SITE = '149';
 
@@ -45,6 +53,14 @@
      lecteur qui lit la fiche. Sans ce battement, toute page vue en dernier
      compte pour zéro seconde. */
   _paq.push(['enableHeartBeatTimer', 15]);
+
+  /* Le titre est figé ici, avant que l'application ne le réécrive avec le
+     nombre de sites une fois le JSON chargé (assets/app.js). Sans ça, la même
+     page d'accueil arrive dans les rapports sous deux titres, selon lequel du
+     tracker ou du chargement des données a fini le premier — VU LE 25/08/2026 :
+     « — Pistes d'athlétisme en France » et « — 7002 sites d'athlétisme en
+     France » comptés comme deux pages. */
+  _paq.push(['setDocumentTitle', document.title]);
 
   _paq.push(['trackPageView']);
 

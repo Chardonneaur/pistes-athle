@@ -100,6 +100,7 @@ T = {
         "prefixe": "", "seg_site": "site", "seg_dep": "departement",
         "seg_index": "departements", "seg_contrib": "contributeurs",
         "seg_pistes": "pistes", "seg_ville": "ville",
+        "seg_prive": "confidentialite",
         "marque": "Où s'entraîner ?",
         "bascule": "English", "bascule_code": "EN",
         "accueil": "Accueil",
@@ -178,6 +179,10 @@ T = {
                                "horaire : c'est ce que les données publiques n'auront jamais.",
         "contrib_appel_lien": "Comment contribuer",
         "code_source": "Code source",
+        "prive_titre": "Confidentialité",
+        "prive_desc": "Ce que ce site mesure, ce qu'il ne mesure pas, et pourquoi il n'y a aucun bandeau à cliquer : mesure d'audience sans cookie, journal des robots, contributions.",
+        "prive_lede": "Aucun cookie, aucune publicité, aucun profil. La seule mesure faite ici est anonyme, et elle sert à répondre à une question : les agents IA lisent-ils cet annuaire, et y envoient-ils des gens ? Voici, précisément, ce qui est enregistré — et ce qui ne l'est pas.",
+        "prive_maj": lambda d: f"Cette page décrit le code publié le {d}. Elle change le jour où il change.",
         "crit_partout": "Où trouver ces installations",
         "crit_dep_lien": lambda n: f"{n} site{'s' if n > 1 else ''}",
         "crit_api": "Cette liste en JSON",
@@ -199,6 +204,7 @@ T = {
         "prefixe": "en/", "seg_site": "track", "seg_dep": "department",
         "seg_index": "departments", "seg_contrib": "contributors",
         "seg_pistes": "tracks", "seg_ville": "city",
+        "seg_prive": "privacy",
         "marque": "Where to train?",
         "bascule": "Français", "bascule_code": "FR",
         "accueil": "Home",
@@ -277,6 +283,10 @@ T = {
                                "track, an opening time: that is what open data will never hold.",
         "contrib_appel_lien": "How to contribute",
         "code_source": "Source code",
+        "prive_titre": "Privacy",
+        "prive_desc": "What this site measures, what it does not, and why there is no cookie banner to click: cookieless analytics, a crawler log, and what contributing publishes.",
+        "prive_lede": "No cookie, no advertising, no profile. The only measurement here is anonymous, and it exists to answer one question: do AI agents read this directory, and do they send people to it? Here is exactly what is recorded — and what is not.",
+        "prive_maj": lambda d: f"This page describes the code published on {d}. It changes the day that code changes.",
         "crit_partout": "Where to find them",
         "crit_dep_lien": lambda n: f"{n} venue{'s' if n > 1 else ''}",
         "crit_api": "This list as JSON",
@@ -321,6 +331,10 @@ def url_appli(lang):
 
 def url_contrib(lang):
     return f"{T[lang]['prefixe']}{T[lang]['seg_contrib']}/"
+
+
+def url_prive(lang):
+    return f"{T[lang]['prefixe']}{T[lang]['seg_prive']}/"
 
 
 def url_critere(lang, cle, dep_slug=None):
@@ -665,7 +679,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-{liens}<link rel="stylesheet" href="{r}assets/page.css?v=11">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=12">
 {mesure}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
@@ -688,6 +702,7 @@ def pied(lang, chemin, url_base, depot):
 <footer class="wrap src">
   <p><a href="{r}{url_appli(lang)}">{E(T[lang]['voir_carte'])}</a> ·
      <a href="{r}{url_index(lang)}">{E(T[lang]['annuaire'])}</a> ·
+     <a href="{r}{url_prive(lang)}">{E(T[lang]['prive_titre'])}</a> ·
      <a href="https://github.com/{depot}">{E(T[lang]['code_source'])}</a></p>
 </footer>
 </body>
@@ -1148,6 +1163,307 @@ def page_contributeurs(communaute, par_id, lang, url_base, depot, maj):
     return "\n".join(lignes)
 
 
+# ------------------------------------------------------------ confidentialite
+# Le site mesure son audience depuis le 25 aout 2026. Une mesure sans cookie
+# n'a pas besoin d'un bandeau, mais elle a besoin d'etre dite : cette page dit
+# ce qui est enregistre, ce qui ne l'est pas, et pourquoi il n'y a rien a
+# cliquer. Elle vit ici, comme les autres pages, parce qu'elle doit exister
+# dans les deux langues et suivre le meme gabarit.
+#
+# REGLE : ce texte decrit le code publie, pas une intention. Si assets/matomo.js,
+# logs/worker.js ou la liste des serveurs appeles par la page changent, cette
+# page change le meme jour. Une politique de confidentialite qui a pris du
+# retard sur le code est un mensonge, pas un document.
+#
+# `{depot}` est le depot GitHub ; aucune accolade ne doit apparaitre ailleurs
+# dans ces textes, ils passent par str.format.
+# assets/app.js assemble l'adresse a l'execution pour qu'elle n'apparaisse
+# nulle part en clair dans le HTML, ou les robots collecteurs viendraient la
+# lire. Cette page est lisible sans JavaScript : elle ne peut pas assembler.
+# Elle ecrit donc l'adresse en toutes lettres mais desamorcee, et sans lien
+# mailto — un humain comme un agent la reconstitue, un moissonneur naif non.
+CONTACT_BOITE, CONTACT_DOMAINE = "ronanchardonneau", "gmail.com"
+
+PRIVE = {
+    "fr": [
+        ("Ce qui est mesuré", """
+<p>La mesure d'audience utilise <a href="https://matomo.org/" rel="noopener">Matomo</a>,
+   hébergé en Europe. À l'ouverture d'une page, elle enregistre l'adresse de cette page,
+   le site ou le moteur qui vous y a amené, un pays et une région déduits de l'adresse IP,
+   le type d'appareil, le navigateur et sa langue, la taille de l'écran, le temps passé sur
+   la page, et les liens sortants cliqués — OpenStreetMap, le site de la mairie, l'itinéraire.</p>
+<p>L'adresse IP n'est pas conservée entière : ses deux derniers octets sont effacés avant
+   l'enregistrement — <code>62.210.0.0</code> et non <code>62.210.x.y</code>. C'est ce tronçon
+   qui sert à situer la visite dans un pays et une région ; il ne désigne personne. Vérifié le
+   25 août 2026 dans les données elles-mêmes, pas seulement dans un réglage.</p>
+<p>Ce que vous tapez dans la recherche est également enregistré, avec le nombre de résultats
+   obtenus — une fois la frappe finie, jamais lettre à lettre. La raison est précise : une
+   recherche qui ne rend rien désigne une piste absente de l'annuaire, et c'est la seule façon
+   de l'apprendre. Cette case sert à trouver un stade : n'y écrivez rien qui vous concerne.</p>
+<p>Rien là-dedans ne vous nomme, et rien ne relie deux visites entre elles : sans cookie ni
+   identifiant conservé, vous revenez demain en parfait inconnu.</p>
+<p>À quoi ça sert : ce projet pose une question précise — les agents IA lisent-ils cet
+   annuaire, et envoient-ils des gens dessus ? Matomo répond pour la moitié humaine,
+   en classant les arrivées venues de ChatGPT, Perplexity, Claude ou Gemini. Sans cette
+   mesure, la réponse resterait une intuition.</p>"""),
+
+        ("Pas de cookie, donc pas de bandeau", """
+<p>La première instruction du traceur est <code>disableCookies()</code> : aucun cookie n'est
+   déposé, rien n'est écrit ni lu sur votre appareil pour mesurer l'audience. C'est ce qui
+   dispense de vous demander votre consentement — la loi l'exige pour accéder à votre
+   terminal, ce que ce site ne fait pas. Le traitement lui-même repose sur l'intérêt
+   légitime du responsable (article 6.1.f du RGPD) : savoir si ce qu'il publie est lu.</p>
+<p>Un navigateur qui envoie l'en-tête <em>Do Not Track</em> n'est pas mesuré du tout :
+   ni anonymisé, ni allégé — pas mesuré. On y perd quelques visites, on y gagne de pouvoir
+   écrire cette phrase sans réserve.</p>
+<p>Le réglage tient en trente lignes, et il est public :
+   <a href="https://github.com/{depot}/blob/master/assets/matomo.js" rel="noopener">assets/matomo.js</a>.
+   Le jour où un cookie y apparaîtrait, cette page le dirait le même jour.</p>"""),
+
+        ("Ce que le site ne fait pas", """
+<ul>
+  <li>Aucun compte, aucun mot de passe, aucune inscription.</li>
+  <li>Aucune publicité, et donc aucun traceur publicitaire.</li>
+  <li>Aucune revente, aucun échange de données avec un tiers commercial.</li>
+  <li>Aucune empreinte de navigateur (<em>fingerprinting</em>), aucun suivi d'un site à l'autre.</li>
+  <li>Aucune adresse e-mail collectée à votre insu : vous n'en donnez une que si vous
+      écrivez, et c'est alors pour vous répondre.</li>
+</ul>"""),
+
+        ("Votre position ne quitte pas votre appareil", """
+<p>Le bouton « autour de moi » demande votre position au navigateur, qui vous la demande à
+   son tour. Elle sert à trier la liste par distance, dans la page, sur votre appareil.
+   Elle n'est envoyée nulle part : ni au site, ni à Matomo, ni à la carte. Refuser ne coûte
+   que le tri par distance ; la recherche par ville ou par code postal donne le même annuaire.</p>"""),
+
+        ("Ce qui reste sur votre appareil", """
+<p>Pas de cookie, mais deux choses techniques, qui ne sont pas des identifiants :</p>
+<ul>
+  <li>un <strong>cache hors-ligne</strong> (<em>service worker</em>) qui garde les fichiers de
+      l'application et les sites de l'annuaire, pour qu'il fonctionne dans un stade sans réseau ;</li>
+  <li>une clé <code>reparation</code> dans la mémoire de l'onglet
+      (<em>sessionStorage</em>), qui empêche l'application de se recharger en boucle après
+      une mise à jour, et qui disparaît quand vous fermez l'onglet.</li>
+</ul>
+<p>Vider les données du site dans votre navigateur efface les deux.</p>"""),
+
+        ("Les robots, eux, sont journalisés", """
+<p>Le domaine passe par Cloudflare, et un petit programme y note le passage des robots
+   d'exploration : Googlebot, GPTBot, ClaudeBot, PerplexityBot et les autres. C'est le seul
+   endroit d'où on puisse les voir — un robot n'exécute pas JavaScript, aucune mesure posée
+   dans la page ne l'atteint jamais.</p>
+<p>Ce journal ne contient <strong>aucune visite humaine</strong> et <strong>aucune adresse
+   IP</strong>. Une ligne, c'est : la date en UTC, le nom du robot, son <em>user-agent</em>,
+   l'hôte, le chemin demandé, le type de page, le code de réponse, et le pays du centre de
+   données d'où part la requête — qui désigne une machine, jamais une personne. Le code est
+   lisible : <a href="https://github.com/{depot}/blob/master/logs/worker.js" rel="noopener">logs/worker.js</a>.</p>"""),
+
+        ("Ce que votre navigateur demande à d'autres serveurs", """
+<p>Afficher une carte ou une vue aérienne oblige votre navigateur à réclamer des fichiers
+   ailleurs. Ces serveurs voient alors, comme tout serveur sollicité, votre adresse IP et
+   votre navigateur. Aucun d'eux ne reçoit votre position ni la moindre donnée vous
+   concernant de la part de ce site.</p>
+<ul>
+  <li><strong>GitHub Pages</strong> et <strong>Cloudflare</strong> — l'hébergement et la
+      distribution des pages.</li>
+  <li><strong>cdn.matomo.cloud</strong> et <strong>ronanchardonneau.matomo.cloud</strong> —
+      la mesure d'audience décrite plus haut.</li>
+  <li><strong>unpkg.com</strong> — Leaflet, la bibliothèque qui dessine la carte.</li>
+  <li><strong>tile.openstreetmap.org</strong> — les tuiles du fond de carte, quand vous
+      ouvrez l'onglet « carte ».</li>
+  <li><strong>data.geopf.fr</strong> — les vues aériennes de l'IGN, affichées sur les fiches
+      qui n'ont pas encore de photo. Les images ne sont pas stockées ici, elles sont demandées
+      à la Géoplateforme au moment de l'affichage.</li>
+  <li><strong>Google Maps</strong> — seulement si vous cliquez « Itinéraire » ou
+      « Horaires » : vous quittez alors le site, et ce sont les règles de Google qui
+      s'appliquent.</li>
+</ul>"""),
+
+        ("Contribuer, c'est publier", """
+<p>Une photo, un avis ou une correction sont publiés sur le site sous licence ODbL, avec le
+   crédit que vous indiquez. Ce crédit, c'est vous qui l'écrivez : un prénom, un nom complet
+   ou un pseudonyme, à votre choix — c'est la seule chose de vous qui apparaîtra.</p>
+<p>Deux chemins, et ils ne sont pas équivalents. Le <strong>formulaire GitHub</strong> crée
+   une discussion publique sous votre compte GitHub, visible de tous. L'<strong>e-mail</strong>
+   arrive dans une boîte privée : votre adresse sert à vous répondre, n'est jamais publiée
+   ni utilisée pour autre chose.</p>
+<p>Une contribution peut être retirée du site sur simple demande. Ce que d'autres en ont déjà
+   repris au titre de la licence, en revanche, échappe au projet : c'est le prix de données
+   librement réutilisables, et il vaut mieux le savoir avant d'envoyer.</p>"""),
+
+        ("Vos droits, et à qui écrire", """
+<p>Le RGPD vous donne un droit d'accès, de rectification, d'effacement et d'opposition.
+   Pour les contributions — nom affiché, photos, avis, e-mail échangé — c'est simple : on
+   retrouve, on corrige, on supprime.</p>
+<p>Pour la mesure d'audience, il faut être honnête : puisqu'elle ne conserve aucun
+   identifiant, rien ne permet de retrouver <em>vos</em> visites parmi les autres, ni de vous
+   les montrer, ni de les effacer sélectivement. La seule façon de vous y soustraire est
+   préventive : activez <em>Do Not Track</em> dans votre navigateur, et vous ne serez pas
+   mesuré du tout.</p>
+<p>Responsable du traitement : Ronan Chardonneau. Pour écrire :
+   <code>BOITE (arobase) DOMAINE</code> — l'adresse n'est pas cliquable, pour la
+   raison qui la fait absente partout ailleurs du HTML de ce site : les robots collecteurs
+   la liraient. Vous pouvez aussi passer par le
+   <a href="https://github.com/{depot}/issues" rel="noopener">dépôt GitHub</a>.</p>
+<p>En cas de désaccord sur la façon dont tout cela est mené, vous pouvez saisir la
+   <a href="https://www.cnil.fr/fr/plaintes" rel="noopener">CNIL</a>.</p>"""),
+    ],
+    "en": [
+        ("What is measured", """
+<p>Audience measurement runs on <a href="https://matomo.org/" rel="noopener">Matomo</a>,
+   hosted in Europe. When a page opens, it records that page's address, the site or search
+   engine you came from, a country and region derived from the IP address, the device type,
+   the browser and its language, the screen size, the time spent on the page, and the outbound
+   links clicked — OpenStreetMap, the town hall website, the directions link.</p>
+<p>The IP address is not kept whole: its last two bytes are zeroed before storage —
+   <code>62.210.0.0</code>, not <code>62.210.x.y</code>. That stub is what places the visit in a
+   country and a region; it designates nobody. Checked on 25 August 2026 against the stored data
+   itself, not merely against a setting.</p>
+<p>What you type in the search box is recorded too, along with how many results it returned —
+   once you stop typing, never letter by letter. The reason is precise: a search that returns
+   nothing points at a track missing from the directory, and there is no other way to learn of
+   it. That box is for finding a stadium: do not write anything about yourself in it.</p>
+<p>None of this names you, and nothing ties two visits together: with no cookie and no stored
+   identifier, you come back tomorrow as a complete stranger.</p>
+<p>What it is for: this project asks one precise question — do AI agents read this directory,
+   and do they send people to it? Matomo answers the human half, by sorting arrivals coming
+   from ChatGPT, Perplexity, Claude or Gemini. Without the measurement, the answer would stay
+   a hunch.</p>"""),
+
+        ("No cookie, so no banner", """
+<p>The tracker's first instruction is <code>disableCookies()</code>: no cookie is set, nothing
+   is written to or read from your device in order to measure the audience. That is what makes
+   a consent request unnecessary — the law requires it for accessing your terminal, which this
+   site does not do. The processing itself rests on the controller's legitimate interest
+   (GDPR article 6(1)(f)): knowing whether what he publishes is read.</p>
+<p>A browser sending the <em>Do Not Track</em> header is not measured at all: not anonymised,
+   not trimmed — not measured. It costs a few visits; it buys the right to write that sentence
+   without a footnote.</p>
+<p>The whole setting is thirty lines long, and it is public:
+   <a href="https://github.com/{depot}/blob/master/assets/matomo.js" rel="noopener">assets/matomo.js</a>.
+   The day a cookie appeared there, this page would say so the same day.</p>"""),
+
+        ("What this site does not do", """
+<ul>
+  <li>No account, no password, no sign-up.</li>
+  <li>No advertising, and therefore no advertising tracker.</li>
+  <li>No selling, no exchange of data with a commercial third party.</li>
+  <li>No browser fingerprinting, no cross-site tracking.</li>
+  <li>No email address collected behind your back: you only give one by writing in, and it is
+      then used to reply to you.</li>
+</ul>"""),
+
+        ("Your location never leaves your device", """
+<p>The &laquo;&nbsp;near me&nbsp;&raquo; button asks the browser for your position, and the
+   browser asks you. It is used to sort the list by distance, inside the page, on your device.
+   It is sent nowhere: not to the site, not to Matomo, not to the map. Declining costs you the
+   distance sort and nothing else; searching by town or postcode returns the same directory.</p>"""),
+
+        ("What stays on your device", """
+<p>No cookie, but two technical things, neither of which is an identifier:</p>
+<ul>
+  <li>an <strong>offline cache</strong> (a <em>service worker</em>) holding the app's files and
+      the venues, so the directory still works in a stadium with no signal;</li>
+  <li>a <code>reparation</code> key in the tab's memory (<em>sessionStorage</em>), which stops
+      the app reloading in a loop after an update, and disappears when you close the tab.</li>
+</ul>
+<p>Clearing the site's data in your browser removes both.</p>"""),
+
+        ("Robots, on the other hand, are logged", """
+<p>The domain goes through Cloudflare, where a small program records the passage of crawlers:
+   Googlebot, GPTBot, ClaudeBot, PerplexityBot and the rest. It is the only place they can be
+   seen from — a crawler does not run JavaScript, so no in-page measurement ever reaches it.</p>
+<p>That log holds <strong>no human visit</strong> and <strong>no IP address</strong>. One line
+   is: the UTC timestamp, the robot's canonical name, its <em>user-agent</em>, the host, the
+   requested path, the page type, the response code, and the country of the data centre the
+   request comes from — which designates a machine, never a person. The code is there to read:
+   <a href="https://github.com/{depot}/blob/master/logs/worker.js" rel="noopener">logs/worker.js</a>.</p>"""),
+
+        ("What your browser requests from other servers", """
+<p>Drawing a map or an aerial view forces your browser to fetch files elsewhere. Those servers
+   then see, as any requested server does, your IP address and your browser. None of them
+   receives your location, or any data about you from this site.</p>
+<ul>
+  <li><strong>GitHub Pages</strong> and <strong>Cloudflare</strong> — hosting and delivery of
+      the pages.</li>
+  <li><strong>cdn.matomo.cloud</strong> and <strong>ronanchardonneau.matomo.cloud</strong> —
+      the audience measurement described above.</li>
+  <li><strong>unpkg.com</strong> — Leaflet, the library that draws the map.</li>
+  <li><strong>tile.openstreetmap.org</strong> — the base map tiles, once you open the map tab.</li>
+  <li><strong>data.geopf.fr</strong> — the IGN aerial views shown on venues that have no photo
+      yet. The images are not stored here; they are requested from the French Géoplateforme as
+      the page is displayed.</li>
+  <li><strong>Google Maps</strong> — only if you click &laquo;&nbsp;Directions&nbsp;&raquo; or
+      &laquo;&nbsp;Opening hours&nbsp;&raquo;: you then leave this site, and Google's rules
+      apply.</li>
+</ul>"""),
+
+        ("Contributing means publishing", """
+<p>A photo, a review or a correction is published on the site under the ODbL licence, with the
+   credit you give. You write that credit yourself: a first name, a full name or a pseudonym,
+   as you prefer — it is the only thing about you that will appear.</p>
+<p>Two routes, and they are not equivalent. The <strong>GitHub form</strong> opens a public
+   thread under your GitHub account, visible to everyone. <strong>Email</strong> lands in a
+   private inbox: your address is used to answer you, never published, never used for anything
+   else.</p>
+<p>A contribution can be taken off the site on request. What others have already reused under
+   the licence, however, is beyond the project's reach: that is the price of freely reusable
+   data, and it is better known before you send.</p>"""),
+
+        ("Your rights, and who to write to", """
+<p>The GDPR gives you rights of access, rectification, erasure and objection. For contributions
+   — displayed name, photos, reviews, emails exchanged — this is straightforward: they can be
+   found, corrected, deleted.</p>
+<p>For audience measurement, honesty is due: since it keeps no identifier, nothing makes it
+   possible to find <em>your</em> visits among the others, to show them to you, or to erase them
+   selectively. The only way out is preventive: turn <em>Do Not Track</em> on in your browser,
+   and you will not be measured at all.</p>
+<p>Data controller: Ronan Chardonneau. To write: <code>BOITE (at) DOMAINE</code> —
+   the address is not a clickable link, for the reason it appears nowhere else in this site's
+   HTML: harvesters would read it. You can also go through the
+   <a href="https://github.com/{depot}/issues" rel="noopener">GitHub repository</a>.</p>
+<p>If you disagree with how any of this is handled, you may lodge a complaint with the French
+   <a href="https://www.cnil.fr/en/home" rel="noopener">CNIL</a>.</p>"""),
+    ],
+}
+
+
+def page_confidentialite(lang, url_base, depot, maj):
+    """Ce que le site mesure, ce qu'il ne mesure pas, et pourquoi rien a cliquer.
+
+    Une mesure d'audience sans cookie n'oblige a aucun bandeau ; elle n'exempte
+    pas de dire ce qui est enregistre. Cette page est la contrepartie de la
+    promesse faite partout ailleurs sur le site : elle est verifiable ligne a
+    ligne, puisqu'elle renvoie au code qu'elle decrit."""
+    chemin = url_prive(lang)
+    r = rel(chemin)
+    tr = T[lang]
+    alternatives = {l: url_prive(l) for l in T}
+    titre = f"{tr['prive_titre']} — {tr['marque']}"
+    fil = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+           "itemListElement": [
+               {"@type": "ListItem", "position": 1, "name": tr["accueil"],
+                "item": f"{url_base}/{url_appli(lang)}"},
+               {"@type": "ListItem", "position": 2, "name": tr["prive_titre"],
+                "item": f"{url_base}/{chemin}"}]}
+
+    lignes = [entete(lang, titre, tr["prive_desc"], chemin, alternatives, [fil], url_base)]
+    lignes.append(f'<nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr["accueil"])}</a>'
+                  f' › {E(tr["prive_titre"])}</nav>')
+    lignes.append(f"<h1>{E(tr['prive_titre'])}</h1>")
+    lignes.append(f'<p class="lede">{tr["prive_lede"]}</p>')
+    lignes.append('<div class="prose">')
+    for sous_titre, corps in PRIVE[lang]:
+        lignes.append(f"<h2>{E(sous_titre)}</h2>")
+        lignes.append(corps.format(depot=depot)
+                      .replace("BOITE", CONTACT_BOITE)
+                      .replace("DOMAINE", CONTACT_DOMAINE))
+    lignes.append("</div>")
+    lignes.append(f'<p class="src">{E(tr["prive_maj"](fmt_date(maj, lang)))}</p>')
+    lignes.append(pied(lang, chemin, url_base, depot))
+    return "\n".join(lignes)
+
+
 def page_index(deps_tries, total, lang, url_base, depot, axes=()):
     chemin = url_index(lang)
     r = rel(chemin)
@@ -1226,6 +1542,11 @@ COQUILLE_EN = [
     ('src="assets/', 'src="../assets/'),
     ('../assets/manifest.webmanifest', '../assets/manifest.en.webmanifest'),
     ('href="departements/"', 'href="departments/"'),
+    # Ces deux liens pointent vers des pages qui ont un segment different en
+    # anglais : sans traduction du href, la coquille anglaise renverrait un
+    # lecteur sans JavaScript sur une page qui n'existe pas.
+    ('href="contributeurs/"', 'href="contributors/"'),
+    ('href="confidentialite/"', 'href="privacy/"'),
     ('href="en/"', 'href="../"'),
     ('hreflang="en" lang="en"', 'hreflang="fr" lang="fr"'),
     ('title="Read this site in English">EN</a>', 'title="Lire ce site en français">FR</a>'),
@@ -1249,6 +1570,9 @@ COQUILLE_EN = [
      'data-i18n="chargement">Loading 7,000 venues…<'),
     ('data-i18n="nav_annuaire">Annuaire par département<',
      'data-i18n="nav_annuaire">Browse by department<'),
+    ('data-i18n="nav_contributeurs">Les contributeurs<',
+     'data-i18n="nav_contributeurs">Contributors<'),
+    ('data-i18n="nav_prive">Confidentialité<', 'data-i18n="nav_prive">Privacy<'),
     ('data-i18n="nav_source">Source des données<', 'data-i18n="nav_source">Data source<'),
     ('data-i18n="nav_code">Code source<', 'data-i18n="nav_code">Source code<'),
     ('data-i18n="changer_langue">Read this site in English<',
@@ -1876,10 +2200,10 @@ def page_404(url_base, total):
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{url_base}/assets/page.css?v=11">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=12">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
-<script src="{url_base}/assets/matomo.js?v=1" defer></script>
+<script src="{url_base}/assets/matomo.js?v=2" defer></script>
 </head>
 <body>
 <header class="page-bar">
@@ -1923,7 +2247,7 @@ def robots(url_base):
             f"{blocs}\n\nSitemap: {url_base}/sitemap.xml\n")
 
 
-def llms_txt(url_base, total, avec_piste, deps, maj, depot, api_url=None):
+def llms_txt(url_base, total, avec_piste, deps, maj, depot, api_url=None, axes=()):
     """Convention llms.txt : une page d'orientation pour les agents.
 
     `api_url` est le serveur de recherche, s'il tourne. Sans lui, on dit que la
@@ -1945,6 +2269,10 @@ def llms_txt(url_base, total, avec_piste, deps, maj, depot, api_url=None):
   indique si un serveur de recherche à paramètres est déployé.
   / This host is static: query strings are ignored by the host. Use the facets, or download the
   index and filter locally."""
+    # Les slugs de critere, en toutes lettres : c'est la liste que l'agent
+    # doit lire au lieu de la deduire. Voir la section « Pages de recherche ».
+    slugs_fr = ", ".join(f"`{c['slug']['fr']}`" for c in axes) or "(aucun)"
+    slugs_en = ", ".join(f"`{c['slug']['en']}`" for c in axes) or "(none)"
     fr_total, fr_piste = f"{total:,}".replace(",", " "), f"{avec_piste:,}".replace(",", " ")
     return f"""# Où s'entraîner ? / Where to train?
 
@@ -1978,6 +2306,10 @@ enriched by community contributions. Dernière génération / last build: {maj}.
   / Both home pages carry a JSON-LD `FAQPage` covering access, lap length, surfaces and sourcing.
 - [Annuaire par département]({url_base}/departements/) — les {len(deps)} départements.
 - [Directory by department]({url_base}/en/departments/) — English version.
+- [Confidentialité]({url_base}/confidentialite/) / [Privacy]({url_base}/en/privacy/) — ce que le
+  site mesure (Matomo sans cookie), ce que le journal des robots enregistre, et les serveurs
+  tiers que la page appelle. / what the site measures, what the crawler log records, and which
+  third-party servers the page calls.
 - Une page par installation / one page per venue:
   `{url_base}/site/<ID>/` (fr) et `{url_base}/en/track/<ID>/` (en), où `<ID>` est
   l'identifiant national de l'installation (champ `i` du JSON, ex. `I441310030`).
@@ -2019,9 +2351,14 @@ enriched by community contributions. Dernière génération / last build: {maj}.
 - Par commune / by town: `{url_base}/ville/<SLUG>/` et `{url_base}/en/city/<SLUG>/`.
   Paris, Lyon et Marseille regroupent leurs arrondissements, que Data ES sépare.
   / Paris, Lyon and Marseille aggregate their arrondissements.
-- Par critère / by criterion: `{url_base}/pistes/<CRITERE>/` et `{url_base}/en/tracks/<CRITERION>/` —
-  développement (`400m`), couloirs (`6-couloirs` / `6-lanes`), accès (`acces-libre` / `free-access`),
-  discipline (`perche` / `pole-vault`), revêtement (`synthetique` / `synthetic`).
+- Par critère / by criterion: `{url_base}/pistes/<CRITERE>/` et `{url_base}/en/tracks/<CRITERION>/`.
+  La liste des critères est close : les voici tous, plutôt que des exemples. Une adresse
+  déduite au lieu d'être lue ici mène à une 404 — vu le 25/08/2026, un agent a demandé
+  `/criteres/piste-400m/`, qui n'a jamais existé, pour `/pistes/400m/`.
+  / The list of criteria is closed; here it is in full rather than by example. A guessed
+  address leads to a 404.
+  fr: {slugs_fr}
+  en: {slugs_en}
 - Croisement avec un département / crossed with a department:
   `{url_base}/pistes/<CRITERE>/<DEPARTEMENT>/`. Seules les intersections comptant au moins trois
   installations existent : une page qui répéterait une seule fiche n'apporterait rien.
@@ -2217,6 +2554,9 @@ def main():
         urls[lang].append((url_appli(lang), "1.0"))
         urls[lang].append((url_index(lang), "0.8"))
         urls[lang].append((url_contrib(lang), "0.7"))
+        urls[lang].append((url_prive(lang), "0.3"))
+        ecrire(os.path.join(out, url_prive(lang), "index.html"),
+               page_confidentialite(lang, url_base, depot, maj))
         ecrire(os.path.join(out, url_contrib(lang), "index.html"),
                page_contributeurs(brut.get("communaute") or {}, par_id, lang,
                                   url_base, depot, maj))
@@ -2277,7 +2617,7 @@ def main():
     avec_piste = sum(1 for t in publiables if t["piste"])
     ecrire(os.path.join(out, "llms.txt"),
            llms_txt(url_base, len(publiables), avec_piste, par_dep, maj, depot,
-                    os.environ.get("API_URL")))
+                    os.environ.get("API_URL"), axes))
 
     pages = sum(len(u) for u in urls.values())
     print(f"-> {out}")
