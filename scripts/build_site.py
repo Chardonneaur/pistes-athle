@@ -174,6 +174,19 @@ T = {
         "contrib_le": lambda d: f"le {d}",
         "contrib_par": lambda a: f"par {a}",
         "contrib_vide": "Aucune contribution pour l'instant. La première est à écrire.",
+        "photo_titre_sans": "Cette piste n'a pas encore de photo",
+        "photo_sans": "La vue aérienne montre l'implantation et se tait sur l'état. Une photo, "
+                      "elle, tranche : synthétique ou cendrée, tapis en place ou retiré, couloirs "
+                      "tracés ou effacés, portail ouvert ou fermé. Le recensement du ministère ne "
+                      "dira jamais rien de tout ça. Si vous vous entraînez ici, vous avez déjà la "
+                      "réponse dans votre téléphone.",
+        "photo_titre_avec": "Il manque sûrement une photo",
+        "photo_avec": "Les sautoirs et les aires de lancer sont ce que la donnée publique décrit "
+                      "le plus mal, et ce qu'on photographie le moins. Un gros plan du sol, une "
+                      "perche bâchée, un bac de sable envahi : chacun ajoute ce qu'aucun champ ne "
+                      "porte.",
+        "photo_bouton": "Envoyer une photo",
+        "photo_sans_compte": "Sans compte GitHub",
         "contrib_appel": "Vous vous entraînez quelque part ?",
         "contrib_appel_texte": "Une photo du sautoir, une note sur l'état de la piste, un "
                                "horaire : c'est ce que les données publiques n'auront jamais.",
@@ -278,6 +291,18 @@ T = {
         "contrib_le": lambda d: f"on {d}",
         "contrib_par": lambda a: f"by {a}",
         "contrib_vide": "No contributions yet. The first one is waiting to be written.",
+        "photo_titre_sans": "This track has no photo yet",
+        "photo_sans": "The aerial view shows the layout and says nothing about the state of it. A "
+                      "photo settles the matter: synthetic or cinder, mat in place or taken away, "
+                      "lanes marked or worn off, gate open or shut. The ministry's census will "
+                      "never tell you any of that. If you train here, the answer is already in "
+                      "your phone.",
+        "photo_titre_avec": "A photo is surely still missing",
+        "photo_avec": "Jump pits and throwing areas are what public data describes worst, and what "
+                      "gets photographed least. A close-up of the ground, a covered vault pit, a "
+                      "sand box gone to weeds: each adds what no field carries.",
+        "photo_bouton": "Send a photo",
+        "photo_sans_compte": "No GitHub account?",
         "contrib_appel": "Do you train somewhere?",
         "contrib_appel_texte": "A photo of the pole vault pit, a note on the state of the "
                                "track, an opening time: that is what open data will never hold.",
@@ -679,7 +704,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-{liens}<link rel="stylesheet" href="{r}assets/page.css?v=12">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=13">
 {mesure}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
@@ -901,6 +926,28 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None):
                 f'alt="{E(tr["aerienne_alt"](nom))}">'
                 f'<figcaption>{E(legende)} '
                 f'<span>{E(tr["aerienne_credit"])}</span></figcaption></figure>')
+
+    # L'appel a photographier, pose juste sous l'image — ou sous son absence.
+    # C'est le seul instant ou le lecteur regarde CE stade-la : plus loin dans
+    # la page, l'appel redevient une banniere qu'on ne lit pas. Le lien porte
+    # l'identifiant, donc la contribution arrive deja rattachee a la fiche ;
+    # sans lui, il faudrait demander « c'etait quel stade, deja ? ».
+    avec = bool(t["photos"])
+    # « 00 » est le code de repli des fiches sans departement : l'ecrire dans
+    # l'intitule enverrait un numero qui ne designe rien.
+    dep = t.get("dep") if t.get("dep") not in (None, "", "00") else None
+    quoi = ", ".join(x for x in (nom, t.get("ville")) if x) + (f" ({dep})" if dep else "")
+    lignes.append(
+        f'<div class="appel">'
+        f'<strong>{E(tr["photo_titre_avec"] if avec else tr["photo_titre_sans"])}</strong>'
+        f'<p>{E(tr["photo_avec"] if avec else tr["photo_sans"])}</p>'
+        f'<span class="boutons">'
+        f'<a class="btn primary" rel="nofollow noopener" '
+        f'href="https://github.com/{depot}/issues/new?template=photo.yml'
+        f'&amp;id={E(t["id"])}&amp;nom={quote_plus(quoi)}">{E(tr["photo_bouton"])}</a>'
+        f'<a class="btn" href="{r}{url_appli(lang)}#site={E(t["id"])}&amp;contribuer=photo">'
+        f'{E(tr["photo_sans_compte"])}</a>'
+        f'</span></div>')
 
     def kv(cle, valeur):
         return (f'<div class="kv"><dt>{E(cle)}</dt><dd>{E(str(valeur))}</dd></div>'
@@ -2200,7 +2247,7 @@ def page_404(url_base, total):
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{url_base}/assets/page.css?v=12">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=13">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="{url_base}/assets/matomo.js?v=2" defer></script>

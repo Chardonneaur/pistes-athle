@@ -1,0 +1,78 @@
+name: "Envoyer des photos d'une piste / Send photos of a track"
+description: "Une photo tranche ce qu'aucune donnée déclarative ne dit / A photo settles what no declared field will"
+title: "[Photo] "
+labels: ["photo", "données"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Une photo dit en une seconde ce que le recensement ne dira jamais : si le
+        revêtement est vraiment du synthétique ou de la cendrée, si le sautoir a
+        encore son tapis, si les couloirs sont tracés, si le portail est ouvert.
+        Sur les 7 100 sites recensés, l'immense majorité n'a aucune image — juste
+        une vue aérienne qui montre l'implantation et se tait sur l'état.
+
+        *A photo says in one second what the ministry's census never will: whether
+        the surface is really synthetic or cinder, whether the pit still has its
+        mat, whether the lanes are marked, whether the gate is open. Of the 7,100
+        recorded venues, the vast majority have no picture at all.*
+
+        Pas de compte GitHub ? Le [formulaire du site](https://pistes-athle.com/#contribuer=photo)
+        envoie les mêmes photos par e-mail. / *No GitHub account? The
+        [form on the site](https://pistes-athle.com/#contribuer=photo) sends the same photos by email.*
+  - type: input
+    id: id
+    attributes:
+      label: "Référence du site / Venue reference"
+      description: "Elle est en bas de chaque fiche du site / At the bottom of every venue page"
+      placeholder: "I441310030"
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du stade et commune / Stadium name and town"
+      placeholder: "Centre Sportif du Val Saint Martin, Pornic (44)"
+    validations:
+      required: true
+  - type: textarea
+    id: photos
+    attributes:
+      label: "Vos photos / Your photos"
+      description: |
+        Glissez-les directement dans ce champ. Les plus utiles, dans l'ordre :
+        la ligne droite ou un virage (revêtement et couloirs), les sautoirs
+        longueur / hauteur / perche, les aires de lancer, l'entrée du stade.
+        Un gros plan du sol tranche à lui seul la question du revêtement.
+        ⚠️ Évitez les photos où des personnes sont reconnaissables.
+
+        *Drag them straight into this field. Most useful, in order: the home
+        straight or a bend (surface and lanes), the long / high / pole vault
+        pits, the throwing areas, the entrance. A close-up of the ground settles
+        the surface question on its own. Avoid photos where people are
+        recognisable.*
+    validations:
+      required: true
+  - type: input
+    id: quand
+    attributes:
+      label: "Prises quand ? / Taken when?"
+      description: "Même approximatif : une piste refaite en 2024 n'est plus celle de 2019 / Even roughly: a track resurfaced in 2024 is not the 2019 one"
+      placeholder: "août 2026"
+  - type: textarea
+    id: contexte
+    attributes:
+      label: "Ce qu'on voit / What is in frame"
+      description: "Ce qu'une image ne dit pas d'elle-même : un agrès hors service, un chantier en cours, un accès condamné."
+      placeholder: "Le sautoir à la perche est bâché et le bac a été retiré. Portail ouvert le samedi matin."
+  - type: input
+    id: signature
+    attributes:
+      label: "Votre crédit / Your credit"
+      description: "Prénom, pseudo, nom de club : c'est ce qui sera affiché sous les photos et au classement des contributeurs. / Shown under the photos and in the contributors ranking."
+      placeholder: "Prénom, pseudo, nom de club…"
+  - type: checkboxes
+    id: droits
+    attributes:
+      label: "Droits sur les photos / Photo rights"
+      options:
+        - label: "Ces photos sont les miennes et j'accepte qu'elles soient publiées sur le site sous licence ODbL, avec mon crédit. / These photos are mine and I agree to their publication on the site under the ODbL licence, with my credit."
+          required: true

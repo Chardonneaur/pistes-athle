@@ -399,7 +399,7 @@ function renderVitrine() {
     <div class="vit-cta">
       <strong>${esc(V.cta_titre)}</strong>
       <p>${esc(V.cta_texte)}</p>
-      <button class="btn primary" type="button" data-contrib="avis">${esc(V.cta_bouton)}</button>
+      <button class="btn primary" type="button" data-contrib="photo">${esc(V.cta_bouton)}</button>
       <span class="src">${esc(V.cta_aide)}</span>
     </div>`;
   el.hidden = false;
@@ -660,10 +660,17 @@ function readHash() {
   if (q) { state.q = q; $('#q').value = q; $('#q-clear').hidden = false; filtre = true; }
   if (filtre) { apply(); cadrerSurResultats(); }
   const id = h.get('site');
-  if (id) return openSheet(id);
   /* #contribuer ouvre le formulaire sans passer par une fiche : c'est le lien
-     donné aux contributeurs sans compte GitHub, depuis le dépôt notamment. */
-  if (h.has('contribuer')) ouvrirContribution(h.get('contribuer') || 'correction', null);
+     donné aux contributeurs sans compte GitHub, depuis le dépôt notamment.
+     Combiné à #site=<ID>, il ouvre ce formulaire DÉJÀ rempli du bon stade —
+     c'est le lien que portent les 7 135 pages statiques pour appeler une
+     photo. Sans la combinaison, il faudrait ouvrir la fiche, puis retrouver
+     le bouton : deux occasions d'abandonner. */
+  if (h.has('contribuer')) {
+    return ouvrirContribution(h.get('contribuer') || 'correction',
+                              id ? state.all.find(x => x.id === id) || null : null);
+  }
+  if (id) return openSheet(id);
 }
 
 function destroyMiniMap() {
@@ -725,7 +732,7 @@ function openPhoto(src, alt) {
 }
 
 /* ------------------------------------------------------- contribution */
-const TYPES_CONTRIB = ['avis', 'correction', 'complement', 'ajout'];
+const TYPES_CONTRIB = ['photo', 'avis', 'correction', 'complement', 'ajout'];
 const ETIQUETTE = { avis: 'Avis', correction: 'Correction',
                     complement: 'Complément', ajout: 'Ajout' };
 

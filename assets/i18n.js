@@ -174,6 +174,7 @@ const FR = {
     titre:      'Contribuer',
     intro:      'Deux façons d’envoyer votre contribution : avec un compte GitHub, ou par e-mail si vous n’en avez pas.',
     types: {
+      photo:      'Envoyer des photos',
       avis:       'Donner mon avis',
       correction: 'Signaler une erreur',
       complement: 'Compléter la fiche',
@@ -188,6 +189,7 @@ const FR = {
             '4 — très bonne piste', '5 — excellente piste, rien à redire'],
     message:    'Votre message',
     message_ph: {
+      photo:      'Ce qu’on voit, et quand c’était. La ligne droite, le sautoir, le revêtement de près : une photo tranche ce qu’aucune donnée déclarative ne dit.',
       avis:       'État de la piste, agrès disponibles, ambiance, accès… Ce que vous auriez aimé savoir avant de venir.',
       correction: 'Affiché : revêtement cendrée\nRéalité : piste refaite en synthétique en 2023',
       complement: 'Agrès réellement présents, horaires d’ouverture, conditions d’accès…',
@@ -417,6 +419,7 @@ const EN = {
     titre:      'Contribute',
     intro:      'Two ways to send your contribution: with a GitHub account, or by email if you do not have one.',
     types: {
+      photo:      'Send photos',
       avis:       'Write a review',
       correction: 'Report an error',
       complement: 'Complete this record',
@@ -431,6 +434,7 @@ const EN = {
             '4 — very good track', '5 — excellent track, nothing to fault'],
     message:    'Your message',
     message_ph: {
+      photo:      'What the pictures show, and when they were taken. The home straight, the jump pit, a close-up of the surface: a photo settles what no declared field will.',
       avis:       'Condition of the track, available equipment, atmosphere, access… What you would have liked to know before going.',
       correction: 'Shown: cinder surface\nReality: resurfaced with synthetic in 2023',
       complement: 'Equipment actually present, opening hours, access conditions…',

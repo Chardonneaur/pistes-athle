@@ -129,3 +129,6 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .prose li{margin:0 0 6px}
 .prose code{font:13.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
   background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 5px}
+
+/* Deux chemins côte à côte : avec compte GitHub, ou sans. */
+.appel .boutons{display:flex;flex-wrap:wrap;gap:9px}
