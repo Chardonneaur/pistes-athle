@@ -62,6 +62,33 @@
      France » comptés comme deux pages. */
   _paq.push(['setDocumentTitle', document.title]);
 
+  /* SESSION AUTOMATISÉE — dimension personnalisée 1, portée visite.
+   *
+   * VU LE 26/08/2026 : une session en mode agent de ChatGPT lit quatre pages du
+   * site. Matomo la classe « accès direct », sans nom d'agent, parce que sa
+   * détection native lit la signature Web Bot Auth sur la requête au TRACEUR,
+   * alors que l'agent signe ses requêtes au SITE. Rien, nulle part, ne disait
+   * qu'un agent était passé.
+   *
+   * navigator.webdriver est le seul signal DÉCLARÉ dont dispose la page : le
+   * navigateur le pose lui-même quand il est conduit par automatisation. On ne
+   * l'extorque pas, on ne construit aucune empreinte — la promesse du site
+   * tient, pas de cookie, pas de bandeau, DNT respecté.
+   *
+   * ON N'ÉCRIT QUE CE QU'ON A VU. Quand le drapeau est faux, on n'écrit RIEN :
+   * un blanc ne dit pas « humain », il dit qu'aucun signal n'a été vu. C'est la
+   * règle des fiches — un champ vide se tait, il n'affirme pas une absence —
+   * et elle vaut ici pour la même raison.
+   *
+   * Ça peut très bien ne jamais se déclencher : un navigateur agentique intégré
+   * n'est pas piloté de l'extérieur et peut rapporter false. On regarde pour
+   * savoir ; le coût de regarder est nul. Si ce champ reste vide alors que des
+   * sessions agentiques passent, le signal suivant est l'AS de l'IP, côté
+   * Worker (logs/worker.js) — voir logs/README.md. */
+  if (navigator.webdriver === true) {
+    _paq.push(['setCustomDimension', 1, 'pilotee']);
+  }
+
   _paq.push(['trackPageView']);
 
   /* Les liens sortants disent où l'annuaire renvoie : OpenStreetMap, le site
