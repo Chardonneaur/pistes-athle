@@ -18,6 +18,13 @@ const FR = {
   ui: {
     titre_page:  "Où s'entraîner ? — Pistes d'athlétisme en France",
     titre_compte: n => `Où s'entraîner ? — ${n} sites d'athlétisme en France`,
+    /* Doit rester identique au gabarit « titre_site » de scripts/build_site.py :
+       une fiche ouverte dans l'application est mesurée sous le même titre et la
+       même URL que sa page statique, sinon le même stade occupe deux lignes dans
+       les rapports. */
+    titre_fiche: (nom, ville, piste) => piste
+      ? `${nom} — piste d'athlétisme à ${ville}`
+      : `${nom} — équipement d'athlétisme à ${ville}`,
     marque:      "Où s'entraîner&nbsp;?",
     a_propos:    'À propos',
     recherche_ph: 'Ville, code postal ou nom du stade',
@@ -266,6 +273,11 @@ const EN = {
   ui: {
     titre_page:  'Where to train? — Athletics tracks in France',
     titre_compte: n => `Where to train? — ${n} athletics venues in France`,
+    /* Must match the « titre_site » template in scripts/build_site.py — see the
+       French note above. */
+    titre_fiche: (nom, ville, piste) => piste
+      ? `${nom} — athletics track in ${ville}, France`
+      : `${nom} — athletics facility in ${ville}, France`,
     marque:      'Where to train?',
     a_propos:    'About',
     recherche_ph: 'Town, postcode or stadium name',
