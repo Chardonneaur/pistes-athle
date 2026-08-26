@@ -138,10 +138,14 @@ du ministère :
 C'est là qu'il faut commencer un département : les corrections structurelles sont
 sûres, les agrès ne le sont pas.
 
-> ⚠️ **Le revêtement fait exception.** Deux contre-exemples mesurés le 21 août
-> 2026 : au Clion-sur-Mer la bande est rouge vif et le contributeur qui l'a
-> foulée dit « ça reste du goudron » ; au lycée Briacé du Landreau l'anneau est
-> brun-rouge sur l'image et le ministère le déclare **bitume**. L'enrobé coloré
+> ⚠️ **Le revêtement fait exception.** Trois contre-exemples. Le 21 août 2026 :
+> au Clion-sur-Mer la bande est rouge vif et le contributeur qui l'a foulée dit
+> « ça reste du goudron » ; au lycée Briacé du Landreau l'anneau est brun-rouge
+> sur l'image et le ministère le déclare **bitume**. Le 25 août 2026, le complexe
+> des Grenais à Saint-Philbert-de-Grand-Lieu tranche la question en photo : la
+> fiche portait « anneau rouge » d'après l'orthophoto, le gros plan du sol montre
+> un enrobé pigmenté à granulat apparent — du goudron teinté, pas du tartan. La
+> photo est sur la fiche, c'est le cas d'école à montrer. L'enrobé coloré
 > est indiscernable du tartan vu du ciel, et c'est précisément le revêtement des
 > anneaux peints autour des city-stades. Ne renseignez `surface` que si
 > OpenStreetMap le tague ou si quelqu'un l'a vu ; décrivez la couleur dans

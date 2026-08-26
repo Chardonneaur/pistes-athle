@@ -10,6 +10,24 @@
   "lat": 47.09316,
   "lon": -1.60754,
   "piste": true,
+  "surface": "bitume",
+  "couloirs": 3,
   "longueur_probable": 105,
-  "note": "Anneau repéré dans OpenStreetMap (relation/15034385, tracé le 2022-12-22) puis lu sur l'orthophoto IGN de 2025 : anneau marqué en couloirs autour d'un plateau multisports. Développement d'environ 105 m estimé sur le périmètre du tracé OpenStreetMap, non mesuré sur place. Site absent du recensement du ministère. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés."
+  "acces_note": "Visite du 25 août 2026 : l'entrée est fermée par une barrière métallique verte de plus d'un mètre, close mais sans cadenas visible. Il aurait fallu l'enjamber, ce qui n'a pas été fait : l'accès n'est donc pas décrit comme libre, et il n'est pas décrit comme interdit non plus — personne n'a essayé d'ouvrir, et aucun panneau d'horaires, de règlement ou d'interdiction n'était affiché à l'entrée. La question de savoir si l'on peut y entrer légitimement reste ouverte, et c'est la première chose à vérifier lors d'une prochaine visite.",
+  "note": "Visite sur place le 25 août 2026, depuis l'extérieur de l'enceinte. Cette fiche remplace ce qui n'était jusqu'ici qu'une lecture d'orthophoto.\n\nCe n'est pas une piste d'athlétisme. Le tracé est un rectangle aux angles arrondis, pas un anneau à deux virages : on ne peut pas y courir en vitesse, les changements de direction sont trop brusques. Trois couloirs sont marqués en blanc sur un enrobé sombre. Le revêtement a été identifié depuis le bord, à quelques mètres, et non foulé — l'observateur n'a pas pu entrer ; c'est du bitume selon toute vraisemblance à cette distance, mais la mention vaut ce que vaut un constat par-dessus une barrière.\n\nAucun agrès n'a été vu : ni sautoir en longueur, en hauteur ou à la perche, ni aire de lancer, ni rivière de steeple. Le champ « agrès » reste donc vide. Ce qui est visible à l'intérieur de l'enceinte relève du jeu et du sport scolaire : un module de jeux pour enfants avec toboggan et structure à grimper, et un bâtiment clair de type modulaire. L'ensemble ressemble à une aire de jeux et de sport général, pas à un complexe sportif.\n\nL'installation paraît rattachée à l'une des écoles voisines, mais aucun panneau ni nom d'établissement n'a été lu sur place : c'est une impression, elle n'est pas traduite dans le champ « scolaire », qui reste vide.\n\nLe développement n'a pas été mesuré. Le chiffre d'environ 105 m vient du périmètre du tracé OpenStreetMap (relation/15034385, tracé le 2022-12-22) et reste un développement probable. Une mesure au décamètre en couloir 1, à 30 cm de la corde, l'effacera le jour où elle sera faite — encore faudra-t-il pouvoir entrer.\n\nSite absent du recensement du ministère.\n\nÀ ne pas confondre avec les deux autres pistes de la commune, à environ 700 m d'ici : le Stade Municipal (I440410001), grand anneau en cendrée d'environ 400 m en accès libre, et le Complexe Sportif Hugues Martin (I440410002), petit anneau en bitume autour du city-stade. Pour qui cherche à s'entraîner à La Chevrolière, c'est vers ces deux-là qu'il faut aller.",
+  "photos": [
+    {
+      "fichier": "01-barriere-fermee-et-anneau-piste-de-la-chevroliere-la-chevroliere.jpg",
+      "legende": "La barrière métallique verte fermée, à la peinture écaillée, qui barre l'entrée ; derrière elle le tracé en enrobé sombre et ses trois couloirs marqués en blanc, un module de jeux pour enfants et un bâtiment modulaire clair",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-25",
+      "note": 1,
+      "texte": "Piste très difficile d'accès : je ne suis même pas sûr qu'on puisse y entrer publiquement. Il aurait fallu que j'enjambe une barrière de plus d'un mètre, et j'ai l'impression que l'installation est rattachée à l'une des écoles des alentours. Je m'attendais à un complexe sportif, mais non, pas vraiment. Je n'y ai vu aucun agrès, juste un tracé de forme quasi rectangulaire — clairement pas adapté à un usage en athlétisme. C'est plutôt une aire de jeux ou de sport en général. Pas exploitable pour un athlète : à La Chevrolière, le stade municipal et son 400 m en cendrée sont à sept cents mètres, en accès libre, et n'ont rien de commun avec ça."
+    }
+  ]
 }

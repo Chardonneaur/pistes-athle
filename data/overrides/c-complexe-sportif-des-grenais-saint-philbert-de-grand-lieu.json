@@ -1,14 +1,43 @@
 {
   "id": "c-complexe-sportif-des-grenais-saint-philbert-de-grand-lieu",
-  "nom": "Complexe sportif des Grenais (Saint-Philbert-de-Grand-Lieu)",
+  "nom": "Complexe sportif des Grenais",
   "adresse": "Rue des Aigrettes",
   "cp": "44310",
   "ville": "Saint-Philbert-de-Grand-Lieu",
   "dep": "44",
   "dep_nom": "Loire-Atlantique",
   "region": "Pays de la Loire",
-  "piste": true,
   "lat": 47.03279,
   "lon": -1.62886,
-  "note": "Anneau repéré en balayant les city-stades du Pays de Retz recensés par la BD TOPO® de l'IGN, puis lu sur l'orthophoto IGN de 2025 : anneau rouge marqué en couloirs autour d'un petit terrain engazonné. Absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente — d'où un développement non estimé : personne ne l'a ni tracé ni mesuré. Déduit de l'orthophoto IGN, non vérifié sur place : le revêtement, le nombre de couloirs, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. Le complexe sportif des Chevrets, déjà à l'annuaire, est un autre site de la commune, à 1,8 km."
+  "piste": true,
+  "surface": "bitume",
+  "couloirs": 3,
+  "acces_libre": true,
+  "acces_note": "Visite du 25 août 2026 : accès libre confirmé, on arrive sur l'anneau sans franchir ni portail ni barrière. Le terrain synthétique que l'anneau ceinture est, lui, entièrement clos par une clôture blanche et verte ; l'anneau court à l'extérieur de cette clôture et reste accessible indépendamment. Un panneau bleu est fixé sur la clôture du city-park — il n'a pas été lu, et son contenu reste à relever : c'est ce qu'il faudra regarder en premier à la prochaine visite.",
+  "note": "Visite sur place le 25 août 2026. Cette fiche remplace ce qui n'était jusqu'ici qu'une lecture d'orthophoto, et elle la corrige sur le point le plus important.\n\nLe revêtement n'est pas du synthétique. L'orthophoto IGN montrait un « anneau rouge » ; au sol, c'est un enrobé pigmenté rouge — un goudron teinté, granulat apparent, dur sous le pied — et non du tartan. Les trois couloirs sont peints en rouge sur la dalle d'enrobé gris qui entoure le terrain, et délimités par des lignes blanches. C'est le cas d'école du piège documenté au § 4.6 de la doc : la couleur vue du ciel ne dit rien du revêtement, et une bande rouge sur une orthophoto n'est pas une piste en synthétique.\n\nTrois couloirs, comptés sur place et visibles sur les photos. Le tracé fait le tour d'un city-park clôturé — terrain en gazon synthétique, buts et panier de basket — bordé d'une pelouse d'un côté et de l'aire de service du complexe de l'autre.\n\nAucun agrès d'athlétisme : ni sautoir en longueur, en hauteur ou à la perche, ni aire de lancer, ni rivière de steeple. Le champ « agrès » reste vide.\n\nL'usage réel se lit sur le sol : les enfants dessinent à la craie sur les couloirs, et les traces de craie rose sont encore visibles sur le gros plan. C'est une aire de jeux de quartier avec un anneau peint dessus, pas un équipement d'athlétisme — malgré le nom de « complexe sportif », qui prête à confusion.\n\nLe développement n'est toujours pas connu. Le site est absent du recensement du ministère **et** d'OpenStreetMap, où aucun tracé ne le représente ; il n'a pas été mesuré sur place et aucune estimation n'est avancée plutôt qu'un chiffre inventé. Une mesure au décamètre en couloir 1, à 30 cm de la corde, reste à faire.\n\nÀ Saint-Philbert-de-Grand-Lieu, la piste sur laquelle on s'entraîne est l'autre : le Complexe Sportif des Chevrets (I441880016), anneau de 250 m en synthétique relevé sur place, à 1,8 km d'ici, avec vestiaires, douches et sanitaires. Les Grenais n'en sont pas une annexe ni une piste bis.",
+  "photos": [
+    {
+      "fichier": "01-virage-trois-couloirs-et-city-park-complexe-sportif-des-grenais-saint-philbert-de-grand-lieu.jpg",
+      "legende": "Le virage : trois couloirs en enrobé rouge lignés de blanc, peints sur la dalle d'enrobé gris qui entoure le city-park clôturé et son terrain en gazon synthétique",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-anneau-le-long-du-terrain-clos-complexe-sportif-des-grenais-saint-philbert-de-grand-lieu.jpg",
+      "legende": "L'anneau longeant la clôture du city-park, bordé d'une pelouse sèche d'un côté et de l'aire de service du complexe de l'autre",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-gros-plan-enrobe-rouge-et-craies-complexe-sportif-des-grenais-saint-philbert-de-grand-lieu.jpg",
+      "legende": "Gros plan du revêtement : un enrobé pigmenté rouge à granulat apparent, et non du tartan — avec les dessins à la craie rose laissés par des enfants",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-25",
+      "note": 1,
+      "texte": "Aucun agrès visible : c'est juste une petite piste pour les enfants. Et c'est du goudron, pas du tartan — la couleur rouge trompe, mais au sol c'est bien de l'enrobé. Clairement une aire de jeux de quartier : les enfants font leur coloriage à la craie dessus. Au mieux on peut y organiser une course entre enfants, mais c'est complètement inexploitable pour un adulte. Le nom de « complexe sportif » induit en erreur : ce n'est pas une piste bis. Pour s'entraîner à Saint-Philbert-de-Grand-Lieu, il faut aller à l'autre piste, celle des Chevrets."
+    }
+  ]
 }
