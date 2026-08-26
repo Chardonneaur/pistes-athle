@@ -85,3 +85,72 @@ avant `Googlebot`, sinon le premier tomberait dans le second.
 Un user-agent se déclare, il ne se prouve pas : ces lignes disent ce qu'un
 client a affirmé être, pas ce qu'il est. Pour Googlebot, seule une résolution
 DNS inverse le confirmerait — inutile ici, où l'on compare des ordres d'arrivée.
+
+## Le webhook GitHub — la contribution déposée
+
+Le Worker porte une seconde route, sans rapport avec les robots :
+`POST /_hooks/github`. Elle reçoit les webhooks du dépôt et en fait un
+événement Matomo.
+
+**Pourquoi.** L'objectif Matomo « Contribution engagée » compte les clics sur le
+lien GitHub. Il ne sait pas si le formulaire a été rempli : `github.com` n'est
+pas ce site. L'écart entre le clic et le dépôt est le seul chiffre qui dise si
+l'appel à contribution échoue au clic ou au formulaire.
+
+**Ce qui remonte**, et rien d'autre :
+
+| Événement GitHub | Événement Matomo |
+|---|---|
+| `issues` / `opened` | `Contribution` / `Issue ouverte` / *étiquettes* |
+| `pull_request` / `opened` | `Contribution` / `Pull request ouverte` / *titre* |
+| `pull_request` / `closed` **et fusionnée** | `Contribution` / `Pull request fusionnée` / *titre* |
+
+Une pull request fermée sans fusion n'est pas une contribution. Commentaires,
+étoiles et pushes reçoivent un 204 et sont ignorés — un 4xx ferait rejouer la
+livraison par GitHub.
+
+L'objectif Matomo **« Contribution déposée »** (site 149) convertit sur la
+catégorie d'événement `Contribution`.
+
+**Sûreté.** La route vérifie `X-Hub-Signature-256` (HMAC-SHA256 du corps) par
+comparaison à temps constant avant de regarder quoi que ce soit. Sans secret
+configuré elle répond 503 : elle échoue fermée, jamais ouverte. Sans cette
+vérification, quiconque connaît l'adresse gonflerait le chiffre.
+
+**Ces hits créent une visite**, contrairement aux robots. Le mode `recMode=1`
+n'ouvre pas de visite, et une conversion d'objectif est une propriété d'une
+visite : en `recMode`, l'événement ne convertirait rien. Le prix est assumé —
+quelques visites par mois qui ne sont pas des lectures de page. Elles portent
+toutes l'identifiant utilisateur `github-webhook`, ce qui permet de les isoler
+dans un segment ou de les effacer.
+
+### Mettre en service
+
+Deux gestes, dans cet ordre :
+
+```bash
+# 1. le secret, côté Cloudflare (générez-le : openssl rand -hex 32)
+npx wrangler secret put GITHUB_WEBHOOK_SECRET --config logs/wrangler.jsonc
+npx wrangler deploy --config logs/wrangler.jsonc
+
+# 2. le webhook, côté dépôt — avec LE MÊME secret
+gh api repos/Chardonneaur/pistes-athle/hooks -X POST \
+  -f name=web -F active=true \
+  -f 'events[]=issues' -f 'events[]=pull_request' \
+  -f config[url]=https://pistes-athle.com/_hooks/github \
+  -f config[content_type]=json \
+  -f config[secret]="$SECRET"
+```
+
+GitHub envoie un `ping` à la création : une coche verte confirme que la
+signature est acceptée.
+
+### Tests
+
+```bash
+node --test logs/worker.test.mjs
+```
+
+Quinze cas : signature absente, forgée, de longueur différente, corps modifié
+après signature, secret manquant, charge démesurée, JSON illisible, et le fait
+qu'une page du site n'est pas interceptée par la route.
