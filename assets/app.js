@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '12';
+const APP_VERSION = '13';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -105,6 +105,7 @@ function decocherOppose(id) {
   if (!el) return;
   if (el.type === 'checkbox') el.checked = false;
   el.classList.remove('is-on');
+  if (el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', 'false');
 }
 
 /* ------------------------------------------------------------------ état */
@@ -896,7 +897,9 @@ async function toggleMiniMap() {
 
   setTimeout(() => {
     state.mini.invalidateSize();
-    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Le defilement doux est une animation comme une autre.
+    const doux = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    box.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'center' });
   }, 60);
 }
 
@@ -1108,7 +1111,12 @@ function buildChips() {
      </select>` +
     GROUPES.map(menu).join('') +
     FILTERS.filter(f => !GROUPE_DE.has(f.id)).map(f =>
-      `<button class="chip${state.active.has(f.id) ? ' is-on' : ''}" data-f="${f.id}">${f.label}</button>`
+      /* aria-pressed, et pas seulement la classe : sans lui, actif et inactif
+         ne se distinguent qu'a la couleur — invisible a un lecteur d'ecran, et
+         contraire au critere « ne pas donner l'information par la seule
+         couleur ». */
+      `<button class="chip${state.active.has(f.id) ? ' is-on' : ''}" data-f="${f.id}"
+         aria-pressed="${state.active.has(f.id)}">${f.label}</button>`
     ).join('');
   majGroupes();
 }
@@ -1292,6 +1300,7 @@ function init() {
     state.active.has(id) ? state.active.delete(id) : state.active.add(id);
     if (state.active.has(id)) decocherOppose(id);
     b.classList.toggle('is-on');
+    b.setAttribute('aria-pressed', String(b.classList.contains('is-on')));
     majGroupes();
     apply();
   });
@@ -1403,6 +1412,20 @@ function init() {
   $('#tab-list').addEventListener('click', () => switchView('list'));
   $('#tab-map').addEventListener('click', () => switchView('map'));
 
+  /* Fleches, Debut et Fin : le clavier attendu d'un groupe d'onglets. */
+  $('.tablist').addEventListener('keydown', e => {
+    const onglets = [$('#tab-list'), $('#tab-map')];
+    const i = onglets.indexOf(document.activeElement);
+    if (i < 0) return;
+    const cible = { ArrowLeft: i - 1, ArrowRight: i + 1,
+                    Home: 0, End: onglets.length - 1 }[e.key];
+    if (cible === undefined) return;
+    e.preventDefault();
+    const suivant = onglets[(cible + onglets.length) % onglets.length];
+    switchView(suivant.id === 'tab-map' ? 'map' : 'list');
+    suivant.focus();
+  });
+
   load().catch(err => {
     $('#loader').innerHTML = U.erreur_chargement;
     console.error(err);
@@ -1423,12 +1446,20 @@ function init() {
 
 function switchView(v) {
   const isMap = v === 'map';
-  $('#tab-list').classList.toggle('is-active', !isMap);
-  $('#tab-map').classList.toggle('is-active', isMap);
-  $('#tab-list').setAttribute('aria-selected', String(!isMap));
-  $('#tab-map').setAttribute('aria-selected', String(isMap));
-  $('#view-list').classList.toggle('is-active', !isMap);
-  $('#view-map').classList.toggle('is-active', isMap);
+  for (const [onglet, vue, actif] of [['#tab-list', '#view-list', !isMap],
+                                      ['#tab-map', '#view-map', isMap]]) {
+    const o = $(onglet), p = $(vue);
+    o.classList.toggle('is-active', actif);
+    o.setAttribute('aria-selected', String(actif));
+    /* Tabulation glissante : un groupe d'onglets ne prend qu'un seul arret au
+       Tab, on circule dedans aux fleches. Sans cela, chaque onglet est un
+       arret de plus entre la recherche et les resultats. */
+    o.tabIndex = actif ? 0 : -1;
+    p.classList.toggle('is-active', actif);
+    // Le panneau inactif est retire de l'arbre d'accessibilite, pas seulement
+    // masque a l'oeil : sinon un lecteur d'ecran lit les deux vues a la suite.
+    p.hidden = !actif;
+  }
   if (isMap) {
     if (state.mapReady) state.map.invalidateSize();
     else chargerLeaflet().then(initMap).catch(() => {

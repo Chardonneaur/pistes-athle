@@ -8,7 +8,15 @@
   --accent:#c2410c; --accent-soft:#fff1e9; --ring:rgba(194,65,12,.28);
   --ok:#0d7d5a; --ok-soft:#e6f5ef; --err:#dc2626;
   --safe-b:env(safe-area-inset-bottom,0px);
+  /* Le bas etait gere partout, le haut nulle part : une fois l'application
+     installee sur l'ecran d'accueil d'un telephone a encoche, la barre de
+     titre passait sous la barre d'etat. */
+  --safe-t:env(safe-area-inset-top,0px);
   --bar:56px; --search:60px; --chips:48px; --tabs:44px;
+  /* Hauteur reelle de l'en-tete, encoche comprise : tout ce qui se place
+     dessous compte a partir de la. */
+  --tete:calc(var(--bar) + var(--safe-t));
+  --chrome:calc(var(--tete) + var(--search) + var(--chips) + var(--tabs));
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
@@ -35,27 +43,30 @@ a{color:var(--accent)}
 
 /* ---------- barres fixes ---------- */
 .app-bar,.search-row,.chips,.tabs{position:fixed;left:0;right:0;z-index:600;background:var(--bg)}
-.app-bar{top:0;height:var(--bar);display:flex;align-items:center;justify-content:space-between;
-  padding:0 14px;background:var(--surface);border-bottom:1px solid var(--line)}
+.app-bar{top:0;height:var(--tete);padding-top:var(--safe-t);
+  display:flex;align-items:center;justify-content:space-between;
+  padding-left:14px;padding-right:14px;background:var(--surface);border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:9px;min-width:0}
 .brand-mark{width:26px;height:26px;color:var(--accent);flex:none}
 .app-bar h1{font-size:16.5px;font-weight:700;margin:0;letter-spacing:-.01em;white-space:nowrap}
 .icon-btn{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);
   background:transparent;font-weight:700;color:var(--muted);cursor:pointer}
 
-.search-row{top:var(--bar);height:var(--search);display:flex;gap:8px;align-items:center;padding:0 12px}
+.search-row{top:var(--tete);height:var(--search);display:flex;gap:8px;align-items:center;padding:0 12px}
 .search-field{flex:1;display:flex;align-items:center;gap:8px;height:42px;padding:0 12px;
   background:var(--surface);border:1px solid var(--line);border-radius:999px;min-width:0}
 .search-field:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 .search-field svg{width:18px;height:18px;color:var(--muted);flex:none}
 .search-field input{flex:1;min-width:0;border:0;background:none;outline:none;font-size:16px}
-.clear-btn{border:0;background:none;color:var(--muted);font-size:22px;line-height:1;padding:0 2px;cursor:pointer}
+/* 20 x 22 px : sous le minimum de 24 x 24 demande par WCAG 2.2. */
+.clear-btn{flex:none;width:28px;height:28px;display:grid;place-items:center;
+  border:0;background:none;color:var(--muted);font-size:22px;line-height:1;cursor:pointer}
 .geo-btn{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
   background:var(--surface);display:grid;place-items:center;cursor:pointer}
 .geo-btn svg{width:20px;height:20px}
 .geo-btn.is-on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
-.chips{top:calc(var(--bar) + var(--search));height:var(--chips);display:flex;gap:7px;
+.chips{top:calc(var(--tete) + var(--search));height:var(--chips);display:flex;gap:7px;
   align-items:center;padding:0 12px 6px;overflow-x:auto;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
 /* La barre des puces est fixed avec z-index 600, comme celle des onglets qui la
@@ -75,6 +86,11 @@ a{color:var(--accent)}
 .chip-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
 .chip-select.is-on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 .chip-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+/* Safari iOS zoome la page des qu'un champ sous 16 px prend le focus — c'est
+   pour cela que #q est a 16 px. Le selecteur de departement avait ete oublie :
+   on ne releve la taille que la ou le doigt sert, pour garder la barre compacte
+   a la souris. */
+@media (pointer:coarse){ .chip-select{font-size:16px} }
 
 /* Tiroirs de filtres. La barre des puces defile horizontalement, donc elle
    rogne : le panneau est en position:fixed, place par placerPanneau(). */
@@ -92,14 +108,28 @@ a{color:var(--accent)}
 .drop-item:hover{background:var(--accent-soft)}
 .drop-item input{accent-color:var(--accent);width:16px;height:16px;flex:none;margin:0}
 
-.tabs{top:calc(var(--bar) + var(--search) + var(--chips));height:var(--tabs);
+.tabs{top:calc(var(--tete) + var(--search) + var(--chips));height:var(--tabs);
   display:flex;align-items:center;gap:4px;padding:0 12px;border-bottom:1px solid var(--line)}
 .tab{border:0;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);
   font-size:14px;font-weight:600;cursor:pointer}
 .tab.is-active{color:var(--accent);background:var(--accent-soft)}
 .result-count{margin-left:auto;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 
-main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
+main{padding-top:var(--chrome)}
+
+/* Quatre barres fixes font 208 px. Sur un telephone couche, et surtout a 400 %
+   de zoom — le critere Reflow demande que la page reste utilisable a cette
+   echelle — il ne restait presque rien pour les resultats. En dessous de
+   520 px de hauteur, les barres cessent d'etre fixes : elles defilent avec la
+   page, qui redevient une page ordinaire. */
+@media (max-height:520px){
+  .app-bar,.search-row,.chips,.tabs{position:static}
+  main{padding-top:0}
+  #map{height:70dvh;min-height:260px}
+  /* Le tiroir de filtres se place en fixed d'apres la position de sa puce :
+     il suit toujours, mais la puce defile — on ferme au defilement, ce que
+     placerPanneau() fait deja. */
+}
 .view{display:none}
 .view.is-active{display:block}
 
@@ -144,7 +174,7 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .muted{color:var(--muted)}
 
 /* ---------- carte ---------- */
-#map{height:calc(100dvh - var(--bar) - var(--search) - var(--chips) - var(--tabs));width:100%}
+#map{height:calc(100dvh - var(--chrome));width:100%}
 .leaflet-container{background:var(--bg);font:inherit}
 .pin{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .cluster{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
@@ -348,3 +378,16 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .seo strong{color:var(--ink)}
 .seo-liens{margin-top:22px;padding-top:14px;border-top:1px solid var(--line)}
 .seo-liens a{color:var(--muted)}
+
+/* ---------- mouvement reduit ----------
+   Un systeme qui demande moins d'animation le demande pour une raison : troubles
+   vestibulaires, migraines, mal des transports. On coupe ce qui bouge, on garde
+   ce qui informe — le compte-tours du chargement reste visible, il cesse
+   simplement de tourner. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .card:active{transform:none}
+  .spinner{border-right-color:currentColor;opacity:.5}
+}

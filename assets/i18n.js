@@ -44,6 +44,7 @@ const FR = {
     chargement:  'Chargement des 7&nbsp;000 sites…',
     erreur_chargement: 'Impossible de charger les données. Rechargez la page.',
     erreur_carte: 'Impossible de charger la carte. La liste, elle, reste utilisable.',
+    vues: 'Vues',
     plus:        'Afficher plus de sites',
     vide:        'Aucun site ne correspond à ces critères.<br>' +
                  '<span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Signalez-la</a>.</span>',
@@ -302,6 +303,7 @@ const EN = {
     chargement:  'Loading 7,000 venues…',
     erreur_chargement: 'Could not load the data. Please reload the page.',
     erreur_carte: 'Could not load the map. The list is still available.',
+    vues: 'Views',
     plus:        'Show more venues',
     vide:        'No venue matches these filters.<br>' +
                  '<span class="muted">Is a track missing? <a href="#" data-add-track>Tell us about it</a>.</span>',
