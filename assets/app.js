@@ -265,6 +265,25 @@ function pertinence(t, q, words) {
 }
 
 /* -------------------------------------------------------------- filtrage */
+/**
+ * Combien de sites repondraient a la recherche saisie SANS les filtres actifs.
+ *
+ * Sert uniquement a rendre un resultat vide explicable : le departement, le
+ * developpement, les filtres coches et le rayon de proximite sont ignores,
+ * seuls les mots saisis comptent. Zero signifie que la recherche elle-meme ne
+ * donne rien, et qu'aucun filtre n'y est pour quelque chose.
+ */
+function compterSansFiltres(words) {
+  if (!words.length) return 0;
+  let n = 0;
+  for (const t of state.all) {
+    let ok = true;
+    for (const w of words) if (!t._s.includes(w)) { ok = false; break; }
+    if (ok) n++;
+  }
+  return n;
+}
+
 function apply() {
   const q = norm(state.q).trim();
   const words = q ? q.split(/\s+/) : [];
@@ -280,7 +299,18 @@ function apply() {
 
   if (state.me) {
     for (const t of out) t._d = distance(state.me.lat, state.me.lon, t.lat, t.lon);
-    out.sort((a, b) => a._d - b._d);
+    /* Une recherche saisie l'emporte sur la distance. Sans ce test, connaitre
+       la position du visiteur suffisait a effacer le tri par pertinence, et la
+       regle voulue quatre lignes plus bas — « val saint martin » doit donner
+       Pornic avant Cergy — s'inversait des qu'on avait clique sur « me
+       localiser » : Cergy passait devant parce qu'elle etait plus proche.
+       La distance reste le departage entre deux resultats aussi pertinents. */
+    if (q) {
+      for (const t of out) t._r = pertinence(t, q, words);
+      out.sort((a, b) => a._r - b._r || a._d - b._d);
+    } else {
+      out.sort((a, b) => a._d - b._d);
+    }
     if (state.active.has('near')) out = out.filter(t => t._d <= 30);
   } else if (q) {
     // Une recherche par commune doit faire remonter la commune, pas l'ordre
@@ -295,7 +325,14 @@ function apply() {
 
   state.shown = out;
   state.limit = 40;
-  $('#count').textContent = out.length ? U.nb_sites(out.length) : U.aucun;
+  /* Un resultat vide ne dit pas POURQUOI il est vide. Le cas vu le 26/08/2026 :
+     une session agentique geolocalisee en Baviere cherche « Nantes » et lit
+     « aucun resultat », alors que la base en contient 32 — le rayon de 30 km du
+     filtre « pres de moi » les avait tous ecartes. Le meme piege attend
+     quiconque laisse un filtre coche. On recompte donc sans les filtres, et on
+     le dit. */
+  $('#count').textContent = out.length ? U.nb_sites(out.length)
+    : (() => { const n = compterSansFiltres(words); return n ? U.aucun_mais(n) : U.aucun; })();
   renderList();
   renderVitrine();
   if (state.mapReady) renderMap();

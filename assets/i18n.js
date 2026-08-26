@@ -51,6 +51,9 @@ const FR = {
     nb_sites:    n => `${n} site${n > 1 ? 's' : ''}`,
     nb_avis:     n => `${n} avis`,
     aucun:       'aucun résultat',
+    /* Un « aucun résultat » sec est un cul-de-sac : il ne dit pas que la
+       réponse existe juste derrière un filtre resté coché. */
+    aucun_mais:  n => `aucun résultat ici — ${n} site${n > 1 ? 's' : ''} sans les filtres actifs`,
     horaires_google: 'Horaires sur Google Maps',
     photos_du_site: 'Photos du site',
     aerienne_alt: n => `Vue aérienne de ${n}`,
@@ -304,6 +307,7 @@ const EN = {
     nb_sites:    n => `${n} venue${n > 1 ? 's' : ''}`,
     nb_avis:     n => `${n} review${n > 1 ? 's' : ''}`,
     aucun:       'no results',
+    aucun_mais:  n => `no results here — ${n} venue${n > 1 ? 's' : ''} without the active filters`,
     horaires_google: 'Opening hours on Google Maps',
     photos_du_site: 'Photos of the venue',
     aerienne_alt: n => `Aerial view of ${n}`,
