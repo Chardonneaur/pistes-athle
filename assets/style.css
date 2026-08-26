@@ -126,6 +126,14 @@ main{padding-top:var(--chrome)}
   .app-bar,.search-row,.chips,.tabs{position:static}
   main{padding-top:0}
   #map{height:70dvh;min-height:260px}
+  /* La vitrine occupe environ 800 px avant le premier resultat sur un ecran
+     court. On la laisse ou elle est : la deplacer avec flex `order` ferait
+     diverger l'ordre visuel de l'ordre du document, donc l'ordre de tabulation
+     — on tabulerait dans la vitrine avant les resultats tout en la voyant en
+     dessous. Echanger un defaut de confort contre un defaut d'ordre de lecture
+     serait une mauvaise affaire. La masquer ferait pire : un utilisateur qui
+     zoome a 400 % perdrait l'appel a contribuer que les autres voient. Le
+     defilement vertical, lui, est permis. */
   /* Le tiroir de filtres se place en fixed d'apres la position de sa puce :
      il suit toujours, mais la puce defile — on ferme au defilement, ce que
      placerPanneau() fait deja. */
@@ -177,6 +185,13 @@ main{padding-top:var(--chrome)}
 #map{height:calc(100dvh - var(--chrome));width:100%}
 .leaflet-container{background:var(--bg);font:inherit}
 .pin{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+/* Couleur du marqueur selon le revetement. Ici, et non dans un attribut
+   style="" pose par le script : voir pinClasse() dans app.js. */
+.pin-liste{width:14px;height:14px}
+.pin-sol-synthetique{background:#0d7d5a}
+.pin-sol-cendree{background:#b45309}
+.pin-sol-bitume{background:#475569}
+.pin-sol-autre{background:#c2410c}
 .cluster{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
   background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12.5px;
   border:2.5px solid var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3)}
@@ -206,6 +221,8 @@ main{padding-top:var(--chrome)}
 .sheet h2{margin:2px 0 2px;font-size:20px;letter-spacing:-.02em}
 .sheet .loc{color:var(--muted);font-size:13.5px;margin:0 0 14px}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.actions-bas{margin-top:18px}
+.btn-espace{margin-top:10px}
 .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:11px;
   border:1px solid var(--line);background:var(--bg);text-decoration:none;color:var(--ink);
   font-size:14px;font-weight:600;cursor:pointer}

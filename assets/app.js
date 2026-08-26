@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '13';
+const APP_VERSION = '14';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -544,11 +544,14 @@ function chargerLeaflet() {
   return promesseLeaflet;
 }
 
-function pinColor(t) {
-  if (t.surface === 'synthetique') return '#0d7d5a';
-  if (t.surface === 'cendree') return '#b45309';
-  if (t.surface === 'bitume') return '#475569';
-  return '#c2410c';
+/* Une classe plutot qu'un attribut style="" : quatre couleurs fixes n'ont
+   jamais eu besoin d'etre ecrites en ligne, et c'est ce qui permet a la
+   politique de securite du contenu de refuser tout style inline — donc de
+   refuser aussi celui qu'une injection y glisserait. Les couleurs vivent
+   maintenant dans style.css, avec le reste. */
+function pinClasse(t) {
+  const connus = ['synthetique', 'cendree', 'bitume'];
+  return 'pin-sol-' + (connus.includes(t.surface) ? t.surface : 'autre');
 }
 
 const fondOSM = () => L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -586,7 +589,7 @@ function renderMap() {
     L.marker([t.lat, t.lon], {
       icon: L.divIcon({
         className: '',
-        html: `<div class="pin" style="width:14px;height:14px;background:${pinColor(t)}"></div>`,
+        html: `<div class="pin pin-liste ${pinClasse(t)}"></div>`,
         iconSize: [14, 14], iconAnchor: [7, 7],
       }),
       title: t.nom,
@@ -677,7 +680,7 @@ function openSheet(id) {
         <p>${esc(a.t)}</p>
       </article>`).join('')
     : `<p class="vide">${U.pas_davis}</p>`}
-    <button class="btn" type="button" style="margin-top:10px" data-contrib="avis">
+    <button class="btn btn-espace" type="button" data-contrib="avis">
        ${esc(U.donner_avis)}</button>`;
 
   $('#sheet-body').innerHTML = `
@@ -716,7 +719,7 @@ function openSheet(id) {
     ${t.note ? `<p class="note">${esc(t.note)}</p>` : ''}
     ${t.url ? `<p><a href="${esc(t.url)}" target="_blank" rel="noopener">${esc(U.site_officiel)}</a></p>` : ''}
 
-    <div class="actions" style="margin-top:18px">
+    <div class="actions actions-bas">
       <button class="btn" type="button" data-contrib="correction">${esc(U.signaler)}</button>
       <button class="btn" type="button" data-contrib="complement">${esc(U.completer)}</button>
     </div>
@@ -889,7 +892,7 @@ async function toggleMiniMap() {
   L.marker([t.lat, t.lon], {
     icon: L.divIcon({
       className: '',
-      html: `<div class="pin pin-big" style="background:${pinColor(t)}"></div>`,
+      html: `<div class="pin pin-big ${pinClasse(t)}"></div>`,
       iconSize: [20, 20], iconAnchor: [10, 10],
     }),
     keyboard: false,

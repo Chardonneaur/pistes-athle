@@ -26,7 +26,7 @@ import shutil
 from datetime import date
 
 import build_api
-from build_api import DISCIPLINES, MATOMO_HEAD, SURFACE_EN, slug
+from build_api import DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD, SURFACE_EN, slug
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
@@ -691,6 +691,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{SECURITE_HEAD}
 <title>{E(titre)}</title>
 <meta name="description" content="{E(desc)}">
 <meta name="theme-color" content="#0f172a">
@@ -1975,6 +1976,21 @@ def dater(cle, journal, maj):
     return maj
 
 
+def verifier_csp(coque):
+    """La politique d'index.html doit rester celle des pages statiques.
+
+    index.html est un fichier ecrit a la main, les pages statiques sortent de
+    build_api.CSP : deux copies d'une meme regle finissent toujours par diverger,
+    et une politique de securite qui diverge en silence est pire qu'absente —
+    on la croit posee partout. On casse donc la construction plutot que de
+    publier deux politiques differentes."""
+    trouve = re.search(r'<meta http-equiv="Content-Security-Policy" content="([^"]+)">', coque)
+    if not trouve:
+        raise SystemExit("[ERREUR] index.html n'a pas de politique de securite du contenu")
+    if " ".join(trouve.group(1).split()) != " ".join(build_api.CSP.split()):
+        raise SystemExit("[ERREUR] la politique d'index.html a diverge de build_api.CSP")
+
+
 def ecrire(chemin, contenu):
     os.makedirs(os.path.dirname(chemin), exist_ok=True)
     with open(chemin, "w", encoding="utf-8") as f:
@@ -2390,6 +2406,7 @@ def page_404(url_base, total):
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{SECURITE_HEAD}
 <title>Page introuvable — Où s'entraîner ?</title>
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
@@ -2614,7 +2631,9 @@ def main():
 
     # --- fichiers de l'application
     with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
-        fr, en = coquilles(f.read(), url_base, maj)
+        coque = f.read()
+    verifier_csp(coque)
+    fr, en = coquilles(coque, url_base, maj)
     ecrire(os.path.join(out, "index.html"), fr)
     ecrire(os.path.join(out, "en", "index.html"), en)
     for nom_fichier in ("sw.js", ".nojekyll"):
