@@ -6,13 +6,13 @@
  * Seuls les contenus immuables (photos, librairies versionnées) sont servis
  * depuis le cache en priorité.
  */
-const VERSION = 'v15';
+const VERSION = 'v16';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées
 const ASSETS = [
   './', './index.html', './en/', './en/index.html',
-  './assets/style.css?v=11', './assets/i18n.js?v=13', './assets/app.js?v=13',
+  './assets/style.css?v=12', './assets/i18n.js?v=14', './assets/app.js?v=14',
   './assets/matomo.js?v=3',
   './assets/icon.svg', './assets/manifest.webmanifest', './assets/manifest.en.webmanifest',
 ];
@@ -72,8 +72,13 @@ self.addEventListener('fetch', e => {
   }
   /* Fonds de carte et orthophotos IGN : immuables, et c'est ce qui rend une
      fiche déjà consultée lisible hors-ligne. */
-  if (url.host === 'unpkg.com' || url.host.endsWith('tile.openstreetmap.org')
-      || url.host === 'data.geopf.fr') {
+  if (url.host.endsWith('tile.openstreetmap.org') || url.host === 'data.geopf.fr') {
+    return e.respondWith(cacheFirst(request, MEDIA));
+  }
+  /* Leaflet est chargé à la demande, à la première carte ouverte. Servi depuis
+     le cache dès la deuxième : c'est une bibliothèque figée, et la mettre à
+     jour se fait en changeant son chemin, pas en attendant le réseau. */
+  if (url.pathname.includes('/assets/vendor/')) {
     return e.respondWith(cacheFirst(request, MEDIA));
   }
   if (url.pathname.endsWith('/data/tracks.json')) {

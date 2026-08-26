@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '11';
+const APP_VERSION = '12';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -476,8 +476,15 @@ function renderList() {
   const list = state.shown.slice(0, state.limit);
   $('#results').innerHTML = list.map(t => {
     const vignette = t.photos[0];
+    /* Un lien, et non un <li> qui ecoute le clic : c'est ce qui rend la liste
+       parcourable au clavier, ouvrable dans un nouvel onglet, et lisible sans
+       JavaScript. Le gestionnaire de #results intercepte le clic simple pour
+       ouvrir le panneau ; tout le reste — Entree, clic milieu, Ctrl+clic —
+       suit le lien vers la page dediee. Meme motif que la vitrine. */
     return `
-    <li class="card${vignette ? ' has-photo' : ''}" data-id="${esc(t.id)}">
+    <li>
+      <a class="card${vignette ? ' has-photo' : ''}" href="${esc(FICHES + t.id + '/')}"
+         data-id="${esc(t.id)}">
       <div class="card-main">
         <div class="card-top">
           <h2>${esc(t.nom || U.sans_nom)}</h2>
@@ -490,6 +497,7 @@ function renderList() {
       </div>
       ${vignette ? `<img class="thumb" loading="lazy" src="${esc(BASE + (vignette.t || vignette.f))}"
          alt="${esc(vignette.l || t.nom)}">` : ''}
+      </a>
     </li>`;
   }).join('');
   $('#more').hidden = state.shown.length <= state.limit;
@@ -497,6 +505,44 @@ function renderList() {
 }
 
 /* ----------------------------------------------------------------- carte */
+
+/* Leaflet et son extension de regroupement ne sont chargés qu'à la première
+   ouverture d'une carte. Ils pesaient 55 Ko compressés, chargés à chaque visite,
+   et leurs deux feuilles de style bloquaient le premier rendu depuis un domaine
+   tiers — pour une carte que la vue par défaut n'affiche pas. Ils sont servis
+   depuis assets/vendor/ : voir le README qui s'y trouve. */
+const VENDOR = BASE + 'assets/vendor/';
+let promesseLeaflet = null;
+
+function ressource(balise, attrs) {
+  return new Promise((ok, ko) => {
+    const el = Object.assign(document.createElement(balise), attrs);
+    el.onload = () => ok();
+    el.onerror = () => ko(new Error(attrs.src || attrs.href));
+    document.head.appendChild(el);
+  });
+}
+
+/** Charge Leaflet une seule fois, quel que soit le nombre d'appels. */
+function chargerLeaflet() {
+  if (window.L && window.L.markerClusterGroup) return Promise.resolve();
+  if (promesseLeaflet) return promesseLeaflet;
+  promesseLeaflet = (async () => {
+    // Les styles d'abord, en parallèle : la carte ne doit pas apparaître nue.
+    await Promise.all([
+      ressource('link', { rel: 'stylesheet', href: VENDOR + 'leaflet.css' }),
+      ressource('link', { rel: 'stylesheet', href: VENDOR + 'MarkerCluster.css' }),
+    ]);
+    // L'extension dépend de Leaflet : l'ordre compte.
+    await ressource('script', { src: VENDOR + 'leaflet.js' });
+    await ressource('script', { src: VENDOR + 'leaflet.markercluster.js' });
+  })().catch(err => {
+    promesseLeaflet = null;               // un nouvel essai reste possible
+    throw err;
+  });
+  return promesseLeaflet;
+}
+
 function pinColor(t) {
   if (t.surface === 'synthetique') return '#0d7d5a';
   if (t.surface === 'cendree') return '#b45309';
@@ -685,18 +731,79 @@ function openSheet(id) {
     if (fig) fig.remove();
   });
 
-  $('#sheet').hidden = false;
-  document.body.style.overflow = 'hidden';
+  ouvrirPanneau();
   setHash();
   mesurerFiche(t);
 }
 
+/* ------------------------------------------------- focus des panneaux
+   Le panneau se declare `role="dialog" aria-modal="true"` : il doit alors se
+   comporter comme tel, sinon l'annonce est fausse. Trois choses manquaient —
+   le focus n'entrait pas dans le panneau, il pouvait en sortir par Tab pour
+   se promener dans la liste restee derriere, et il ne revenait pas d'ou il
+   venait a la fermeture. Un utilisateur au clavier se retrouvait a tabuler
+   dans une page qu'il ne voyait plus. */
+
+// Ce qui avait le focus avant l'ouverture, pour le lui rendre ensuite.
+let focusAvantPanneau = null;
+
+const FOCUSABLES = 'a[href], button:not([disabled]), input:not([disabled]),' +
+                   'select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/** Donne au panneau le nom que son aria-labelledby promet.
+
+    Les trois contenus possibles — fiche, contribution, a propos — commencent
+    tous par un <h2> : on le designe apres chaque injection plutot que de
+    demander a chacun de penser a poser l'identifiant. */
+function nommerPanneau() {
+  const titre = $('#sheet-body').querySelector('h2, h3');
+  if (titre) titre.id = 'sheet-title';
+}
+
+/** Ouvre le panneau : focus dedans, et memoire de l'endroit d'ou l'on vient. */
+function ouvrirPanneau() {
+  // Passer d'une fiche au formulaire de contribution rouvre le panneau : on ne
+  // reecrit pas l'origine, sinon on perdrait la carte d'ou l'on venait.
+  if ($('#sheet').hidden) focusAvantPanneau = document.activeElement;
+  $('#sheet').hidden = false;
+  document.body.style.overflow = 'hidden';
+  nommerPanneau();
+  // Le focus va sur le panneau lui-meme : un lecteur d'ecran annonce alors son
+  // role et son titre, ce qu'il ne ferait pas si l'on visait le bouton fermer.
+  const panneau = $('.sheet-panel');
+  panneau.setAttribute('tabindex', '-1');
+  panneau.focus();
+  panneau.scrollTop = 0;
+}
+
+/** Maintient le focus dans le panneau tant qu'il est ouvert. */
+function bouclerFocus(e) {
+  if (e.key !== 'Tab' || $('#sheet').hidden) return;
+  const cibles = [...$('.sheet-panel').querySelectorAll(FOCUSABLES)]
+                 .filter(el => el.offsetParent !== null);
+  if (!cibles.length) return e.preventDefault();
+  const premier = cibles[0], dernier = cibles[cibles.length - 1];
+  const actif = document.activeElement;
+  if (e.shiftKey && (actif === premier || actif === $('.sheet-panel'))) {
+    e.preventDefault(); dernier.focus();
+  } else if (!e.shiftKey && actif === dernier) {
+    e.preventDefault(); premier.focus();
+  }
+}
+
 function closeSheet() {
+  const etaitOuvert = !$('#sheet').hidden;
   destroyMiniMap();
   state.openId = null;
   state.contrib = null;
   $('#sheet').hidden = true;
   document.body.style.overflow = '';
+  /* Rendre le focus a la carte d'ou l'on vient, et non au debut de la page :
+     sans cela, fermer une fiche renvoie tabuler depuis l'en-tete. */
+  if (etaitOuvert && focusAvantPanneau && document.contains(focusAvantPanneau)) {
+    focusAvantPanneau.focus();
+  }
+  focusAvantPanneau = null;
   if (location.hash.includes('site=')) history.replaceState(null, '', location.pathname + location.search);
   rendreMesureAAccueil();
 }
@@ -746,7 +853,7 @@ function destroyMiniMap() {
   if (state.mini) { state.mini.remove(); state.mini = null; }
 }
 
-function toggleMiniMap() {
+async function toggleMiniMap() {
   const box = $('#minimap');
   const btn = $('#btn-minimap');
   const t = state.all.find(x => x.id === state.openId);
@@ -766,6 +873,14 @@ function toggleMiniMap() {
     `<button type="button" class="minimap-full" data-full-map>${esc(U.plein_ecran)}</button>`;
 
   destroyMiniMap();
+  try {
+    await chargerLeaflet();
+  } catch {
+    box.innerHTML = `<p class="empty">${esc(U.erreur_carte)}</p>`;
+    return;
+  }
+  // Le panneau a pu etre ferme, ou une autre fiche ouverte, pendant le chargement.
+  if (box.hidden || state.all.find(x => x.id === state.openId) !== t) return;
   state.mini = L.map(box.querySelector('.minimap-canvas'), {
     zoomControl: true, scrollWheelZoom: false, dragging: true,
   }).setView([t.lat, t.lon], 17);
@@ -793,11 +908,26 @@ function showOnFullMap() {
 }
 
 function openPhoto(src, alt) {
+  const revenir = document.activeElement;
   const v = document.createElement('div');
   v.className = 'viewer';
-  v.innerHTML = `<img src="${esc(src)}" alt="${esc(alt)}"><button aria-label="Fermer">×</button>`;
-  v.addEventListener('click', () => v.remove());
+  v.setAttribute('role', 'dialog');
+  v.setAttribute('aria-modal', 'true');
+  v.setAttribute('aria-label', alt || U.photos_du_site);
+  v.innerHTML = `<img src="${esc(src)}" alt="${esc(alt)}">` +
+                `<button type="button" aria-label="${esc(U.fermer)}">×</button>`;
+  const fermer = () => {
+    v.remove();
+    if (revenir && document.contains(revenir)) revenir.focus();
+  };
+  v.addEventListener('click', fermer);
+  // Le focus reste sur le bouton fermer : la visionneuse n'a rien d'autre a
+  // parcourir, et Echap la referme comme n'importe quelle modale.
+  v.addEventListener('keydown', e => {
+    if (e.key === 'Tab') e.preventDefault();
+  });
   document.body.appendChild(v);
+  v.querySelector('button').focus();
 }
 
 /* ------------------------------------------------------- contribution */
@@ -851,8 +981,7 @@ function ouvrirContribution(type, t) {
       <p class="src">${esc(C.licence)}</p>
     </div>`;
 
-  $('#sheet').hidden = false;
-  document.body.style.overflow = 'hidden';
+  ouvrirPanneau();
 }
 
 /* Le type choisi change l'exemple proposé et l'utilité de la note. */
@@ -935,8 +1064,7 @@ function envoyerContribution(voie) {
 function openAbout() {
   state.openId = null;
   $('#sheet-body').innerHTML = DICO.about({ repo: REPO });
-  $('#sheet').hidden = false;
-  document.body.style.overflow = 'hidden';
+  ouvrirPanneau();
 }
 
 /* -------------------------------------------------------- géolocalisation */
@@ -1217,7 +1345,13 @@ function init() {
   $('#btn-about').addEventListener('click', openAbout);
   $('#more').addEventListener('click', () => { state.limit += 60; renderList(); });
   $('#results').addEventListener('click', e => {
-    const c = e.target.closest('.card'); if (c) openSheet(c.dataset.id);
+    const c = e.target.closest('.card');
+    // Clic simple : on ouvre le panneau. Ctrl, Cmd, Maj ou clic milieu :
+    // on laisse le navigateur ouvrir la page dediee, comme pour tout lien.
+    if (c && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey && e.button === 0) {
+      e.preventDefault();
+      openSheet(c.dataset.id);
+    }
   });
   $('#sheet').addEventListener('change', e => {
     if (e.target.id === 'c-type') majTypeContribution();
@@ -1239,7 +1373,15 @@ function init() {
     if (e.target.closest('[data-full-map]')) return showOnFullMap();
     if (e.target.closest('[data-close]')) closeSheet();
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      // La visionneuse photo est par-dessus le panneau : elle se ferme d'abord.
+      const v = document.querySelector('.viewer');
+      if (v) return v.click();
+      return closeSheet();
+    }
+    bouclerFocus(e);
+  });
   document.addEventListener('click', e => {
     const a = e.target.closest('[data-add-track]');
     if (a) { e.preventDefault(); ouvrirContribution('ajout', null); }
@@ -1287,7 +1429,14 @@ function switchView(v) {
   $('#tab-map').setAttribute('aria-selected', String(isMap));
   $('#view-list').classList.toggle('is-active', !isMap);
   $('#view-map').classList.toggle('is-active', isMap);
-  if (isMap) { state.mapReady ? state.map.invalidateSize() : initMap(); }
+  if (isMap) {
+    if (state.mapReady) state.map.invalidateSize();
+    else chargerLeaflet().then(initMap).catch(() => {
+      // Une carte indisponible ne doit pas donner un ecran blanc : on le dit,
+      // et l'onglet Liste reste a un clic.
+      $('#map').innerHTML = `<p class="empty">${esc(U.erreur_carte)}</p>`;
+    });
+  }
   setHash();
 }
 

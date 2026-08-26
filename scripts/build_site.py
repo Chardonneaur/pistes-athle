@@ -13,10 +13,13 @@ Usage : python3 scripts/build_site.py [--out _site] [--url https://exemple.org/b
 """
 
 import argparse
+import hashlib
 import html
 import json
 import math
 import os
+import urllib.error
+import urllib.request
 from urllib.parse import quote_plus, urlsplit
 import re
 import shutil
@@ -1322,7 +1325,6 @@ PRIVE = {
       distribution des pages.</li>
   <li><strong>cdn.matomo.cloud</strong> et <strong>ronanchardonneau.matomo.cloud</strong> —
       la mesure d'audience décrite plus haut.</li>
-  <li><strong>unpkg.com</strong> — Leaflet, la bibliothèque qui dessine la carte.</li>
   <li><strong>tile.openstreetmap.org</strong> — les tuiles du fond de carte, quand vous
       ouvrez l'onglet « carte ».</li>
   <li><strong>data.geopf.fr</strong> — les vues aériennes de l'IGN, affichées sur les fiches
@@ -1448,7 +1450,6 @@ PRIVE = {
       the pages.</li>
   <li><strong>cdn.matomo.cloud</strong> and <strong>ronanchardonneau.matomo.cloud</strong> —
       the audience measurement described above.</li>
-  <li><strong>unpkg.com</strong> — Leaflet, the library that draws the map.</li>
   <li><strong>tile.openstreetmap.org</strong> — the base map tiles, once you open the map tab.</li>
   <li><strong>data.geopf.fr</strong> — the IGN aerial views shown on venues that have no photo
       yet. The images are not stored here; they are requested from the French Géoplateforme as
@@ -1579,6 +1580,7 @@ def page_index(deps_tries, total, lang, url_base, depot, axes=()):
 # l'anglais. Cette table est courte : le dictionnaire complet reste i18n.js.
 COQUILLE_EN = [
     ('<html lang="fr">', '<html lang="en">'),
+    ('>Aller aux résultats</a>', '>Skip to results</a>'),
     ("<title>Où s'entraîner ? — Pistes d'athlétisme en France</title>",
      "<title>Where to train? — Athletics tracks in France</title>"),
     ('content="Trouvez la piste d\'athlétisme la plus proche et découvrez ses équipements : '
@@ -1860,10 +1862,127 @@ def coquilles(html_fr, url_base, maj):
 
 
 # ------------------------------------------------------------------- fichiers
+# ------------------------------------------------------------- date des pages
+# Une balise <lastmod> ne vaut que si la date bouge quand la page bouge. Redater
+# les 23 842 URL a chaque deploiement — c'est ce que faisait une date de
+# construction unique — apprend a un moteur que le signal ne veut rien dire, et
+# il cesse d'en tenir compte. Sur un site de cette taille, sans liens entrants,
+# c'est le budget d'exploration qu'on y perd : le moteur ne sait plus lesquelles
+# des 23 842 pages meritent une nouvelle visite.
+#
+# Chaque page est donc datee sur son *contenu* : on prend l'empreinte du HTML
+# rendu, on la compare a celle de la version deja publiee, et la date ne change
+# que si l'empreinte a change. Le journal des empreintes voyage avec le site
+# lui-meme (dates.json) : le site publie porte sa propre memoire, il n'y a rien
+# a committer ni a garder entre deux constructions.
+
+JOURNAL = "dates.json"
+
+# Empreintes des pages de cette construction : {"site/I441310030": "a1b2c3d4"}.
+# Remplie par ecrire(), lue au moment d'assembler le plan de site.
+EMPREINTES = {}
+_SORTIE = None      # racine de la construction, pour nommer les pages
+_MAJ = None         # date de construction, neutralisee dans les empreintes
+
+
+def suivre_les_dates(out, maj):
+    """Arme le releve des empreintes pour cette construction."""
+    global _SORTIE, _MAJ
+    _SORTIE, _MAJ = out, maj
+    EMPREINTES.clear()
+
+
+def cle_page(chemin, out):
+    """Cle d'une page dans le journal : son chemin d'URL, sans index.html.
+
+    « _site/site/I441310030/index.html » donne « site/I441310030 », et la page
+    d'accueil donne la chaine vide — la meme forme que les entrees du plan de
+    site, aux barres obliques pres."""
+    rel = os.path.relpath(chemin, out).replace(os.sep, "/")
+    if rel.endswith("/index.html"):
+        rel = rel[: -len("/index.html")]
+    elif rel == "index.html":
+        rel = ""
+    return rel
+
+
+def empreinte(contenu, maj):
+    """Empreinte du contenu d'une page, insensible a la date de construction.
+
+    La date de construction est neutralisee avant le calcul : elle apparait
+    dans le pied de page et dans le JSON-LD de chaque page, et sans cela toutes
+    les empreintes changeraient a chaque construction — precisement le defaut
+    qu'on corrige ici.
+
+    Huit caracteres suffisent : une collision ne se jouerait qu'entre l'ancienne
+    et la nouvelle empreinte d'une *meme* page, soit une chance sur quatre
+    milliards par page et par construction, et son seul effet serait de laisser
+    cette page a son ancienne date."""
+    neutre = contenu.replace(maj, "@") if maj else contenu
+    return hashlib.sha1(neutre.encode("utf-8")).hexdigest()[:8]
+
+
+def lire_journal(chemin):
+    """Journal d'une construction locale precedente, ou {} s'il n'y en a pas."""
+    try:
+        with open(chemin, encoding="utf-8") as f:
+            return json.load(f).get("pages") or {}
+    except (OSError, ValueError):
+        return {}
+
+
+def journal_publie(url_base, secours, timeout=20):
+    """Empreintes et dates de la version actuellement en ligne.
+
+    C'est le site publie qui fait foi, puisque c'est lui que les moteurs ont
+    explore : sa date de derniere modification est celle qu'ils connaissent. A
+    defaut — premiere construction, machine hors ligne, site pas encore en
+    ligne — on se rabat sur la construction locale precedente.
+
+    Si les deux manquent, on le dit clairement plutot que de laisser croire a
+    un plan de site informatif : toutes les pages porteront la date du jour, et
+    c'est seulement a la construction suivante que les dates recommenceront a
+    vouloir dire quelque chose."""
+    url = f"{url_base}/{JOURNAL}"
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "pistes-athle/1.0 (+construction du site)"})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            pages = json.load(r).get("pages") or {}
+        if pages:
+            print(f"   dates : {len(pages)} pages connues de la version en ligne")
+            return pages
+    except (urllib.error.URLError, OSError, ValueError) as e:
+        print(f"[!] journal des dates injoignable en ligne ({e}) ; "
+              f"on se rabat sur la construction locale")
+    if secours:
+        print(f"   dates : {len(secours)} pages connues de la construction locale")
+        return secours
+    print("[!] aucun journal des dates : toutes les pages porteront la date du "
+          "jour. Le plan de site ne distinguera les pages modifiees qu'a la "
+          "construction suivante.")
+    return {}
+
+
+def dater(cle, journal, maj):
+    """Date a annoncer pour cette page.
+
+    Inchangee depuis la version publiee : sa date d'alors. Modifiee, ou jamais
+    publiee : aujourd'hui."""
+    connu = journal.get(cle)
+    if isinstance(connu, list) and len(connu) == 2 and connu[0] == EMPREINTES.get(cle):
+        return connu[1]
+    return maj
+
+
 def ecrire(chemin, contenu):
     os.makedirs(os.path.dirname(chemin), exist_ok=True)
     with open(chemin, "w", encoding="utf-8") as f:
         f.write(contenu)
+    # Toute page HTML est datable : on releve son empreinte au passage, plutot
+    # que de relire 23 842 fichiers apres coup.
+    if _SORTIE and chemin.endswith(".html"):
+        EMPREINTES[cle_page(chemin, _SORTIE)] = empreinte(contenu, _MAJ)
 
 
 # ------------------------------------------- pages par critere et par commune
@@ -2210,14 +2329,22 @@ def ville_slug_nu(ville_slug, dep):
     return ville_slug[:-(len(dep) + 1)] if ville_slug.endswith(f"-{dep}") else ville_slug
 
 
-def sitemap(urls, url_base, maj):
+def sitemap(urls, url_base, journal, maj):
     """Plan de site, extension images comprise.
 
     Une photo de terrain n'est atteignable qu'en suivant un lien depuis la
     fiche du site ; l'extension `image:` de sitemaps.org la declare
     directement, avec sa legende. C'est le moyen le plus direct de faire
-    indexer par Google Images des photos qu'aucun lien externe ne pointe."""
-    lignes = []
+    indexer par Google Images des photos qu'aucun lien externe ne pointe.
+
+    Chaque URL porte la date a laquelle *son* contenu a change pour la derniere
+    fois — voir dater() — et non la date de construction. Renvoie le XML et la
+    plus recente des dates annoncees, qui datera l'index du plan de site.
+
+    changefreq n'est plus annonce : Google l'ignore depuis des annees, et une
+    frequence uniforme « monthly » sur 23 842 URL etait, elle aussi, un signal
+    qui ne decrivait rien."""
+    lignes, dates = [], []
     for entree in urls:
         u, prio = entree[0], entree[1]
         images = entree[2] if len(entree) > 2 else ()
@@ -2226,18 +2353,25 @@ def sitemap(urls, url_base, maj):
             f"<image:title>{E(i['titre'])}</image:title>"
             f"<image:caption>{E(i['legende'])}</image:caption></image:image>"
             for i in images)
-        lignes.append(f"  <url><loc>{url_base}/{u}</loc><lastmod>{maj}</lastmod>"
-                      f"<changefreq>monthly</changefreq><priority>{prio}</priority>"
-                      f"{blocs}</url>\n")
-    return ('<?xml version="1.0" encoding="UTF-8"?>\n'
-            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
-            '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
-            f"{''.join(lignes)}</urlset>\n")
+        d = dater(u.rstrip("/"), journal, maj)
+        dates.append(d)
+        lignes.append(f"  <url><loc>{url_base}/{u}</loc><lastmod>{d}</lastmod>"
+                      f"<priority>{prio}</priority>{blocs}</url>\n")
+    xml = ('<?xml version="1.0" encoding="UTF-8"?>\n'
+           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"\n'
+           '        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
+           f"{''.join(lignes)}</urlset>\n")
+    return xml, (max(dates) if dates else maj)
 
 
-def sitemap_index(fichiers, url_base, maj):
-    corps = "".join(f"  <sitemap><loc>{url_base}/{f}</loc><lastmod>{maj}</lastmod></sitemap>\n"
-                    for f in fichiers)
+def sitemap_index(fichiers, url_base):
+    """Index du plan de site.
+
+    `fichiers` associe chaque plan a la date de sa page la plus recente : un
+    moteur qui relit l'index sait alors quel plan a bouge sans avoir a les
+    telecharger tous les deux."""
+    corps = "".join(f"  <sitemap><loc>{url_base}/{f}</loc><lastmod>{d}</lastmod></sitemap>\n"
+                    for f, d in fichiers.items())
     return ('<?xml version="1.0" encoding="UTF-8"?>\n'
             '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
             f"{corps}</sitemapindex>\n")
@@ -2467,9 +2601,16 @@ def main():
     brut, sites, deps = charger()
     maj = brut.get("generated") or date.today().isoformat()
 
+    # Le journal des dates se lit avant l'effacement : la construction locale
+    # precedente sert de secours quand le site en ligne est injoignable.
+    secours = lire_journal(os.path.join(out, JOURNAL))
+
     if os.path.isdir(out):
         shutil.rmtree(out)
     os.makedirs(out)
+
+    journal = journal_publie(url_base, secours)
+    suivre_les_dates(out, maj)
 
     # --- fichiers de l'application
     with open(os.path.join(ROOT, "index.html"), encoding="utf-8") as f:
@@ -2665,10 +2806,24 @@ def main():
     stat_api = build_api.construire(out, publiables, deps, url_base, maj, depot,
                                     os.environ.get("API_URL"))
     # --- plan du site, robots, llms
+    plans = {}
     for lang in T:
-        ecrire(os.path.join(out, f"sitemap-{lang}.xml"), sitemap(urls[lang], url_base, maj))
-    ecrire(os.path.join(out, "sitemap.xml"),
-           sitemap_index([f"sitemap-{l}.xml" for l in T], url_base, maj))
+        xml, recente = sitemap(urls[lang], url_base, journal, maj)
+        ecrire(os.path.join(out, f"sitemap-{lang}.xml"), xml)
+        plans[f"sitemap-{lang}.xml"] = recente
+    ecrire(os.path.join(out, "sitemap.xml"), sitemap_index(plans, url_base))
+
+    # Le journal part avec le site : c'est lui que lira la prochaine
+    # construction pour savoir ce qui a reellement change.
+    pages_datees = {u.rstrip("/"): [EMPREINTES.get(u.rstrip("/"), ""),
+                                    dater(u.rstrip("/"), journal, maj)]
+                    for liste in urls.values() for u in (e[0] for e in liste)}
+    ecrire(os.path.join(out, JOURNAL), json.dumps({
+        "a_propos": ("Empreinte et date de derniere modification de chaque page, "
+                     "pour que <lastmod> ne bouge que quand la page bouge."),
+        "genere": maj,
+        "pages": pages_datees,
+    }, ensure_ascii=False, separators=(",", ":")))
     domaine = domaine_personnalise(url_base)
     if domaine:
         ecrire(os.path.join(out, "CNAME"), domaine + "\n")
@@ -2686,6 +2841,17 @@ def main():
     print(f"   {len(axes)} criteres, {len(communes)} communes")
     print(f"   API : {stat_api['facettes']} facettes, {stat_api['cellules']} cellules geo, "
           f"openapi.json")
+    # « Modifiee » se lit sur l'empreinte, pas sur la date : une page datee
+    # d'aujourd'hui parce qu'une construction precedente a eu lieu ce matin
+    # n'a pas bouge pour autant.
+    bougees = sum(1 for cle, (emp, _) in pages_datees.items()
+                  if (journal.get(cle) or ["", ""])[0] != emp)
+    if journal:
+        print(f"   dates : {bougees} URL modifiees sur {len(pages_datees)}, "
+              f"les autres gardent leur date")
+    else:
+        print(f"   dates : {len(pages_datees)} URL a la date du jour, faute de "
+              f"point de comparaison")
     print(f"   URL publique : {url_base}")
 
 

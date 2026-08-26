@@ -1,5 +1,10 @@
 :root{
-  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#64748b; --line:#e4e8ee;
+  /* Sur l'orange sombre, le blanc tombe a 2,26:1 — il en faut 4,5. On pose
+     donc la couleur du texte porte par l'accent dans un jeton plutot que
+     d'ecrire #fff en dur : en clair il reste blanc (5,18:1), en sombre il
+     passe au bleu nuit du fond (8,32:1). */
+  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#5b6a7d; --line:#e4e8ee;
+  --on-accent:#fff; --star:#b45309;
   --accent:#c2410c; --accent-soft:#fff1e9; --ring:rgba(194,65,12,.28);
   --ok:#0d7d5a; --ok-soft:#e6f5ef; --err:#dc2626;
   --safe-b:env(safe-area-inset-bottom,0px);
@@ -7,6 +12,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
+        --on-accent:#0b1120;--star:#fbbf24;
         --accent:#fb923c;--accent-soft:#3a1f10;--ring:rgba(251,146,60,.3);
         --ok:#34d399;--ok-soft:#123328;--err:#f87171;}
 }
@@ -20,6 +26,12 @@ body{
 }
 button,input{font:inherit;color:inherit}
 a{color:var(--accent)}
+
+/* Lien d'evitement : hors de l'ecran, il revient a la premiere tabulation. */
+.skip{position:fixed;top:8px;left:8px;z-index:1500;padding:10px 16px;border-radius:10px;
+  background:var(--accent);color:var(--on-accent);text-decoration:none;font-weight:600;font-size:14px;
+  transform:translateY(-200%)}
+.skip:focus{transform:none;outline:2px solid var(--ink);outline-offset:2px}
 
 /* ---------- barres fixes ---------- */
 .app-bar,.search-row,.chips,.tabs{position:fixed;left:0;right:0;z-index:600;background:var(--bg)}
@@ -41,7 +53,7 @@ a{color:var(--accent)}
 .geo-btn{flex:none;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);
   background:var(--surface);display:grid;place-items:center;cursor:pointer}
 .geo-btn svg{width:20px;height:20px}
-.geo-btn.is-on{background:var(--accent);border-color:var(--accent);color:#fff}
+.geo-btn.is-on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
 .chips{top:calc(var(--bar) + var(--search));height:var(--chips);display:flex;gap:7px;
   align-items:center;padding:0 12px 6px;overflow-x:auto;scrollbar-width:none}
@@ -51,7 +63,7 @@ a{color:var(--accent)}
 .chips.chips-open{z-index:700}
 .chip{flex:none;white-space:nowrap;padding:7px 13px;border-radius:999px;cursor:pointer;
   border:1px solid var(--line);background:var(--surface);color:var(--muted);font-size:13.5px}
-.chip.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chip.is-on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 /* Le sélecteur de département vit dans la même barre que les puces, mais ce n'est
    pas une puce : il ne se bascule pas, il se choisit. */
 /* La largeur suit le contenu : l'attribut size est posé par afficherDep(),
@@ -61,7 +73,7 @@ a{color:var(--accent)}
   font-size:13.5px;color-scheme:light dark;outline:none;text-overflow:ellipsis}
 .chip-select::placeholder{color:var(--muted);opacity:1}
 .chip-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
-.chip-select.is-on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.chip-select.is-on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
 .chip-select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 
 /* Tiroirs de filtres. La barre des puces defile horizontalement, donc elle
@@ -93,15 +105,28 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 
 /* ---------- liste ---------- */
 .results{list-style:none;margin:0;padding:8px 12px calc(24px + var(--safe-b));display:grid;gap:8px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 13px;cursor:pointer}
+/* La carte est un lien : le <li> n'est plus qu'un element de grille, et le lien
+   l'occupe entierement pour que deux cartes d'une meme rangee s'alignent. */
+.results>li{display:flex}
+.card{flex:1;display:block;text-decoration:none;color:inherit;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 13px;cursor:pointer}
 .card.has-photo{display:flex;gap:11px;align-items:flex-start;padding-right:11px}
 .card-main{flex:1;min-width:0}
 .thumb{flex:none;width:74px;height:74px;object-fit:cover;border-radius:10px;background:var(--bg)}
 .rating{display:flex;align-items:center;gap:6px;margin:5px 0 0;font-size:12px;color:var(--muted)}
-.stars{color:#f59e0b;letter-spacing:1px;font-size:12.5px}
+.stars{color:var(--star);letter-spacing:1px;font-size:12.5px}
 .rating.big{margin:0 0 14px;font-size:13.5px}
 .rating.big .stars{font-size:16px}
 .card:active{transform:scale(.995)}
+
+/* Un parcours au clavier doit se voir. Il n'y avait de style de focus que sur
+   le selecteur de departement : tout le reste — cartes, onglets, puces,
+   boutons — ne montrait rien, et le focus etait invisible sur la liste. */
+:where(.card,.tab,.chip,.icon-btn,.geo-btn,.more-btn,.clear-btn,.btn,
+       .vit-card,.vit-top a,.site-links a,.sheet-grab,.retour):focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;border-radius:10px}
+.card:focus-visible{outline-offset:1px;border-radius:14px}
+.sheet-panel:focus{outline:none}
 .card-top{display:flex;gap:10px;align-items:baseline}
 .card h2{margin:0;font-size:15px;font-weight:650;letter-spacing:-.01em;flex:1;min-width:0}
 .dist{flex:none;font-size:12.5px;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
@@ -123,7 +148,7 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .leaflet-container{background:var(--bg);font:inherit}
 .pin{border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
 .cluster{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
-  background:var(--accent);color:#fff;font-weight:700;font-size:12.5px;
+  background:var(--accent);color:var(--on-accent);font-weight:700;font-size:12.5px;
   border:2.5px solid var(--surface);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.8)}
 
@@ -154,7 +179,7 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-radius:11px;
   border:1px solid var(--line);background:var(--bg);text-decoration:none;color:var(--ink);
   font-size:14px;font-weight:600;cursor:pointer}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .sec{margin:16px 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
 .kv{background:var(--bg);border-radius:10px;padding:9px 11px}
@@ -240,6 +265,8 @@ main{padding-top:calc(var(--bar) + var(--search) + var(--chips) + var(--tabs))}
 .viewer img{max-width:100%;max-height:100%;border-radius:8px}
 .viewer button{position:absolute;top:calc(12px + env(safe-area-inset-top,0px));right:14px;
   width:38px;height:38px;border-radius:50%;border:0;background:rgba(255,255,255,.15);
+  /* La visionneuse est toujours sur fond noir, dans les deux themes : ce blanc
+     ne suit pas l'accent. */
   color:#fff;font-size:24px;line-height:1;cursor:pointer}
 
 /* ---------- à propos ---------- */

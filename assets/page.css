@@ -2,11 +2,17 @@
    Ces pages sont du HTML complet, lisible sans JavaScript : c'est ce que
    voient les moteurs de recherche et les agents IA. */
 :root{
-  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#64748b; --line:#e4e8ee;
+  /* Sur l'orange sombre, le blanc tombe a 2,26:1 — il en faut 4,5. On pose
+     donc la couleur du texte porte par l'accent dans un jeton plutot que
+     d'ecrire #fff en dur : en clair il reste blanc (5,18:1), en sombre il
+     passe au bleu nuit du fond (8,32:1). */
+  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#5b6a7d; --line:#e4e8ee;
+  --on-accent:#fff; --star:#b45309;
   --accent:#c2410c; --accent-soft:#fff1e9; --ok:#0d7d5a; --ok-soft:#e6f5ef;
 }
 @media (prefers-color-scheme:dark){
   :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
+        --on-accent:#0b1120;--star:#fbbf24;
         --accent:#fb923c;--accent-soft:#3a1f10;--ok:#34d399;--ok-soft:#123328;}
 }
 *{box-sizing:border-box}
@@ -36,13 +42,13 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .lede{background:var(--surface);border:1px solid var(--line);border-radius:14px;
   padding:14px 16px;margin:0 0 18px}
 .rating{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:0 0 14px}
-.stars{color:#f59e0b;letter-spacing:1px}
+.stars{color:var(--star);letter-spacing:1px}
 
 .actions{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 8px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:11px;
   border:1px solid var(--line);background:var(--surface);text-decoration:none;
   color:var(--ink);font-size:14.5px;font-weight:600}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:0}
 .kv{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
@@ -117,7 +123,7 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .appel .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;
   border-radius:11px;text-decoration:none;border:1px solid var(--line);
   background:var(--surface);color:var(--ink);font-weight:600}
-.appel .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.appel .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 
 /* ---------- page confidentialité ---------- */
 /* Du texte suivi, pas des cartes : la seule page du site qui se lise d'un bout
