@@ -101,6 +101,59 @@ const MATOMO_CORPUS = new Set([
   "MistralAI-Crawler", "DuckAssistBot", "AI2Bot", "Firecrawl",
 ]);
 
+/* WEB BOT AUTH — l'agent qui pilote un vrai navigateur
+ * ----------------------------------------------------
+ * Un agent comme le mode agent de ChatGPT n'est PAS un crawler : il conduit un
+ * navigateur, execute le JavaScript, et presente un user-agent de Chrome
+ * ordinaire. `robot()` ne le voit donc pas, et jusqu'ici ce Worker jetait ses
+ * requetes — VU LE 26/08/2026 : une session agentique lit quatre pages du site,
+ * Matomo la classe « acces direct » et la base D1 n'en garde aucune trace, alors
+ * que le Worker avait les requetes en main.
+ *
+ * La seule chose qui puisse le declarer est la signature Web Bot Auth : les
+ * en-tetes Signature, Signature-Input et Signature-Agent, ce dernier portant
+ * l'identite du mandant sous forme de chaine entre guillemets, « "https://
+ * chatgpt.com" ». C'est ce que lit le plugin AIAgents de Matomo — sauf qu'il le
+ * lit sur la requete au TRACEUR, alors que l'agent signe ses requetes au SITE.
+ * Sur un site mesure en JavaScript, sa detection ne peut donc pas se declencher.
+ * Ici, si.
+ *
+ * On se contente d'ECOUTER. Rien n'est renvoye a Matomo : l'agent y est deja
+ * compte par assets/matomo.js, qu'il execute, et un second hit dedoublerait la
+ * visite. Le jour ou ces lignes montreront que la signature arrive vraiment, il
+ * sera temps de la relayer — et il faudra alors passer par la page, pas par une
+ * requete separee. */
+const AGENTS_SIGNES = new Map([
+  ["chatgpt.com", "ChatGPT"],
+  ["openai.com", "ChatGPT"],
+  ["claude.com", "Claude"],
+  ["anthropic.com", "Claude"],
+  ["perplexity.ai", "Perplexity"],
+  ["gemini.google.com", "Gemini"],
+]);
+
+/**
+ * Le nom du mandant declare par Signature-Agent, ou null.
+ *
+ * Un hote inconnu n'est pas ignore : il ressort prefixe de « signe: », parce
+ * que le but de ces lignes est justement de decouvrir QUI signe. Une liste
+ * fermee ne pourrait montrer que ce qu'on y a deja mis.
+ */
+function agentSigne(requete) {
+  const brut = requete.headers.get("signature-agent");
+  if (!brut) return null;
+  // RFC 9651 : la valeur est une chaine, donc entre guillemets doubles.
+  const valeur = brut.trim().replace(/^"(.*)"$/, "$1");
+  let hote;
+  try {
+    hote = new URL(valeur.includes("://") ? valeur : `https://${valeur}`).hostname;
+  } catch {
+    return null;
+  }
+  hote = hote.replace(/^www\./, "").toLowerCase();
+  return AGENTS_SIGNES.get(hote) || `signe:${hote}`;
+}
+
 /* L'habillage n'apprend rien sur ce qu'un robot a lu. Volontairement plus
    permissif que le reglage par defaut de Matomo, qui ecarte aussi .json et
    .txt : ici /api/index.json et /llms.txt sont justement les adresses qu'un
@@ -210,7 +263,10 @@ function gabarit(chemin) {
 
 async function journaliser(requete, reponse, env) {
   const agent = requete.headers.get("user-agent") || "";
-  const nom = robot(agent);
+  /* Un robot se reconnait a son user-agent ; un agent qui pilote un navigateur
+     ne se reconnait qu'a sa signature. Les deux sont des passages non humains
+     et ont leur place dans le meme journal. */
+  const nom = robot(agent) || agentSigne(requete);
   if (!nom) return;
 
   const url = new URL(requete.url);

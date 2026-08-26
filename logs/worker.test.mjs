@@ -1,5 +1,5 @@
 /**
- * Tests de la route webhook GitHub du Worker.
+ * Tests du Worker : route webhook GitHub, et detection Web Bot Auth.
  *
  *   node --test logs/worker.test.mjs
  *
@@ -185,4 +185,84 @@ test("une page du site n'est pas interceptee par la route", async () => {
   } finally {
     globalThis.fetch = vrai;
   }
+});
+
+/* ------------------------------------------------------------------ *
+ * Web Bot Auth : l'agent qui pilote un navigateur                     *
+ * ------------------------------------------------------------------ */
+
+const CHROME = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
+             + "(KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36";
+
+/** Appelle le Worker sur une page du site en capturant les ecritures en base. */
+async function lirePage(entetes = {}) {
+  const inserts = [];
+  const env = {
+    DB: { prepare: () => ({ bind: (...a) => ({ run: async () => { inserts.push(a); } }) }) },
+  };
+  const vrai = globalThis.fetch;
+  globalThis.fetch = async () => new Response("page", { status: 200 });
+  const attentes = [];
+  try {
+    await worker.fetch(
+      new Request("https://pistes-athle.com/site/c-piste-casson/", { headers: entetes }),
+      env, { waitUntil: (p) => attentes.push(p) });
+    await Promise.all(attentes);
+  } finally {
+    globalThis.fetch = vrai;
+  }
+  // colonnes : vu_le, robot, agent, hote, chemin, gabarit, statut, pays
+  return inserts.map((a) => ({ robot: a[1], agent: a[2], chemin: a[4] }));
+}
+
+test("un agent signe est journalise malgre un user-agent de Chrome", async () => {
+  const lignes = await lirePage({
+    "user-agent": CHROME,
+    "signature-agent": '"https://chatgpt.com"',
+    "signature": "sig1=:AAAA:",
+    "signature-input": 'sig1=("@authority");created=1',
+  });
+  assert.equal(lignes.length, 1);
+  assert.equal(lignes[0].robot, "ChatGPT");
+  assert.equal(lignes[0].agent, CHROME, "le user-agent reel est conserve tel quel");
+  assert.equal(lignes[0].chemin, "/site/c-piste-casson/");
+});
+
+test("Signature-Agent suffit : c'est lui qui porte l'identite", async () => {
+  const lignes = await lirePage({ "user-agent": CHROME, "signature-agent": '"https://claude.com"' });
+  assert.equal(lignes[0].robot, "Claude");
+});
+
+test("un signataire inconnu est garde, prefixe, pour qu'on le decouvre", async () => {
+  const lignes = await lirePage({ "user-agent": CHROME, "signature-agent": '"https://agent.exemple.fr"' });
+  assert.equal(lignes[0].robot, "signe:agent.exemple.fr");
+});
+
+test("les guillemets et le www sont optionnels", async () => {
+  const a = await lirePage({ "user-agent": CHROME, "signature-agent": "https://www.chatgpt.com" });
+  assert.equal(a[0].robot, "ChatGPT");
+  const b = await lirePage({ "user-agent": CHROME, "signature-agent": '"chatgpt.com"' });
+  assert.equal(b[0].robot, "ChatGPT");
+});
+
+test("un Signature-Agent illisible ne journalise rien", async () => {
+  assert.equal((await lirePage({ "user-agent": CHROME, "signature-agent": '""' })).length, 0);
+  assert.equal((await lirePage({ "user-agent": CHROME, "signature-agent": "  " })).length, 0);
+});
+
+test("un navigateur sans signature reste invisible — la promesse du site", async () => {
+  assert.equal((await lirePage({ "user-agent": CHROME })).length, 0);
+});
+
+test("un robot classique est toujours journalise sous son nom", async () => {
+  const lignes = await lirePage({ "user-agent": "Mozilla/5.0 (compatible; GPTBot/1.2; +https://openai.com/gptbot)" });
+  assert.equal(lignes[0].robot, "GPTBot");
+});
+
+test("le user-agent l'emporte sur la signature quand les deux sont la", async () => {
+  const lignes = await lirePage({
+    "user-agent": "Mozilla/5.0 (compatible; ClaudeBot/1.0)",
+    "signature-agent": '"https://chatgpt.com"',
+  });
+  assert.equal(lignes[0].robot, "ClaudeBot", "un crawler declare reste range sous son nom de crawler");
 });
