@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=5">
 <title>Où s'entraîner ? — Pistes d'athlétisme en France</title>
 <meta name="description" content="Trouvez la piste d'athlétisme la plus proche et découvrez ses équipements : sautoirs longueur, hauteur, perche, aires de lancer, revêtement synthétique ou cendrée.">
+<!-- Politique de securite du contenu. GitHub Pages ne permet aucun en-tete
+     HTTP : elle passe donc par une balise, qui en accepte l'essentiel —
+     frame-ancestors et report-uri y sont ignores, il n'y a pas d'autre
+     moyen sur cet hebergement. style-src ne porte pas 'unsafe-inline' : le
+     site n'a ni balise <style> ni attribut style="". Doit rester identique a
+     CSP dans scripts/build_api.py, qui couvre les pages statiques. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdn.matomo.cloud; style-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr https://ronanchardonneau.matomo.cloud; connect-src 'self' https://ronanchardonneau.matomo.cloud; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0f172a">
 <meta name="google-site-verification" content="kzX2eR3I5nadv2_Q132pxypVhQGP7ax79PMayaBXi-U">
 <link rel="canonical" href="https://pistes-athle.com/">
@@ -26,12 +34,11 @@
 <link rel="manifest" href="assets/manifest.webmanifest">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon.svg">
-<!-- Leaflet arrive d'un autre domaine : ouvrir DNS et TLS des maintenant evite
-     d'attendre trois allers-retours quand la feuille de style est demandee. -->
-<link rel="preconnect" href="https://unpkg.com">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
-<link rel="stylesheet" href="assets/style.css?v=11">
+<!-- Leaflet n'est plus ici : il est servi depuis assets/vendor/ et chargé à la
+     première ouverture d'une carte. Ses deux feuilles de style bloquaient le
+     premier rendu, depuis un domaine tiers, pour une carte que la vue par
+     défaut n'affiche pas. Voir assets/vendor/README.md. -->
+<link rel="stylesheet" href="assets/style.css?v=14">
 <!-- Mesure d'audience sans cookie : voir assets/matomo.js. Le preconnect ouvre
      DNS et TLS vers le CDN Matomo pendant la lecture du <head>, pour que la
      mesure ne retarde jamais l'affichage. -->
@@ -139,6 +146,10 @@
 </head>
 <body>
 
+<!-- Vingt tabulations séparaient l'ouverture de la page du premier résultat :
+     l'en-tête, la recherche, les filtres et les onglets sont tous devant. -->
+<a class="skip" href="#results" data-i18n="aller_au_contenu">Aller aux résultats</a>
+
 <header class="app-bar">
   <div class="brand">
     <svg viewBox="0 0 24 24" aria-hidden="true" class="brand-mark"><path d="M3 17c3.5-8 7-11 11-11 3 0 5 1.6 6 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 21c3-7 6-9.5 9.5-9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".5"/></svg>
@@ -167,18 +178,26 @@
 
 <nav class="chips" id="chips" data-i18n-al="filtres" aria-label="Filtres"></nav>
 
-<div class="tabs" role="tablist">
-  <button class="tab is-active" id="tab-list" role="tab" aria-selected="true" data-i18n="onglet_liste">Liste</button>
-  <button class="tab" id="tab-map" role="tab" aria-selected="false" data-i18n="onglet_carte">Carte</button>
-  <span class="result-count" id="count">—</span>
+<div class="tabs">
+  <!-- Le compteur de resultats etait dans le role="tablist" : un tablist ne
+       peut contenir que des tabs. Il en sort, et devient une region live —
+       filtrer ne disait rien a un lecteur d'ecran. -->
+  <div class="tablist" role="tablist" data-i18n-al="vues" aria-label="Vues">
+    <button class="tab is-active" id="tab-list" role="tab" aria-selected="true"
+            aria-controls="view-list" data-i18n="onglet_liste">Liste</button>
+    <button class="tab" id="tab-map" role="tab" aria-selected="false"
+            aria-controls="view-map" tabindex="-1" data-i18n="onglet_carte">Carte</button>
+  </div>
+  <span class="result-count" id="count" role="status">—</span>
 </div>
 
 <main>
-  <section id="view-list" class="view is-active">
+  <section id="view-list" class="view is-active" role="tabpanel"
+           aria-labelledby="tab-list" tabindex="0">
     <!-- Vitrine des contributions : masquee des qu'une recherche ou un filtre
          est actif, pour ne pas s'interposer entre la question et sa reponse. -->
     <section id="vitrine" class="vitrine" hidden aria-labelledby="vitrine-titre"></section>
-    <ul id="results" class="results"></ul>
+    <ul id="results" class="results" tabindex="-1"></ul>
     <button id="more" class="more-btn" data-i18n="plus" hidden>Afficher plus de sites</button>
     <p id="empty" class="empty" data-i18n="vide" hidden>Aucun site ne correspond à ces critères.<br>
       <span class="muted">Une piste manque&nbsp;? <a href="#" data-add-track>Ajoutez-la sur GitHub</a>.</span></p>
@@ -257,12 +276,13 @@
       </p>
     </section>
   </section>
-  <section id="view-map" class="view">
+  <section id="view-map" class="view" role="tabpanel"
+           aria-labelledby="tab-map" tabindex="0" hidden>
     <div id="map"></div>
   </section>
 </main>
 
-<div id="loader" class="loader"><span class="spinner"></span> <span data-i18n="chargement">Chargement des 7&nbsp;000 sites…</span></div>
+<div id="loader" class="loader" role="status"><span class="spinner"></span> <span data-i18n="chargement">Chargement des 7&nbsp;000 sites…</span></div>
 
 <div id="sheet" class="sheet" hidden>
   <div class="sheet-backdrop" data-close></div>
@@ -272,9 +292,7 @@
   </div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-<script src="assets/i18n.js?v=13"></script>
-<script src="assets/app.js?v=13"></script>
+<script src="assets/i18n.js?v=15"></script>
+<script src="assets/app.js?v=16"></script>
 </body>
 </html>

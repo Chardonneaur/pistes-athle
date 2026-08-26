@@ -87,6 +87,7 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/pistes/<CRITÈRE>/<DÉPARTEMENT>/` | le croisement des deux, quand il compte au moins trois installations |
 | `/api/…` et `/openapi.json` | l'API statique et son contrat — voir « Interroger l'annuaire » |
 | `/sitemap.xml` | index de plan de site (une entrée par langue, ~23 700 URL) |
+| `/dates.json` | empreinte et date de dernière modification de chaque page — voir « Dater les pages » |
 | `/robots.txt` | tout ouvert, robots d'IA compris, explicitement |
 | `/llms.txt` | description du site et du jeu de données pour un agent, avec le schéma des clés |
 
@@ -102,6 +103,29 @@ coordonnées, leur note et leurs avis en JSON-LD.
 Les libellés de l'interface vivent dans `assets/i18n.js` ; `<html lang>` décide de la
 langue servie. Les pages statiques, elles, sont traduites à la génération par
 `scripts/build_site.py`.
+
+## Dater les pages
+
+Une balise `<lastmod>` ne vaut que si la date bouge quand la page bouge. Dater les
+23 842 URL du jour de la construction — ce que faisait la première version — revient
+à annoncer à chaque déploiement que tout le site a changé : un moteur en déduit vite
+que le signal ne décrit rien, et cesse d'en tenir compte. Sur un site de cette taille
+et sans liens entrants, c'est le budget d'exploration qu'on y perd.
+
+Chaque page est donc datée sur **son contenu**. À la construction, `build_site.py`
+prend l'empreinte du HTML rendu — la date de construction neutralisée, sinon toutes
+les empreintes changeraient à chaque fois — et la compare à celle de la version en
+ligne. La date ne bouge que si l'empreinte a bougé.
+
+Le journal des empreintes voyage avec le site, dans `/dates.json` : le site publié
+porte sa propre mémoire, il n'y a rien à committer ni à conserver entre deux
+constructions. La construction suivante le relit sur le site en ligne ; à défaut,
+elle se rabat sur la construction locale précédente, et si les deux manquent elle
+le dit et date tout du jour — le temps d'une construction.
+
+En pratique, corriger un seul site redate une quarantaine d'URL et non 23 842 : sa
+fiche, celles des sites voisins qui la citent, sa commune et les communes à moins de
+20 km, son département, et les pages de critère où il apparaît.
 
 ## Interroger l'annuaire
 
@@ -268,7 +292,9 @@ la force (utile pour un domaine personnalisé).
 itérer sans retélécharger 8 Mo).
 
 Aucune dépendance : Python 3 de la bibliothèque standard, et du JavaScript sans
-framework. Seules Leaflet et Leaflet.markercluster sont chargées depuis un CDN.
+framework. Leaflet et Leaflet.markercluster sont servies depuis `assets/vendor/`,
+et chargées seulement à la première ouverture d'une carte — voir le README qui s'y
+trouve. Aucun script tiers ne s'exécute dans la page.
 
 ## Structure du dépôt
 
@@ -279,6 +305,7 @@ assets/i18n.js              tous les libellés, français et anglais
 assets/style.css            interface mobile-first, thème clair/sombre
 assets/page.css             feuille de style des pages statiques
 assets/manifest*.webmanifest  PWA, une par langue
+assets/vendor/              Leaflet, servi depuis ce dépôt et chargé à la demande
 sw.js                       service worker (hors-ligne)
 scripts/build_data.py       Data ES + overrides -> data/tracks.json
 scripts/build_site.py       -> _site/ : application FR/EN, pages par site, par

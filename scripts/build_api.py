@@ -634,6 +634,43 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
 # generees ici, par build_site.py, ou ecrites a la main dans index.html. Le
 # script lui-meme est assets/matomo.js : c'est la que se lit la configuration.
 # `{r}` est le chemin relatif vers la racine du site depuis la page courante.
+# Politique de securite du contenu.
+#
+# GitHub Pages ne permet de poser AUCUN en-tete HTTP : la politique passe donc
+# par une balise <meta>, qui en accepte l'essentiel. Deux directives y sont
+# ignorees et il faut le savoir plutot que de croire le site couvert :
+# frame-ancestors (protection contre l'encadrement par un tiers) et report-uri.
+# Il n'y a pas d'autre moyen sur cet hebergement.
+#
+# style-src ne porte PAS 'unsafe-inline' : le site n'a aucune balise <style> ni
+# aucun attribut style=""  — les quatre qui restaient ont ete remplaces par des
+# classes (voir pinClasse() dans assets/app.js). C'est ce qui rend la politique
+# reellement contraignante : un contenu injecte ne peut ni executer un script,
+# ni se maquiller.
+#
+# Une seule politique pour toutes les pages, plutot qu'une par gabarit : deux
+# listes qui derivent l'une de l'autre finissent par autoriser ce qu'on croyait
+# avoir ferme. Les pages statiques n'ouvrent pas de carte, elles n'utilisent
+# donc pas tile.openstreetmap.org, mais l'y laisser ne coute rien.
+CSP = (
+    "default-src 'self'; "
+    "base-uri 'self'; "
+    "object-src 'none'; "
+    "frame-src 'none'; "
+    "form-action 'none'; "
+    "script-src 'self' https://cdn.matomo.cloud; "
+    "style-src 'self'; "
+    "img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr "
+    "https://ronanchardonneau.matomo.cloud; "
+    "connect-src 'self' https://ronanchardonneau.matomo.cloud; "
+    "upgrade-insecure-requests"
+)
+
+SECURITE_HEAD = (
+    f'<meta http-equiv="Content-Security-Policy" content="{CSP}">\n'
+    '<meta name="referrer" content="strict-origin-when-cross-origin">'
+)
+
 MATOMO_HEAD = """<link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="{r}assets/matomo.js?v=3" defer></script>"""
@@ -644,6 +681,7 @@ PAGE_HTML = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{SECURITE_HEAD}
 <title>API — Où s'entraîner ?</title>
 <meta name="description" content="Interroger l'annuaire des pistes d'athlétisme françaises : facettes statiques, index compact, OpenAPI.">
 <meta name="robots" content="index,follow">
@@ -756,6 +794,7 @@ def construire(out, sites, deps, url_base, maj, depot, api_url=None):
     os.makedirs(os.path.dirname(chemin_html), exist_ok=True)
     with open(chemin_html, "w", encoding="utf-8") as f:
         f.write(PAGE_HTML.format(
+            SECURITE_HEAD=SECURITE_HEAD,
             url_base=url_base, depot=depot, nb=f"{len(index):,}".replace(",", " "),
             sans_acces=f"{sans_acces:,}".replace(",", " "),
             capacites=json.dumps(cap, ensure_ascii=False).replace("</", "<\\/")))
