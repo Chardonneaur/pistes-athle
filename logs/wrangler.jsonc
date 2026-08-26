@@ -35,6 +35,12 @@
     "MATOMO_CORPUS": "0"
   },
 
+  // Le secret du webhook GitHub n'est PAS ici : c'est un secret, il se pose
+  // avec  npx wrangler secret put GITHUB_WEBHOOK_SECRET --config logs/wrangler.jsonc
+  // Sans lui, la route /_hooks/github repond 503 et n'enregistre rien —
+  // elle echoue fermee, jamais ouverte. Voir `hookGithub()` dans worker.js.
+
+
   "d1_databases": [
     {
       "binding": "DB",

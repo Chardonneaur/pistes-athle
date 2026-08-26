@@ -308,10 +308,199 @@ async function mesurer(requete, reponse, dureeMs, env) {
   }
 }
 
+/* ---------------------------------------------------------------------------
+ * WEBHOOK GITHUB — la contribution DEPOSEE, pas le clic sur le lien
+ *
+ * L'objectif Matomo « Contribution engagee » compte les clics sur le lien
+ * GitHub. Il ne sait pas si le formulaire a ete rempli : github.com n'est pas
+ * ce site, aucune mesure d'ici ne le suit. L'ecart entre les deux — combien
+ * ouvrent le formulaire, combien le deposent — est le seul chiffre qui dise si
+ * l'appel a contribution echoue au clic ou au formulaire.
+ *
+ * D'ou cette route. GitHub POSTe ici a chaque issue ouverte et a chaque pull
+ * request fusionnee ; on en fait un evenement Matomo.
+ *
+ * POURQUOI PAS recMode=1, CONTRAIREMENT AUX ROBOTS
+ * ------------------------------------------------
+ * Le mode « sans visite » n'ouvre pas de visite, et une conversion d'objectif
+ * est une PROPRIETE d'une visite : en recMode, l'evenement ne convertirait
+ * rien et n'apparaitrait dans aucun rapport de comportement. Une contribution
+ * doit compter. Ces hits creent donc une visite ordinaire.
+ *
+ * Le prix est assume : quelques visites par mois qui ne sont pas des lectures
+ * de page viennent s'ajouter au total. Elles portent toutes l'identifiant
+ * utilisateur « github-webhook », ce qui permet de les isoler dans un segment
+ * ou de les effacer par le gestionnaire de donnees personnelles. Sans cet
+ * identifiant, elles seraient indiscernables et donc irrattrapables.
+ * --------------------------------------------------------------------------- */
+
+const HOOK_CHEMIN = "/_hooks/github";
+const HOOK_UID = "github-webhook";
+/* Une charge utile GitHub depasse rarement 100 Ko. Le plafond n'existe pas
+   pour GitHub mais pour celui qui trouverait l'adresse et enverrait 50 Mo :
+   il faut lire tout le corps pour verifier la signature, donc refuser AVANT
+   de lire est la seule protection possible. */
+const HOOK_MAX_OCTETS = 1_000_000;
+
+/** Comparaison a temps constant : une comparaison qui sort au premier octet
+    different laisse deviner la signature octet par octet. */
+function memeSignature(a, b) {
+  if (a.length !== b.length) return false;
+  let ecart = 0;
+  for (let i = 0; i < a.length; i++) ecart |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return ecart === 0;
+}
+
+/** « sha256=<hex> », le format de l'en-tete X-Hub-Signature-256. */
+async function signatureAttendue(secret, corps) {
+  const cle = await crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sceau = await crypto.subtle.sign(
+    "HMAC", cle, new TextEncoder().encode(corps));
+  const hex = [...new Uint8Array(sceau)]
+    .map((o) => o.toString(16).padStart(2, "0")).join("");
+  return `sha256=${hex}`;
+}
+
+/**
+ * L'evenement Matomo correspondant a une charge utile GitHub, ou null si
+ * l'evenement ne nous interesse pas.
+ *
+ * Une issue OUVERTE et une pull request FUSIONNEE ne valent pas la meme
+ * chose : la premiere est une intention, la seconde une donnee qui est entree
+ * dans l'annuaire. Les distinguer coute une ligne, et les confondre rendrait
+ * le chiffre inutilisable.
+ */
+function evenementGithub(type, charge) {
+  if (type === "issues" && charge?.action === "opened") {
+    return {
+      action: "Issue ouverte",
+      // Le gabarit dit ce qui est contribue : une photo, une correction.
+      nom: (charge.issue?.labels || []).map((e) => e?.name).filter(Boolean).join(", ")
+           || charge.issue?.title || "sans etiquette",
+      url: charge.issue?.html_url,
+    };
+  }
+  if (type === "pull_request" && charge?.action === "opened") {
+    return {
+      action: "Pull request ouverte",
+      nom: charge.pull_request?.title || "sans titre",
+      url: charge.pull_request?.html_url,
+    };
+  }
+  if (type === "pull_request" && charge?.action === "closed"
+      && charge.pull_request?.merged === true) {
+    return {
+      action: "Pull request fusionnee",
+      nom: charge.pull_request?.title || "sans titre",
+      url: charge.pull_request?.html_url,
+    };
+  }
+  return null;
+}
+
+/**
+ * Recoit un webhook GitHub, verifie sa signature, en fait un evenement Matomo.
+ *
+ * Retourne toujours une Response — c'est ce qui distingue cette route du reste
+ * du Worker, qui lui laisse passer la requete vers l'origine.
+ */
+async function hookGithub(requete, env, ctx) {
+  if (requete.method !== "POST") {
+    return new Response("POST attendu", { status: 405, headers: { allow: "POST" } });
+  }
+
+  /* Sans secret configure, on refuse. Enregistrer sans verifier reviendrait a
+     laisser n'importe qui gonfler le chiffre en connaissant l'adresse. */
+  if (!env.GITHUB_WEBHOOK_SECRET) {
+    return new Response("secret absent", { status: 503 });
+  }
+
+  const annonce = Number.parseInt(requete.headers.get("content-length") || "0", 10);
+  if (annonce > HOOK_MAX_OCTETS) {
+    return new Response("charge trop grande", { status: 413 });
+  }
+
+  const signature = requete.headers.get("x-hub-signature-256") || "";
+  const corps = await requete.text();
+  if (corps.length > HOOK_MAX_OCTETS) {
+    return new Response("charge trop grande", { status: 413 });
+  }
+
+  const attendue = await signatureAttendue(env.GITHUB_WEBHOOK_SECRET, corps);
+  if (!memeSignature(signature, attendue)) {
+    return new Response("signature invalide", { status: 401 });
+  }
+
+  const type = requete.headers.get("x-github-event") || "";
+  /* GitHub envoie un « ping » a la creation du webhook et affiche une croix
+     rouge si on ne repond pas correctement. */
+  if (type === "ping") return new Response(null, { status: 204 });
+
+  let charge;
+  try {
+    charge = JSON.parse(corps);
+  } catch {
+    return new Response("JSON illisible", { status: 400 });
+  }
+
+  const evenement = evenementGithub(type, charge);
+  // Tout le reste — commentaires, etoiles, pushes — est ignore sans erreur :
+  // un 204 evite que GitHub marque la livraison en echec et la rejoue.
+  if (!evenement) return new Response(null, { status: 204 });
+
+  ctx.waitUntil(mesurerContribution(evenement, env));
+  return new Response(null, { status: 204 });
+}
+
+/** Envoie l'evenement a Matomo. Voir `mesurer()` pour le meme protocole. */
+async function mesurerContribution(evenement, env) {
+  if (!env.MATOMO_URL || !env.MATOMO_SITE_ID) return;
+
+  const p = {
+    idsite: env.MATOMO_SITE_ID,
+    rec: 1,
+    e_c: "Contribution",
+    e_a: evenement.action,
+    e_n: evenement.nom.slice(0, 500),
+    url: evenement.url || "https://github.com/Chardonneaur/pistes-athle",
+    uid: HOOK_UID,
+    ua: "GitHub-Webhook (pistes-athle)",
+  };
+
+  const cible = new URL(env.MATOMO_URL);
+  const chemin = (cible.pathname || "/").replace(/\/matomo\.php$/i, "/");
+  cible.pathname = (chemin.endsWith("/") ? chemin : chemin + "/") + "matomo.php";
+  cible.search = new URLSearchParams(
+    Object.entries(p).map(([k, v]) => [k, String(v)])).toString();
+  cible.hash = "";
+
+  const arret = new AbortController();
+  const minuteur = setTimeout(() => arret.abort(), MATOMO_DELAI_MS);
+  try {
+    await fetch(cible.toString(), { method: "GET", signal: arret.signal });
+  } catch (erreur) {
+    console.log(JSON.stringify({
+      niveau: "erreur", ou: "mesurerContribution",
+      action: evenement.action, message: String(erreur),
+    }));
+  } finally {
+    clearTimeout(minuteur);
+  }
+}
+
 export default {
   async fetch(requete, env, ctx) {
     // Sur une route, fetch(requete) va a l'origine definie par le DNS de la
     // zone — GitHub Pages — et ne repasse pas par ce Worker.
+    // Le webhook n'est pas une page du site : il ne va pas a l'origine, n'est
+    // pas journalise et ne compte pas comme lecture. Il sort donc AVANT tout
+    // le reste.
+    if (new URL(requete.url).pathname === HOOK_CHEMIN) {
+      return hookGithub(requete, env, ctx);
+    }
+
     const debut = Date.now();
     // Une adresse devinee par un agent est corrigee ici, sans aller a
     // l'origine : GitHub Pages ne sait pas rediriger.
