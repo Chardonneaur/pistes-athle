@@ -221,6 +221,36 @@ function mesurerRecherche() {
   }, MESURE_DELAI_MS);
 }
 
+/* Une fiche ouverte dans l'application ne change pas de page : sans cet appel,
+   elle n'est mesuree nulle part. Les fiches consultees depuis la carte ou la
+   liste etaient donc invisibles, alors que les pages statiques /site/<id>/,
+   elles, comptaient — VU LE 26/08/2026, en definissant les objectifs Matomo.
+
+   L'URL et le titre poussés ici sont EXACTEMENT ceux de la page statique du
+   meme stade : les deux chemins d'acces se rejoignent sur une seule ligne dans
+   les rapports, et l'objectif « Fiche de piste ouverte » les compte tous les
+   deux. Le prix a payer est qu'on ne distingue plus l'arrivee directe de la
+   navigation interne ; le gain est de savoir enfin quels stades on regarde. */
+function mesurerFiche(t) {
+  const _paq = (window._paq = window._paq || []);
+  /* FICHES est RELATIF a la page courante ('../en/track/' depuis /en/) : le
+     coller a l'origine donnerait /../en/track/. Le chemin canonique se rebatit
+     donc a partir de la langue seule. */
+  const chemin = (LANG === 'en' ? '/en/track/' : '/site/') + t.id + '/';
+  _paq.push(['setCustomUrl', location.origin + chemin]);
+  _paq.push(['setDocumentTitle', U.titre_fiche(t.nom, t.ville, !!t.piste)]);
+  _paq.push(['trackPageView']);
+}
+
+/* Refermer la fiche rend le tracker a la page d'accueil. Sans ce retour, un
+   lien sortant clique apres la fermeture resterait attribue au dernier stade
+   ouvert. */
+function rendreMesureAAccueil() {
+  const _paq = (window._paq = window._paq || []);
+  _paq.push(['setCustomUrl', location.origin + location.pathname]);
+  _paq.push(['setDocumentTitle', document.title]);
+}
+
 /* Plus le score est bas, plus le site est pertinent pour la recherche saisie. */
 function pertinence(t, q, words) {
   const ville = norm(t.ville);
@@ -621,6 +651,7 @@ function openSheet(id) {
   $('#sheet').hidden = false;
   document.body.style.overflow = 'hidden';
   setHash();
+  mesurerFiche(t);
 }
 
 function closeSheet() {
@@ -630,6 +661,7 @@ function closeSheet() {
   $('#sheet').hidden = true;
   document.body.style.overflow = '';
   if (location.hash.includes('site=')) history.replaceState(null, '', location.pathname + location.search);
+  rendreMesureAAccueil();
 }
 
 /* Liens partageables : #carte, #dep=44, #q=pornic, #site=I352380090 */
