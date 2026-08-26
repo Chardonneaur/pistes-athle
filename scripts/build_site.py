@@ -1247,6 +1247,13 @@ PRIVE = {
    obtenus — une fois la frappe finie, jamais lettre à lettre. La raison est précise : une
    recherche qui ne rend rien désigne une piste absente de l'annuaire, et c'est la seule façon
    de l'apprendre. Cette case sert à trouver un stade : n'y écrivez rien qui vous concerne.</p>
+<p>Un seul drapeau supplémentaire est enregistré, et seulement s'il est vrai :
+   <code>navigator.webdriver</code>, que votre navigateur pose de lui-même lorsqu'il est
+   conduit par un programme plutôt que par une personne. Il sert à distinguer les visites
+   d'agents automatisés des vôtres. Rien ne va le chercher : c'est le navigateur qui
+   l'annonce, et quand il vaut faux, rien n'est écrit — un blanc ne dit pas « humain », il
+   dit qu'aucun signal n'a été vu. Aucune empreinte n'est calculée, ni de votre matériel, ni
+   de votre façon de bouger la souris.</p>
 <p>Rien là-dedans ne vous nomme, et rien ne relie deux visites entre elles : sans cookie ni
    identifiant conservé, vous revenez demain en parfait inconnu.</p>
 <p>À quoi ça sert : ce projet pose une question précise — les agents IA lisent-ils cet
@@ -1370,6 +1377,12 @@ PRIVE = {
    once you stop typing, never letter by letter. The reason is precise: a search that returns
    nothing points at a track missing from the directory, and there is no other way to learn of
    it. That box is for finding a stadium: do not write anything about yourself in it.</p>
+<p>One extra flag is recorded, and only when it is true: <code>navigator.webdriver</code>,
+   which your browser sets by itself when it is driven by a program rather than by a person.
+   It serves to tell automated agent visits apart from yours. Nothing goes looking for it: the
+   browser announces it, and when it is false nothing is written — a blank does not say
+   &laquo;&nbsp;human&nbsp;&raquo;, it says no signal was seen. No fingerprint is computed,
+   neither of your hardware nor of the way you move the mouse.</p>
 <p>None of this names you, and nothing ties two visits together: with no cookie and no stored
    identifier, you come back tomorrow as a complete stranger.</p>
 <p>What it is for: this project asks one precise question — do AI agents read this directory,
@@ -2250,7 +2263,7 @@ def page_404(url_base, total):
 <link rel="stylesheet" href="{url_base}/assets/page.css?v=13">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
-<script src="{url_base}/assets/matomo.js?v=2" defer></script>
+<script src="{url_base}/assets/matomo.js?v=3" defer></script>
 </head>
 <body>
 <header class="page-bar">

@@ -636,7 +636,7 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
 # `{r}` est le chemin relatif vers la racine du site depuis la page courante.
 MATOMO_HEAD = """<link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
-<script src="{r}assets/matomo.js?v=2" defer></script>"""
+<script src="{r}assets/matomo.js?v=3" defer></script>"""
 
 
 PAGE_HTML = """<!DOCTYPE html>
@@ -652,7 +652,7 @@ PAGE_HTML = """<!DOCTYPE html>
 <link rel="stylesheet" href="../../assets/page.css?v=13">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
-<script src="../../assets/matomo.js?v=2" defer></script>
+<script src="../../assets/matomo.js?v=3" defer></script>
 <script type="application/json" id="capabilities">{capacites}</script>
 </head>
 <body>

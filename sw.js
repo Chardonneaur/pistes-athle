@@ -13,7 +13,7 @@ const MEDIA = 'media';                       // photos : jamais modifiées, jama
 const ASSETS = [
   './', './index.html', './en/', './en/index.html',
   './assets/style.css?v=11', './assets/i18n.js?v=13', './assets/app.js?v=13',
-  './assets/matomo.js?v=2',
+  './assets/matomo.js?v=3',
   './assets/icon.svg', './assets/manifest.webmanifest', './assets/manifest.en.webmanifest',
 ];
 
