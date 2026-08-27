@@ -1,0 +1,9 @@
+{
+  "id": "I740110013",
+  "nom": "Complexe sportif d'Albigny",
+  "couloirs": 6,
+  "agres": ["hauteur", "longueur", "triple", "poids", "disque", "javelot", "marteau"],
+  "acces_libre": true,
+  "acces_note": "Ouvert au public libre sur créneaux dédiés : la Ville d'Annecy classe les usagers de la piste en « Ville / Associations / Public libre (créneaux dédiés) » (SIG des équipements sportifs, mise à jour 01/2024). Les créneaux ne sont pas publiés : renseignez-vous avant de vous déplacer.",
+  "note": "Situé à Annecy-le-Vieux, commune déléguée d'Annecy depuis la fusion de 2017 ; le recensement du ministère le rattache à Annecy. Anneau de 400 m ; les 6 couloirs viennent d'OpenStreetMap (relation/5522893, 400 m, tartan) et ne figurent pas dans le recensement du ministère. Les agrès reprennent la fiche du Recensement des équipements sportifs telle qu'elle était publiée avant la refonte de Data ES : 2 aires de saut (hauteur, longueur et triple-saut) et 5 aires de lancer (poids, disque, 2 javelot, marteau) ; la version actuelle du jeu de données ne comporte plus ces champs. Le complexe est l'une des deux pistes d'Annecy Athlétisme avec le Parc des Sports, et sert de repli quand le Parc des Sports est fermé. Accès en bus Sibra lignes 20 et 26, arrêt Petit Port Chavoires ; parking du petit port et arceaux à vélos à proximité."
+}

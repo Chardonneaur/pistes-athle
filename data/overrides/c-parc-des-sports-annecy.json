@@ -1,0 +1,31 @@
+{
+  "id": "c-parc-des-sports-annecy",
+  "nom": "Parc des Sports d'Annecy",
+  "adresse": "1 rue Baron Pierre de Coubertin",
+  "cp": "74000",
+  "ville": "Annecy",
+  "dep": "74",
+  "dep_nom": "Haute-Savoie",
+  "region": "Auvergne-Rhône-Alpes",
+  "lat": 45.91655,
+  "lon": 6.11812,
+  "piste": true,
+  "longueur_piste": 400,
+  "couloirs": 8,
+  "surface": "synthetique",
+  "agres": [
+    "hauteur",
+    "longueur",
+    "perche",
+    "poids",
+    "disque",
+    "marteau",
+    "javelot",
+    "steeple"
+  ],
+  "eclairage": true,
+  "tribunes": 13699,
+  "renovation": 2025,
+  "acces_note": "Piste réservée à la Ville et aux associations : la Ville d'Annecy ne la classe pas en public libre, contrairement au Stade du Côteau et au complexe d'Albigny (SIG des équipements sportifs de la Ville d'Annecy, mise à jour 01/2024). Le Parc des Sports abrite le siège d'Annecy Haute-Savoie Athlétisme.",
+  "note": "Site absent du recensement du ministère : aucun équipement de Data ES n'est déclaré à moins de 700 m de l'anneau. Ajouté ici à partir de trois sources concordantes — le SIG des équipements sportifs de la Ville d'Annecy (« Piste d'athlétisme (400 m) », mise à jour 01/2024), le dossier de presse d'inauguration de la Ville, et OpenStreetMap (relation/5522934 : 400 m, 8 couloirs, tartan). L'anneau de 8 couloirs, la fosse de steeple, les sautoirs (hauteur, longueur, perche) et les aires de lancers (marteau, disque, javelot) ont été rénovés du 19 mai au 23 octobre 2025 en vue d'une homologation pour les compétitions nationales ; les tracés ont été réalisés début novembre 2025 et le stade a été inauguré le 25 octobre 2025. L'éclairage a été repris en LED au niveau E2 de la FFF : quatre mâts de 32 projecteurs. Les 13 699 places sont celles de l'arrêté d'homologation du stade. Les aires de lancers longs d'entraînement sont déportées : marteau et disque au Stade des Îles, 37 boulevard du Fier, réservées aux associations. Le Parc des Sports, inauguré en 1964, a accueilli les championnats du monde juniors d'athlétisme de 1998, les Coupes d'Europe des nations de 2002 et 2008, le DécaNation 2010 et des championnats de France. La vue aérienne de l'IGN affichée ici date de 2023 : elle montre l'anneau tel qu'il était avant le chantier. Rien n'a été vérifié sur place : l'état des agrès, les vestiaires et les horaires ne sont pas renseignés."
+}
