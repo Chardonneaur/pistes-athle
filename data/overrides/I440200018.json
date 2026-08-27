@@ -1,5 +1,13 @@
 {
   "id": "I440200018",
-  "longueur_probable": 400,
-  "note": "Développement estimé à 400 m d'après le tracé de l'anneau dans OpenStreetMap (w93396956), non mesuré sur place."
+  "piste": false,
+  "surface": "bitume",
+  "note": "Ce site n'a pas d'anneau d'athlétisme. Visite du 27 août 2026 : le seul anneau du complexe est une piste de roller, au revêtement lisse — béton ou enrobé peint — bordée d'une lisse métallique. Le recensement du ministère nomme pourtant cet équipement « piste d'athlétisme de la Neustrie » et le déclare en stabilisé/cendrée : les deux sont démentis sur place. On peut y courir, mais ce n'est pas sa destination, et les patineurs sont prioritaires dans les faits. Le développement de 400 m porté ici jusqu'au 27 août 2026 venait du tracé OpenStreetMap de l'anneau (w93396956, décrit comme « running » sur du gravier) : il mesurait en réalité cet anneau de roller, il n'est plus repris. Pour un tour de piste, le complexe de la Croix Jeannette est à 2 km, dans la même commune.",
+  "photos": [
+    {
+      "fichier": "01-anneau-roller-complexe-sportif-de-la-neustrie-bouguenais.jpg",
+      "legende": "Le seul anneau du complexe : une piste de roller au revêtement lisse, bordée d'une lisse métallique",
+      "credit": "Ronan Chardonneau"
+    }
+  ]
 }

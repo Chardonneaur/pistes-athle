@@ -1,0 +1,50 @@
+{
+  "id": "I440200017",
+  "agres": [
+    "javelot",
+    "longueur",
+    "poids",
+    "hauteur"
+  ],
+  "acces_libre": true,
+  "note": "Visite du 27 août 2026. Anneau en cendrée bordé de vieux béton, autour d'un terrain engazonné dont la pelouse était en cours de réfection le jour de la visite : un tour mesuré à 400 m à la montre GPS au ras de la bordure, ce qui conforte le développement déclaré par le ministère. Aucun couloir n'est tracé sur l'anneau. Le recensement ne déclare aucun agrès ici ; il y en a quatre, tous vus sur place. La piste d'élan du javelot est en herbe sèche et débouche sur l'anneau. Le bac de sable du sautoir de longueur est en bon état. Le cercle de poids est en béton, son butoir en place, l'aire de chute en terre. Le sautoir de hauteur est sous une housse rigide DIMA d'aspect neuf, posée sur un plateau de bitume fissuré : le tapis n'a pas été vu sous la housse et les poteaux n'étaient pas installés. Accès libre constaté le jour de la visite, sans portail ni barrière à l'entrée, et du stationnement sur place. L'ensemble est très ancien mais tient la route.",
+  "photos": [
+    {
+      "fichier": "01-anneau-cendree-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "L'anneau en cendrée dans un virage, bordé de vieux béton ; au centre le terrain engazonné et ses poteaux de rugby",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-butoir-poids-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "Le butoir blanc du cercle de poids, et l'aire de chute en terre sèche",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-cercle-poids-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "Le cercle de lancer du poids, en béton, gagné par l'herbe sur tout son pourtour",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "04-elan-javelot-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "La piste d'élan du javelot, en herbe sèche, débouchant sur l'anneau en cendrée",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "05-sautoir-hauteur-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "Le sautoir de hauteur sous sa housse rigide DIMA, posée sur un plateau de bitume fissuré",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "06-sautoir-longueur-complexe-sportif-de-la-croix-jeannette-bouguenais.jpg",
+      "legende": "Le sautoir de longueur ; le long de l'anneau, le gazon du terrain central en cours de réfection",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-27",
+      "texte": "Pas mal du tout, même si c'est en cendrée. Il y a de quoi se garer, et de l'espace sur la piste. J'aime beaucoup ce côté Pays de Retz, avec du vieux béton pour faire les rebords de la piste. L'aire de javelot et celle de poids sont correctes, et le mieux c'est la hauteur. La piste en elle-même n'est pas top, parce qu'aucun couloir n'est défini — mais ça reste un bon complexe dans l'ensemble."
+    }
+  ]
+}
