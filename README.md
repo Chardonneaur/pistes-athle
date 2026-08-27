@@ -164,6 +164,53 @@ Deux garde-fous : le slug d'une commune du recensement gagne toujours — deux p
 la même URL, c'est la page qui perd — et le fil d'Ariane d'une fiche pointe la commune
 qui figure sur son adresse, pas l'ancienne.
 
+## Suivre l'argent public
+
+Le recensement du ministère est déclaratif, et rien n'oblige une commune à le tenir
+à jour. Thonon-les-Bains en donne la mesure : le stade de Vongy y est décrit avec deux
+terrains de football et des travaux datant de 2012, alors qu'une piste de huit couloirs
+homologuée FFA y a été livrée en 2022. L'annuaire ne pouvait pas l'inventer.
+
+Mais une piste, ça se paie. Depuis 2018, tout marché public au-dessus de 40 000 € doit
+être publié en données ouvertes : les [DECP](https://data.economie.gouv.fr/) disent qui
+a dépensé, quand, combien, et pour quel objet. `scripts/marches_publics.py` les balaie,
+croise avec `data/tracks.json`, et rend une file de lecture en trois piles :
+
+- **aucun site d'athlétisme recensé dans cette commune** — le cas Vongy ;
+- **des sites, mais aucun avec piste** ;
+- **des pistes recensées, mais plus anciennes que le marché** — la fiche est périmée.
+
+**Ce que les DECP ne diront jamais**, et c'est la limite à garder en tête : le nombre de
+couloirs, le revêtement, les agrès. L'objet du marché tient en une ligne de majuscules,
+`PISTE D'ATHLÉTISME`, et le cahier des charges qui contient les détails vit sur le profil
+d'acheteur pendant la consultation puis disparaît — rien ne l'archive, rien ne le
+centralise. C'est un instrument de **datation et de détection, pas de description**.
+
+Deux pièges, tous deux vérifiés sur les données :
+
+1. **`lieuexecution_code` mélange codes INSEE et codes postaux.** Annecy saisit `74000`,
+   son code postal, là où son code INSEE est `74010` ; Thonon saisit `74200`. Pire, un
+   code postal saisi à la place de l'INSEE tombe parfois sur une vraie petite commune à
+   l'autre bout du pays — d'où des lignes absurdes, un village de deux cents âmes qui
+   refait une piste à 1,4 million. Le script croise donc avec l'**acheteur** (SIRET →
+   nature juridique 7210 = commune) et refuse de conclure quand les deux se contredisent.
+2. **Le rattachement par code échoue sur Paris, Lyon et Marseille** : le marché porte le
+   code de la commune, l'annuaire range ses sites par arrondissement. Un rattrapage par
+   le nom retrouve « Lyon 8e Arrondissement » derrière « Lyon ».
+
+Le filet des codes CPV a été essayé puis rangé derrière `--large` : sur la Haute-Savoie
+il ajoute des lots de peinture, des pumptracks et des courts de padel, et pas une piste
+que l'objet du marché n'avait pas déjà nommée.
+
+```bash
+python3 scripts/marches_publics.py --dep 74 --depuis 2022-01-01
+python3 scripts/marches_publics.py --depuis 2021-01-01 --montant-min 200000 --json .work/marches.json
+```
+
+Aucune ligne n'est une piste tant que personne ne l'a vue. La suite se joue sur le site
+de la mairie — voir **[Ce que dit la mairie](docs/ce-que-dit-la-mairie.md)** — sur
+l'orthophoto, puis sur place.
+
 ## Prévenir les moteurs — IndexNow
 
 Cette datation sert une deuxième fois. Une fois le site déployé, `scripts/indexnow.py`
@@ -386,6 +433,7 @@ scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
 scripts/indexnow.py         annonce à IndexNow les pages qui viennent de changer
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couverture
+scripts/marches_publics.py  marchés publics : les pistes payées mais pas recensées
 scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
 scripts/conseils_municipaux.py  délibérations des conseils municipaux : file de lecture
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
