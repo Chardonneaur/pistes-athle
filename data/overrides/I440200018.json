@@ -9,5 +9,13 @@
       "legende": "Le seul anneau du complexe : une piste de roller au revêtement lisse, bordée d'une lisse métallique",
       "credit": "Ronan Chardonneau"
     }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-27",
+      "note": 1,
+      "texte": "Ce n'est pas vraiment une piste d'athlétisme, et c'est assez trompeur : c'est une piste de roller. On peut éventuellement l'utiliser pour courir, faute d'anneau de course sur le complexe, mais ce n'est pas fait pour ça — ceux qui font du roller vont clairement vous le faire remarquer."
+    }
   ]
 }
