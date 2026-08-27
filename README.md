@@ -83,6 +83,7 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/contributeurs/` et `/en/contributors/` | le classement des contributeurs et toutes leurs contributions |
 | `/confidentialite/` et `/en/privacy/` | ce qui est mesuré, ce qui ne l'est pas, et pourquoi il n'y a pas de bandeau |
 | `/ville/<SLUG>/` et `/en/city/<SLUG>/` | les installations d'une commune, et celles à moins de 20 km |
+| `/ville/<COMMUNE-DÉLÉGUÉE>/` | les installations d'une commune fusionnée, sous son ancien nom — voir « Les communes qui ont disparu » |
 | `/pistes/<CRITÈRE>/` et `/en/tracks/<CRITERION>/` | développement, couloirs, accès libre, discipline, revêtement |
 | `/pistes/<CRITÈRE>/<DÉPARTEMENT>/` | le croisement des deux, quand il compte au moins trois installations |
 | `/api/…` et `/openapi.json` | l'API statique et son contrat — voir « Interroger l'annuaire » |
@@ -127,6 +128,41 @@ le dit et date tout du jour — le temps d'une construction.
 En pratique, corriger un seul site redate une quarantaine d'URL et non 23 842 : sa
 fiche, celles des sites voisins qui la citent, sa commune et les communes à moins de
 20 km, son département, et les pages de critère où il apparaît.
+
+## Les communes qui ont disparu
+
+Annecy-le-Vieux a fusionné dans Annecy en 2017. Le recensement du ministère ne connaît
+plus que « Annecy » : les quatre installations d'Annecy-le-Vieux y sont rattachées à la
+commune nouvelle, et l'ancien nom n'apparaît nulle part. Personne, pourtant, n'a cessé
+de chercher « piste d'athlétisme Annecy-le-Vieux ».
+
+Le rattachement d'origine est pourtant dans les données, sans qu'il faille aller le
+chercher ailleurs : **le numéro d'installation encode le code INSEE de la commune où
+elle a été recensée**. `I740110013` porte 74011 — Annecy-le-Vieux — quand le champ
+`insee` de la même ligne donne 74010, Annecy. Quand les deux diffèrent, l'installation
+est dans une commune qui a fusionné depuis.
+
+Le **nom**, lui, n'est nulle part dans Data ES ; l'[API géo de l'État](https://geo.api.gouv.fr/)
+le rend. Comme le millésime des orthophotos, ce service n'est pas indispensable à la
+construction : s'il ne répond pas, les fiches restent rattachées à la commune
+d'aujourd'hui et rien ne casse.
+
+Sur les 7 167 sites, **43 sont dans une commune fusionnée et 20 anciennes communes ont
+pu être nommées** — Annecy-le-Vieux, Cran-Gevrier, Meythet, Seynod, Pierre-Bénite,
+Pierrefitte-sur-Seine, Rocquencourt… Les 23 autres n'ont plus de commune déléguée
+subsistante : Évry-Courcouronnes n'en a jamais créé, Les Sables-d'Olonne les a dissoutes
+en 2019. L'API répond alors 404, et il n'y a pas d'autre nom à afficher — **on se tait
+plutôt que d'inventer**.
+
+Chaque commune déléguée nommée reçoit sa page, dans les deux langues, avec la même
+mise en page qu'une commune : ses installations, celles à moins de 20 km, et un chapô
+qui dit la fusion. La commune nouvelle, elle, gagne une section qui les liste. Une page
+de commune déléguée n'a pas de bloc API : l'index est rangé par commune du recensement,
+et le recensement ne connaît plus celle-ci.
+
+Deux garde-fous : le slug d'une commune du recensement gagne toujours — deux pages sous
+la même URL, c'est la page qui perd — et le fil d'Ariane d'une fiche pointe la commune
+qui figure sur son adresse, pas l'ancienne.
 
 ## Prévenir les moteurs — IndexNow
 
