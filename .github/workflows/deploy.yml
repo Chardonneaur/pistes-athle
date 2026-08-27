@@ -96,6 +96,33 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
+  # IndexNow est le pendant ouvert du bouton « Demander une indexation » :
+  # Bing, Yandex, Seznam et Naver se partagent la notification. Google ne lit
+  # pas ce protocole — c'est un signal de plus, pas un remplacant du plan de
+  # site, et il vise surtout les agents qui s'appuient sur Bing.
+  #
+  # Apres le deploiement, jamais avant : le script lit les plans de site tels
+  # qu'ils viennent d'etre publies et n'annonce que les URL datees du jour,
+  # celles dont build_site.py a vu l'empreinte changer. Annoncer une page qui
+  # n'est pas encore servie apprend au moteur que le signal ment.
+  annoncer:
+    needs: deploy
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Annoncer les pages modifiées à IndexNow
+        # Une annonce ratee ne doit pas peindre en rouge un deploiement reussi :
+        # le site est en ligne, seul le faire-part s'est perdu. Le script rend
+        # deja 0 sur toutes ses abstentions ; ceci couvre le reste.
+        continue-on-error: true
+        run: |
+          python3 scripts/indexnow.py \
+            --url "${{ vars.SITE_URL || 'https://pistes-athle.com' }}" --envoyer
+
   # Un echec ici ne casse rien en production — le site en ligne reste le
   # dernier build valide — et c'est precisement le probleme : rien ne le dit.
   # Le 26 aout 2026, un export tronque du portail a arrete la publication a

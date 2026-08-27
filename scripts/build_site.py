@@ -26,6 +26,7 @@ import shutil
 from datetime import date
 
 import build_api
+import indexnow
 from build_api import DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD, SURFACE_EN, slug
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -2847,6 +2848,10 @@ def main():
     if domaine:
         ecrire(os.path.join(out, "CNAME"), domaine + "\n")
     ecrire(os.path.join(out, "robots.txt"), robots(url_base))
+    # Preuve de possession du domaine pour IndexNow : le moteur va chercher ce
+    # fichier avant d'accepter la moindre annonce. Il doit donc etre en ligne
+    # avant elle — d'ou son ecriture ici, et l'annonce apres le deploiement.
+    ecrire(os.path.join(out, f"{indexnow.CLE}.txt"), indexnow.CLE + "\n")
     ecrire(os.path.join(out, "404.html"), page_404(url_base, len(publiables)))
     avec_piste = sum(1 for t in publiables if t["piste"])
     ecrire(os.path.join(out, "llms.txt"),
