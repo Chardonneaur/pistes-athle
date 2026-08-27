@@ -55,9 +55,9 @@ import urllib.parse
 import urllib.request
 import urllib.robotparser
 
-from osm_longueurs import charger_sites
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TRACKS = os.path.join(ROOT, "data", "tracks.json")
 UA = "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"
 ENTETES = {"User-Agent": UA}
 
@@ -191,6 +191,21 @@ def autorise(rp, url):
 # --------------------------------------------------------------------------
 # 1. De quoi parle-t-on : un site, une commune
 # --------------------------------------------------------------------------
+
+def charger_sites():
+    """Tous les sites de l'annuaire, avec ce dont ce script a besoin.
+
+    osm_longueurs.charger_sites() faisait l'affaire jusqu'a ce qu'elle prenne un
+    departement en argument et se mette a filtrer dessus : l'appel d'ici, reste
+    sans argument, levait un TypeError, et le dictionnaire qu'elle rend n'a de
+    toute facon pas la cle `dep` sur laquelle main() trie ensuite. Un chargeur
+    de trois lignes vaut mieux qu'un emprunt qui derive."""
+    with open(TRACKS, encoding="utf-8") as f:
+        data = json.load(f)
+    cle = {v: k for k, v in data["keymap"].items()}
+    champs = ("id", "nom", "ville", "cp", "dep", "lat", "lon", "piste")
+    return [{k: t.get(cle[k]) for k in champs} for t in data["tracks"]]
+
 
 def insee_du_site(site):
     """Le code INSEE est dans l'identifiant du recensement : I + INSEE + rang.
