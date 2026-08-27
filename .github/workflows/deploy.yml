@@ -46,7 +46,9 @@ jobs:
           n = len(d["tracks"])
           print(f"{n} sites generes")
           if n < 5000:
-              sys.exit(f"ERREUR : seulement {n} sites, l'API a probablement repondu partiellement")
+              sys.exit(f"ERREUR : seulement {n} sites. Les exports sont verifies complets\n"
+                       f"en amont (build_data.py, _export) : chercher plutot du cote de la\n"
+                       f"jointure equipements/installations ou des contributions.")
           PY
 
       - name: Assembler le site (application FR/EN + pages statiques + API)
@@ -93,3 +95,74 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # Un echec ici ne casse rien en production — le site en ligne reste le
+  # dernier build valide — et c'est precisement le probleme : rien ne le dit.
+  # Le 26 aout 2026, un export tronque du portail a arrete la publication a
+  # 22 h 13, et l'echec n'a ete vu que le lendemain matin. Le build mensuel du
+  # 1er, personne ne le regarde passer : il lui faut une voix.
+  alerte:
+    needs: [build, deploy]
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Signaler que la publication a echoue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENEMENT: ${{ github.event_name }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          gh label create publication-echouee --color B60205 \
+            --description "Le site n'a pas pu etre republie" 2>/dev/null || true
+
+          # Un seul billet ouvert a la fois : des echecs qui se suivent sont
+          # presque toujours le meme, et trois billets identiques se lisent
+          # moins bien qu'un seul qui s'allonge.
+          ouvert=$(gh issue list --label publication-echouee --state open \
+                     --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ -n "$ouvert" ]; then
+            gh issue comment "$ouvert" \
+              --body "Nouvel echec ($EVENEMENT, ${COMMIT:0:7}) : $RUN"
+            exit 0
+          fi
+
+          printf '%s\n' \
+            "Le workflow « Construire et publier le site » s'est arrete avant de deployer." \
+            "" \
+            "- Execution : $RUN" \
+            "- Declencheur : \`$EVENEMENT\`" \
+            "- Commit : \`$COMMIT\`" \
+            "" \
+            "**Le site en ligne n'a pas bouge** : il sert toujours le dernier build valide." \
+            "Les echecs suivants viendront en commentaire ici, et ce billet se fermera" \
+            "tout seul a la prochaine publication reussie." \
+            "" \
+            "La cause la plus frequente est un export partiel de Data ES. Le journal du" \
+            "build nomme alors le nombre de lignes recues et le nombre annonce." \
+            > corps.md
+
+          gh issue create --label publication-echouee \
+            --title "La publication du site a echoue" --body-file corps.md
+
+  # Le pendant du billet ci-dessus : ce qui s'ouvre tout seul doit se refermer
+  # tout seul, sinon il traine ouvert bien apres que la panne a cesse.
+  clore:
+    needs: deploy
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Refermer un signalement laisse ouvert
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --label publication-echouee --state open \
+                       --limit 20 --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Publication reussie : $RUN"
+          done

@@ -15,6 +15,7 @@ import re
 import subprocess
 import sys
 import unicodedata
+import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -38,6 +39,7 @@ API_BASE = "https://equipements.sports.gouv.fr/api/explore/v2.1/catalog/datasets
 API_EQUIP = f"{API_BASE}/data-es-equipement-dcf/exports/json"
 API_INST = f"{API_BASE}/data-es-installation-dcf/exports/json"
 FAMILLE = "Equipement d'athlétisme"
+UA = {"User-Agent": "pistes-athle/1.0 (+github pages)"}
 
 # Les deux tables de correspondance, du nouveau nom vers l'ancien. Traduire ici
 # plutot que partout ailleurs : aggregate(), detect_disciplines() et le reste du
@@ -290,13 +292,59 @@ def _assainir(inst):
     return inst
 
 
+def _attendu(url, params):
+    """Le nombre de lignes que le portail se reconnait, pour ce meme filtre.
+
+    L'export, lui, n'annonce pas sa taille : il ouvre un tableau, le remplit,
+    le ferme. Le 26 aout 2026 il l'a ferme au bout de 33 847 installations sur
+    151 944 — un tableau bien forme, que json.load() a donc accepte sans rien
+    signaler. La jointure a ensuite laisse 8 047 equipements sans installation
+    et le site serait parti en production ampute de 83 % de son annuaire si le
+    garde-fou du workflow n'avait pas trouve le total invraisemblable.
+
+    Ce garde-fou tient sur un seuil arbitraire — moins de 5 000 sites. Il a
+    arrete 1 212 sites ; il aurait laisse passer 5 500. Le point de
+    comparaison juste est ici : /records?limit=0 rend total_count, le nombre
+    de lignes que le portail dit detenir, clause `where` comprise.
+    """
+    compte = url.replace("/exports/json", "/records")
+    params = {k: v for k, v in params.items() if k != "select"} | {"limit": 0}
+    req = urllib.request.Request(compte + "?" + urllib.parse.urlencode(params),
+                                 headers=UA)
+    with urllib.request.urlopen(req, timeout=60) as r:
+        return json.load(r)["total_count"]
+
+
 def _export(url, params, quoi):
-    """Un export complet du portail, rendu tel quel."""
+    """Un export complet du portail — verifie complet, ou rien.
+
+    Bloquant des que le compte manque ou ne tombe pas : mieux vaut ne pas
+    publier que publier une partie sans le dire. Le site ne dit d'une piste
+    que ce qui est declare, jamais l'inverse ; un annuaire tronque en silence
+    ferait exactement l'inverse — il affirmerait l'absence de ce qui n'a pas
+    ete telecharge.
+    """
+    try:
+        attendu = _attendu(url, params)
+    except (urllib.error.URLError, TimeoutError, ValueError, KeyError) as e:
+        raise SystemExit(f"ERREUR : {quoi} — impossible de demander au portail "
+                         f"combien de lignes il detient ({e}). Sans ce nombre, "
+                         f"rien ne dit que l'export recu est entier.")
+
     req = urllib.request.Request(url + "?" + urllib.parse.urlencode(params),
-                                 headers={"User-Agent": "pistes-athle/1.0 (+github pages)"})
+                                 headers=UA)
     with urllib.request.urlopen(req, timeout=300) as r:
         data = json.load(r)
-    print(f"   {len(data)} {quoi}")
+
+    # Une tolerance d'un pour mille : le portail peut bouger d'une ligne entre
+    # les deux appels, une troncature se compte en dizaines de milliers.
+    manque = attendu - len(data)
+    if manque > max(5, attendu // 1000):
+        raise SystemExit(f"ERREUR : {quoi} — export tronque : {len(data)} lignes "
+                         f"recues sur {attendu} annoncees, {manque} manquantes. "
+                         f"Le portail a repondu partiellement, rien n'est publie.")
+    ecart = f" (sur {attendu} annoncees)" if manque else ""
+    print(f"   {len(data)} {quoi}{ecart}")
     return data
 
 
