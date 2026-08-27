@@ -89,6 +89,7 @@ génère donc, à côté de l'application, un site entièrement statique :
 | `/sitemap.xml` | index de plan de site (une entrée par langue, ~23 700 URL) |
 | `/dates.json` | empreinte et date de dernière modification de chaque page — voir « Dater les pages » |
 | `/robots.txt` | tout ouvert, robots d'IA compris, explicitement |
+| `/<clé>.txt` | clé IndexNow, publique par construction — voir « Prévenir les moteurs » |
 | `/llms.txt` | description du site et du jeu de données pour un agent, avec le schéma des clés |
 
 L'application accepte des liens partageables : `#carte` ouvre la carte, `#dep=44`
@@ -126,6 +127,38 @@ le dit et date tout du jour — le temps d'une construction.
 En pratique, corriger un seul site redate une quarantaine d'URL et non 23 842 : sa
 fiche, celles des sites voisins qui la citent, sa commune et les communes à moins de
 20 km, son département, et les pages de critère où il apparaît.
+
+## Prévenir les moteurs — IndexNow
+
+Cette datation sert une deuxième fois. Une fois le site déployé, `scripts/indexnow.py`
+relit les plans de site **tels qu'ils viennent d'être publiés** et annonce à
+[IndexNow](https://www.indexnow.org/) les URL datées du jour : exactement les pages
+dont l'empreinte a changé. Bing, Yandex, Seznam et Naver se partagent la notification.
+**Google ne lit pas ce protocole** — c'est un signal de plus, pas un remplaçant du plan
+de site, et il vise surtout les agents qui s'appuient sur Bing.
+
+L'annonce part **après** le déploiement, jamais avant : annoncer une page qui n'est pas
+encore servie apprend au moteur que le signal ment. La clé, servie en clair à la racine
+du site, n'est pas un secret mais une preuve de possession du domaine — elle a donc sa
+place dans le dépôt, et surtout pas dans un secret GitHub où elle serait invisible à la
+relecture tout en restant lisible sur le site.
+
+Quatre situations où le script s'abstient et le dit, plutôt que d'envoyer à l'aveugle :
+
+- **rien n'a changé** — aucune URL datée du jour ;
+- **plus de 2 000 URL** — ce n'est plus une notification mais un réindexage. Le journal
+  des dates a été perdu, ou le ministère a republié son jeu : arroser un moteur de
+  milliers d'URL est le signal qui fait plafonner un domaine, et le plan de site fait
+  déjà ce travail ;
+- **le fichier de clé n'est pas servi** — l'annonce serait rejetée à l'autre bout ;
+- **le site est publié dans un sous-dossier** — le cas d'un fork sur `github.io`, qui
+  ne possède pas l'hôte et n'a rien à y annoncer.
+
+Sans `--envoyer`, le script dit ce qu'il enverrait et n'envoie rien :
+
+```bash
+python3 scripts/indexnow.py --url https://pistes-athle.com
+```
 
 ## Interroger l'annuaire
 
@@ -314,6 +347,7 @@ scripts/build_site.py       -> _site/ : application FR/EN, pages par site, par
 scripts/build_api.py        -> _site/api/ : facettes JSON, index compact, openapi.json
 api/worker.js               serveur de recherche /api/tracks?... (à déployer, optionnel)
 scripts/validate_overrides.py  contrôle des contributions (utilisé par la CI)
+scripts/indexnow.py         annonce à IndexNow les pages qui viennent de changer
 scripts/optimize_photos.py  redimensionne les photos et efface leur EXIF
 scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couverture
 scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
