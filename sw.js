@@ -6,10 +6,14 @@
  * Seuls les contenus immuables (photos, librairies versionnées) sont servis
  * depuis le cache en priorité.
  */
-const VERSION = 'v18';
+const VERSION = 'v19';
 const SHELL = `shell-${VERSION}`;
 const DATA = `data-${VERSION}`;
 const MEDIA = 'media';                       // photos : jamais modifiées, jamais purgées
+// Fonds de carte et orthophotos : servis par d'autres domaines, donc soumis au
+// piège des réponses opaques (voir distant()). Cache à part et versionné, pour
+// qu'une erreur mise en cache par une version précédente puisse être jetée.
+const CARTES = 'cartes-v1';
 const ASSETS = [
   './', './index.html', './en/', './en/index.html',
   './assets/style.css?v=14', './assets/i18n.js?v=15', './assets/app.js?v=16',
@@ -32,8 +36,16 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k !== SHELL && k !== DATA && k !== MEDIA)
+        keys.filter(k => k !== SHELL && k !== DATA && k !== MEDIA && k !== CARTES)
             .map(k => caches.delete(k))))
+      // `media` n'est jamais purgé, et il a hébergé les orthophotos jusqu'à la
+      // v18 : les réponses opaques erronées qu'il a pu avaler y sont encore, et
+      // resteraient servies à vie. On l'ampute de tout ce qui n'est pas à nous,
+      // une fois ; les photos, elles, sont sur notre domaine et ne bougent pas.
+      .then(() => caches.open(MEDIA).then(c => c.keys().then(reqs =>
+        Promise.all(reqs
+          .filter(r => new URL(r.url).origin !== location.origin)
+          .map(r => c.delete(r))))))
       .then(() => self.clients.claim())
   );
 });
@@ -62,6 +74,39 @@ function cacheFirst(request, cacheName) {
   }));
 }
 
+/** Images d'un autre domaine : cache d'abord, mais on vérifie avant de garder.
+ *
+ * Le piège : une image tierce demandée par <img> part en `no-cors` et revient
+ * « opaque ». Une réponse opaque a un statut 0 et un corps illisible — on ne
+ * peut pas distinguer l'orthophoto du message d'erreur. Or l'IGN répond 400
+ * avec un ServiceExceptionReport en XML quand une requête échoue. Mise en
+ * cache telle quelle par une stratégie « cache d'abord », cette erreur était
+ * resservie indéfiniment : l'image restait cassée, et recharger n'y changeait
+ * rien.
+ *
+ * data.geopf.fr et les tuiles OSM envoient tous deux `access-control-allow-
+ * origin: *`. On redemande donc en `cors`, ce qui rend le statut lisible, et
+ * on ne garde que ce qui est une image et qui a repondu 200. Le reste est
+ * renvoyé au navigateur sans être mémorisé — au pire l'image manque
+ * aujourd'hui et revient au prochain chargement. */
+function distant(request, cacheName) {
+  return caches.match(request).then(hit => {
+    if (hit) return hit;
+    return fetch(new Request(request.url, { mode: 'cors', credentials: 'omit' }))
+      .then(res => {
+        const type = res.headers.get('content-type') || '';
+        if (res.ok && type.startsWith('image/')) {
+          const copy = res.clone();
+          caches.open(cacheName).then(c => c.put(request, copy));
+        }
+        return res;
+      })
+      // Le CORS refuse, le réseau tombe : on laisse le navigateur faire sa
+      // requête habituelle plutôt que de rejeter et de casser l'image.
+      .catch(() => fetch(request));
+  });
+}
+
 self.addEventListener('fetch', e => {
   const { request } = e;
   if (request.method !== 'GET') return;
@@ -73,7 +118,7 @@ self.addEventListener('fetch', e => {
   /* Fonds de carte et orthophotos IGN : immuables, et c'est ce qui rend une
      fiche déjà consultée lisible hors-ligne. */
   if (url.host.endsWith('tile.openstreetmap.org') || url.host === 'data.geopf.fr') {
-    return e.respondWith(cacheFirst(request, MEDIA));
+    return e.respondWith(distant(request, CARTES));
   }
   /* Leaflet est chargé à la demande, à la première carte ouverte. Servi depuis
      le cache dès la deuxième : c'est une bibliothèque figée, et la mettre à
