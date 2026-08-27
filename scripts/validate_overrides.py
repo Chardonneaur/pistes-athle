@@ -17,7 +17,8 @@ AGRES = {"longueur", "triple", "hauteur", "perche", "poids", "disque",
 SURFACES = {"synthetique", "bitume", "cendree", "sable", "gazon", "naturel", "interieur"}
 
 STR = {"nom", "adresse", "cp", "ville", "dep", "dep_nom", "region", "surface",
-       "url", "horaires", "acces_note", "note", "photo", "proprietaire", "gestionnaire"}
+       "url", "horaires", "acces_note", "note", "photo", "proprietaire", "gestionnaire",
+       "commune_deleguee"}
 BOOL = {"piste", "couvert", "eclairage", "acces_libre", "ouvert_public", "vestiaires",
         "douches", "sanitaires", "scolaire", "supprime"}
 INT = {"couloirs", "longueur_piste", "longueur_probable", "tribunes", "annee", "renovation"}

@@ -188,6 +188,86 @@ def as_int(v):
 
 
 
+# ----------------------------------------------------- communes deleguees
+# Le numero d'installation encode le code INSEE de la commune ou elle a ete
+# recensee — « I740110013 » vaut 74011, Annecy-le-Vieux — quand le champ
+# `insee` donne, lui, la commune d'aujourd'hui : 74010, Annecy. Quand les deux
+# different, l'installation est dans une commune qui a fusionne depuis, et
+# personne ne cherche « piste athletisme Annecy » en pensant a Annecy-le-Vieux.
+#
+# Le nom, lui, n'est nulle part dans Data ES : l'API geo de l'Etat le rend.
+API_GEO = "https://geo.api.gouv.fr/communes_associees_deleguees"
+
+
+def nom_deleguee(code, timeout=15):
+    """Nom de la commune deleguee portant ce code INSEE, ou None.
+
+    Toutes les fusions ne laissent pas de commune deleguee derriere elles :
+    Evry-Courcouronnes n'en a pas cree, Les Sables-d'Olonne les a dissoutes en
+    2019. L'API rend alors 404, et il n'y a pas d'autre nom a afficher — on se
+    tait plutot que d'inventer."""
+    req = urllib.request.Request(f"{API_GEO}/{code}?fields=nom", headers=UA)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return (json.load(r).get("nom") or "").strip() or None
+    except urllib.error.HTTPError as e:
+        if e.code == 404:
+            return None
+        raise
+
+
+def deleguees(installations):
+    """Complete chaque installation d'une commune fusionnee avec son ancien nom.
+
+    Comme le millesime des orthos, ce service n'est pas indispensable a la
+    construction : s'il ne repond pas, les fiches restent rattachees a la
+    commune d'aujourd'hui et rien ne casse."""
+    a_resoudre = {}
+    for inst in installations.values():
+        num, insee = inst.get("id") or "", inst.get("insee") or ""
+        # Un site ajoute par la communaute n'a pas de numero du ministere.
+        if not num.startswith("I") or len(num) != 10 or not insee:
+            continue
+        if num[1:6] != insee:
+            a_resoudre.setdefault(num[1:6], []).append(inst)
+
+    if not a_resoudre:
+        return
+    noms, muettes, injoignables = {}, 0, 0
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        for code, (nom, repondu) in zip(a_resoudre, pool.map(_nom_sur, a_resoudre)):
+            if nom:
+                noms[code] = nom
+            elif repondu:
+                muettes += 1
+            else:
+                injoignables += 1
+    for code, nom in noms.items():
+        for inst in a_resoudre[code]:
+            inst["commune_deleguee"] = nom
+    rattaches = sum(len(v) for k, v in a_resoudre.items() if k in noms)
+    detail = []
+    if muettes:
+        detail.append(f"{muettes} sans commune deleguee subsistante")
+    # Ne jamais confondre les deux : « pas de commune deleguee » est une
+    # reponse, « le service n'a pas repondu » est un blanc. Les compter
+    # ensemble ferait passer une panne pour un constat.
+    if injoignables:
+        detail.append(f"{injoignables} sans reponse du service")
+    print(f"-> communes deleguees : {len(noms)} nommee(s) sur {len(a_resoudre)}, "
+          f"{rattaches} site(s) rattache(s)"
+          + (", " + ", ".join(detail) if detail else ""))
+
+
+def _nom_sur(code):
+    """Rend (nom, le_service_a_repondu). Un 404 est une reponse : cette
+    commune n'a pas de commune deleguee. Une panne n'en est pas une."""
+    try:
+        return nom_deleguee(code), True
+    except Exception:
+        return None, False
+
+
 # --------------------------------------------------------- millesime des orthos
 IGN_WMS = "https://data.geopf.fr/wms-r/wms"
 
@@ -434,6 +514,7 @@ def aggregate(raw):
                 "dep_nom": e.get("dep_nom"),
                 "region": e.get("reg_nom"),
                 "scolaire": bool(e.get("inst_uai")),
+                "commune_deleguee": None,
                 "lat": lat, "lon": lon,
                 "piste": False,
                 "couloirs": None,
@@ -541,7 +622,8 @@ def load_overrides():
 
 LIST_FIELDS = {"agres", "agres_probables"}
 ALLOWED_OVERRIDE_KEYS = {
-    "id", "nom", "adresse", "cp", "ville", "dep", "lat", "lon", "piste", "couloirs",
+    "id", "nom", "adresse", "cp", "ville", "dep", "commune_deleguee",
+    "lat", "lon", "piste", "couloirs",
     "longueur_piste", "longueur_probable", "surface", "couvert", "eclairage",
     "acces_libre", "ouvert_public",
     "horaires", "acces_note", "vestiaires", "douches", "sanitaires", "tribunes",
@@ -564,6 +646,7 @@ def apply_overrides(installations, overrides):
             inst = installations[oid] = {
                 "id": oid, "nom": "", "adresse": "", "cp": None, "ville": "",
                 "insee": None, "dep": None, "dep_nom": None, "region": None,
+                "commune_deleguee": None,
                 "scolaire": False, "lat": None, "lon": None, "piste": True,
                 "couloirs": None, "longueur_piste": None, "longueur_probable": None,
                 "surface": None,
@@ -597,7 +680,8 @@ def apply_overrides(installations, overrides):
 # --- encodage compact du fichier publie -------------------------------------
 KEYMAP = {
     "id": "i", "nom": "n", "adresse": "a", "cp": "cp", "ville": "v",
-    "dep": "d", "lat": "y", "lon": "x", "piste": "p", "couloirs": "cl",
+    "dep": "d", "commune_deleguee": "cd", "lat": "y", "lon": "x",
+    "piste": "p", "couloirs": "cl",
     "longueur_piste": "lp", "longueur_probable": "lpp", "surface": "s", "couvert": "cv", "eclairage": "ec",
     "acces_libre": "al", "ouvert_public": "op", "vestiaires": "ve", "douches": "du",
     "sanitaires": "wc", "tribunes": "tr", "agres": "g", "agres_probables": "gp",
@@ -815,6 +899,9 @@ def main():
 
     raw = fetch_raw(offline=args.offline)
     installations = aggregate(raw)
+    # Avant les contributions, pour qu'un override puisse corriger le
+    # rattachement plutot que se le faire ecraser.
+    deleguees(installations)
     installations = apply_overrides(installations, load_overrides())
     tracks, deps = finalize(installations)
     deps = millesimes(tracks, deps)
