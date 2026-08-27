@@ -23,6 +23,7 @@ import urllib.request
 from urllib.parse import quote_plus, urlsplit
 import re
 import shutil
+import unicodedata
 from datetime import date
 
 import build_api
@@ -97,6 +98,31 @@ SOURCES = {
 }
 ORDRE_AGRES = ["steeple", "longueur", "triple", "hauteur", "perche",
                "poids", "disque", "marteau", "javelot"]
+
+
+def de(nom):
+    """« de » devant un nom de commune, elide et contracte.
+
+    Les noms de communes ne se laissent pas coller un « de » brut : ca donne
+    « de Annecy » et « de Le Chesnay-Rocquencourt ». Les quatre cas suffisent
+    a couvrir le recensement — voyelle ou h muet, et les articles Le / La /
+    Les, seuls a se contracter."""
+    if not nom:
+        return ""
+    tete = nom.split()[0]
+    if tete == "Le":
+        return "du " + nom[3:]
+    if tete == "Les":
+        return "des " + nom[4:]
+    if tete == "La":
+        return "de " + nom
+    return ("d'" if deaccent(nom[0]) in "aeiouyh" else "de ") + nom
+
+
+def deaccent(s):
+    return "".join(c for c in unicodedata.normalize("NFD", s or "")
+                   if unicodedata.category(c) != "Mn").lower()
+
 
 T = {
     "fr": {
@@ -213,6 +239,15 @@ T = {
                                     f"piste, revêtement, agrès, accès."),
         "ville_autour": "À moins de 20 km",
         "ville_autour_vide": "Aucune autre installation recensée dans un rayon de 20 km.",
+        "deleguee_de": lambda mere: f"Commune déléguée {de(mere)}",
+        "deleguee_note": lambda v, mere: (
+            f"{v} a fusionné dans la commune nouvelle {de(mere)} : le recensement du "
+            f"ministère y rattache désormais ses installations, et son nom n'y "
+            f"apparaît plus. Cette page les regroupe sous celui qu'on cherche."),
+        "deleguees_titre": "Communes déléguées",
+        "deleguees_note": lambda mere: (
+            f"{mere} est une commune nouvelle : ces anciennes communes en font "
+            f"partie, et gardent ici leur page."),
         "crit_vide": "Aucune installation ne correspond.",
         "a_km": lambda d: f"à {d} km",
     },
@@ -329,6 +364,15 @@ T = {
                                     f"track, surface, equipment, access."),
         "ville_autour": "Within 20 km",
         "ville_autour_vide": "No other venue recorded within 20 km.",
+        "deleguee_de": lambda mere: f"Former commune, now part of {mere}",
+        "deleguee_note": lambda v, mere: (
+            f"{v} was merged into the new commune of {mere}. The ministry's register "
+            f"now files its venues under that name, and {v} no longer appears in it. "
+            f"This page gathers them under the name people actually search for."),
+        "deleguees_titre": "Former communes",
+        "deleguees_note": lambda mere: (
+            f"{mere} is a merged commune: these former communes are part of it, and "
+            f"keep their own page here."),
         "crit_vide": "No venue matches.",
         "a_km": lambda d: f"{d} km away",
     },
@@ -740,7 +784,8 @@ def pied(lang, chemin, url_base, depot):
 """
 
 
-def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None):
+def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
+              deleguee_slug=None):
     chemin = url_site(lang, t["id"])
     r = rel(chemin)
     tr = T[lang]
@@ -885,7 +930,9 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None):
   <a href="{r}{url_dep(lang, t['dep'])}">{E(t.get('dep_nom') or t.get('dep') or '')}</a> ›
   {maillon_ville}{E(nom)}</nav>
 <h1>{E(nom)}</h1>
-<p class="loc">{E(adresse)}{f" · {E(t['dep_nom'])}" if t.get('dep_nom') else ''}</p>""")
+<p class="loc">{E(adresse)}{f" · {E(t['dep_nom'])}" if t.get('dep_nom') else ''}{
+    f' · <a href="{r}{url_ville(lang, deleguee_slug)}">{E(t["commune_deleguee"])}</a>'
+    if deleguee_slug and t.get("commune_deleguee") else ''}</p>""")
 
     if t.get("note_moyenne"):
         lignes.append(f'<p class="rating">{etoiles(t["note_moyenne"], lang)} '
@@ -2272,14 +2319,20 @@ def page_critere(crit, lang, dep, sites, repartition, url_base, depot):
     return "".join(lignes)
 
 
-def page_ville(ville, ville_slug, sites, autour, lang, url_base, depot):
+def page_ville(ville, ville_slug, sites, autour, lang, url_base, depot,
+               deleguee=None, filles=()):
     """Page d'une commune.
 
     2 604 des 3 847 communes du recensement n'ont qu'une installation. Une page
     qui se contenterait de la relister serait un doublon de la fiche. Elle
     porte donc aussi ce qu'il y a autour, dans RAYON_VILLE_KM : c'est ce qu'on
     veut vraiment savoir quand on cherche ou s'entrainer dans une commune qui
-    n'a qu'un stade."""
+    n'a qu'un stade.
+
+    `deleguee` vaut (nom, slug) de la commune nouvelle quand cette page est
+    celle d'une commune deleguee : Annecy-le-Vieux a fusionne dans Annecy en
+    2017 et a disparu du recensement, mais pas des recherches. `filles` est
+    l'inverse — la liste des communes deleguees d'une commune nouvelle."""
     chemin = url_ville(lang, ville_slug)
     r = rel(chemin)
     tr = T[lang]
@@ -2306,12 +2359,19 @@ def page_ville(ville, ville_slug, sites, autour, lang, url_base, depot):
                 "item": f"{url_base}/{chemin}"}]}
 
     lignes = [entete(lang, titre, desc, chemin, alternatives, [liste_ld, fil], url_base)]
+    mere = (f'<a href="{r}{url_ville(lang, deleguee[1])}">{E(deleguee[0])}</a> ›\n  '
+            if deleguee else "")
+    situation = [nom_dep or "", tr["nb_sites"](len(sites))]
+    if deleguee:
+        situation.insert(1, tr["deleguee_de"](deleguee[0]))
     lignes.append(f'''
 <nav class="crumb"><a href="{r}{url_appli(lang)}">{E(tr["accueil"])}</a> ›
   <a href="{r}{url_dep(lang, sites[0].get("dep") or "00")}">{E(nom_dep or "")}</a> ›
-  {E(ville)}</nav>
+  {mere}{E(ville)}</nav>
 <h1>{E(titre)}</h1>
-<p class="loc">{E(nom_dep or "")} · {E(tr["nb_sites"](len(sites)))}</p>''')
+<p class="loc">{" · ".join(E(x) for x in situation if x)}</p>''')
+    if deleguee:
+        lignes.append(f'<p class="lede">{E(tr["deleguee_note"](ville, deleguee[0]))}</p>')
     # Sur Paris, Lyon ou Marseille, la liste regroupe par arrondissement : 79
     # entrees a plat ne se lisent pas. Ailleurs, la commune est unique.
     par_arrondissement = len({s.get("ville") for s in sites}) > 1
@@ -2330,8 +2390,19 @@ def page_ville(ville, ville_slug, sites, autour, lang, url_base, depot):
     else:
         lignes.append(f'<p>{E(tr["ville_autour_vide"])}</p>')
 
-    dep = sites[0].get("dep") or "00"
-    lignes.append(bloc_api(lang, url_base, f"city/{dep}/{ville_slug_nu(ville_slug, dep)}", r))
+    if filles:
+        lignes.append(f'<h2>{E(tr["deleguees_titre"])}</h2>')
+        lignes.append(f'<p>{E(tr["deleguees_note"](ville))}</p>')
+        lignes.append('<ul class="liste">' + "".join(
+            f'<li><a href="{r}{url_ville(lang, sl)}">{E(nom)}'
+            f'<span class="meta">{E(tr["nb_sites"](n))}</span></a></li>'
+            for nom, sl, n in filles) + "</ul>")
+
+    # Une page de commune deleguee n'a pas de facette d'API : l'index est range
+    # par commune du recensement, et le recensement ne connait plus celle-ci.
+    if not deleguee:
+        dep = sites[0].get("dep") or "00"
+        lignes.append(bloc_api(lang, url_base, f"city/{dep}/{ville_slug_nu(ville_slug, dep)}", r))
     lignes.append(pied(lang, chemin, url_base, depot))
     return "".join(lignes)
 
@@ -2745,6 +2816,46 @@ def main():
             if precis or s["id"] not in ville_de_site:
                 ville_de_site[s["id"]] = final
 
+    # --- communes deleguees. Annecy-le-Vieux a fusionne dans Annecy en 2017 :
+    # le recensement ne connait plus que « Annecy », mais les gens cherchent
+    # toujours l'ancien nom, et aucune page ne le portait. build_data les
+    # nomme (voir deleguees()) ; ici, chacune recoit sa page.
+    #
+    # Elles rejoignent `communes` : une commune deleguee se comporte
+    # exactement comme une commune pour tout ce qui suit — voisinage, pages,
+    # plan de site, version anglaise. Elles arrivent apres `ville_de_site`
+    # pour que le fil d'Ariane d'une fiche pointe la commune du recensement,
+    # celle qui figure sur son adresse.
+    noms_communes = {final: nom for final, nom, _ in communes}
+    pris = set(noms_communes)
+    par_deleguee = {}
+    for final, _nom, liste in list(communes):
+        for site in liste:
+            if site.get("commune_deleguee") and ville_de_site.get(site["id"]) == final:
+                par_deleguee.setdefault((site["commune_deleguee"], final), []).append(site)
+
+    deleguee_de, filles_de, deleguee_de_site = {}, {}, {}
+    for (nom, mere), liste in sorted(par_deleguee.items()):
+        sl = slug(nom)
+        if sl in pris:
+            # Une commune du recensement porte deja ce slug : elle garde l'URL.
+            # Le suffixe de departement suffit a departager, comme pour les
+            # 23 homonymes du recensement.
+            sl = f"{sl}-{liste[0].get('dep') or '00'}"
+        if sl in pris:
+            print(f"[!] commune deleguee « {nom} » ignoree : le slug {sl} est pris")
+            continue
+        pris.add(sl)
+        liste.sort(key=lambda s: (s.get("nom") or "").lower())
+        communes.append((sl, nom, liste))
+        deleguee_de[sl] = (noms_communes[mere], mere)
+        filles_de.setdefault(mere, []).append((nom, sl, len(liste)))
+        for site in liste:
+            deleguee_de_site[site["id"]] = sl
+    if deleguee_de:
+        print(f"   {len(deleguee_de)} commune(s) deleguee(s) : "
+              f"{sum(len(v) for v in par_deleguee.values())} site(s) sous leur ancien nom")
+
     # Ce qu'il y a autour de chaque commune : grille grossiere puis distance
     # exacte, pour ne pas comparer 3 847 communes a 7 135 sites.
     grille = {}
@@ -2809,12 +2920,15 @@ def main():
                 urls[lang].append((chemin, "0.5"))
         for final, ville, liste in communes:
             ecrire(os.path.join(out, url_ville(lang, final), "index.html"),
-                   page_ville(ville, final, liste, voisinage[final], lang, url_base, depot))
+                   page_ville(ville, final, liste, voisinage[final], lang, url_base,
+                              depot, deleguee_de.get(final),
+                              sorted(filles_de.get(final, ()))))
             urls[lang].append((url_ville(lang, final), "0.6"))
         for t in publiables:
             ecrire(os.path.join(out, url_site(lang, t["id"]), "index.html"),
                    page_site(t, lang, voisins.get(t["id"], []), url_base, depot, maj,
-                             ville_de_site.get(t["id"])))
+                             ville_de_site.get(t["id"]),
+                             deleguee_de_site.get(t["id"])))
             images = [{"loc": f"{url_base}/{p['f']}",
                        "titre": nom_de(t, lang),
                        "legende": alt_photo(p, t, lang)}
@@ -2862,7 +2976,8 @@ def main():
     print(f"-> {out}")
     print(f"   {len(publiables)} sites x 2 langues, {len(par_dep)} departements, "
           f"{pages} URL au plan du site")
-    print(f"   {len(axes)} criteres, {len(communes)} communes")
+    print(f"   {len(axes)} criteres, {len(communes) - len(deleguee_de)} communes "
+          f"+ {len(deleguee_de)} deleguees")
     print(f"   API : {stat_api['facettes']} facettes, {stat_api['cellules']} cellules geo, "
           f"openapi.json")
     # « Modifiee » se lit sur l'empreinte, pas sur la date : une page datee
