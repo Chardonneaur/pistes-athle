@@ -41,10 +41,68 @@ import urllib.request
 
 from build_data import annee_ortho
 from ortho import carte as url_ortho
-from osm_longueurs import (ESSAIS, OVERPASS, PAUSE, centre, charger_sites,
-                           code_osm, dedans, dist, ferme, perimetre, points)
+from osm_longueurs import OVERPASS, centre, dist, ferme, perimetre, points
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TRACKS = os.path.join(ROOT, "data", "tracks.json")
+
+# Quatre choses que ce fichier importait d'osm_longueurs, ou elles n'ont jamais
+# existe : le script ne demarrait donc pas, sous aucune de ses formes. Elles
+# vivent ici desormais. Un emprunt entre scripts derive des que l'un des deux
+# bouge, et celui-la avait derive sans que rien ne le signale.
+ESSAIS = 4                 # reprises d'une requete Overpass avant d'abandonner
+PAUSE = 1.5                # secondes entre deux requetes : on visite un bien commun
+
+
+def code_osm(dep):
+    """Le code que porte le departement dans OSM, sous `ref:INSEE`.
+
+    C'est le code du departement tel quel — « 74 », « 2A », « 971 ». La
+    fonction existe pour que la requete lise bien, et pour porter cette
+    reserve : outre-mer, le departement est aussi une region et OSM le tague
+    en admin_level 4, la ou la requete demande 6. Ces departements-la sortent
+    donc en echec, ce que le releve final nomme."""
+    return dep
+
+
+def dedans(point, g):
+    """Le point (lat, lon) tombe-t-il dans l'anneau g ? (lancer de rayon)
+
+    `g` est une liste de couples (lat, lon), comme la rend points(). Sert a
+    savoir si un site du recensement est *a l'interieur* d'un anneau trouve
+    dans OSM : c'est le seul rattachement certain, la distance au centre ne
+    l'etant jamais — Data ES pointe souvent le gymnase plutot que la piste."""
+    if not g or len(g) < 4:
+        return False
+    lat, lon = point
+    if not (min(p[0] for p in g) <= lat <= max(p[0] for p in g)):
+        return False                        # boite englobante, pour aller vite
+    if not (min(p[1] for p in g) <= lon <= max(p[1] for p in g)):
+        return False
+    dans = False
+    for i in range(len(g) - 1):
+        y1, x1 = g[i]
+        y2, x2 = g[i + 1]
+        if (y1 > lat) != (y2 > lat):
+            xi = x1 + (lat - y1) * (x2 - x1) / (y2 - y1)
+            if lon < xi:
+                dans = not dans
+    return dans
+
+
+def charger_sites():
+    """Tous les sites de l'annuaire, departement compris.
+
+    osm_longueurs.charger_sites() prend desormais un departement et filtre
+    dessus ; ce script les veut tous, et trie lui-meme."""
+    with open(TRACKS, encoding="utf-8") as f:
+        data = json.load(f)
+    cle = {v: k for k, v in data["keymap"].items()}
+    champs = ("id", "nom", "ville", "dep", "lat", "lon", "piste",
+              "longueur_piste", "longueur_probable", "couloirs")
+    return [{k: t.get(cle[k]) for k in champs}
+            for t in data["tracks"] if t.get(cle["lat"]) is not None]
+
 BAN = "https://api-adresse.data.gouv.fr/reverse/"
 UA = {"User-Agent": "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"}
 
