@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-drap",
+  "nom": "Piste de Drap",
+  "ville": "Drap",
+  "dep": "06",
+  "lat": 43.76497,
+  "lon": 7.3385,
+  "piste": true,
+  "longueur_probable": 424,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1352937693), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 424 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,2 km, et aucun équipement recensé à moins de 3227 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "06340",
+  "dep_nom": "Alpes-Maritimes",
+  "region": "Provence-Alpes-Côte d'Azur"
+}

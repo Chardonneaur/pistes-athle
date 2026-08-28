@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-bedarrides",
+  "nom": "Piste de Bédarrides",
+  "ville": "Bédarrides",
+  "dep": "84",
+  "lat": 44.04133,
+  "lon": 4.88969,
+  "piste": true,
+  "longueur_probable": 408,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/5370870), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 408 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 4,0 km, et aucun équipement recensé à moins de 4020 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "84370",
+  "dep_nom": "Vaucluse",
+  "region": "Provence-Alpes-Côte d'Azur"
+}

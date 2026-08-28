@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-anse-bertrand",
+  "nom": "Piste de Anse-Bertrand",
+  "ville": "Anse-Bertrand",
+  "dep": "971",
+  "lat": 16.46651,
+  "lon": -61.50993,
+  "piste": true,
+  "longueur_probable": 399,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11593722), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 399 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 22,0 km, et aucun équipement recensé à moins de 6004 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "97121",
+  "dep_nom": "Guadeloupe",
+  "region": "Guadeloupe"
+}

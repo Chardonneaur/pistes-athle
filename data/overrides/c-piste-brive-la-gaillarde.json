@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-brive-la-gaillarde",
+  "nom": "Piste de Brive-la-Gaillarde",
+  "ville": "Brive-la-Gaillarde",
+  "dep": "19",
+  "lat": 45.13261,
+  "lon": 1.54503,
+  "piste": true,
+  "longueur_probable": 401,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/6553740), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 401 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,2 km, et aucun équipement recensé à moins de 3238 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "19100",
+  "dep_nom": "Corrèze",
+  "region": "Nouvelle-Aquitaine"
+}

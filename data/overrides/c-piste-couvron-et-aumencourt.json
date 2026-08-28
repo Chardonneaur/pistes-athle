@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-couvron-et-aumencourt",
+  "nom": "Piste de Couvron-et-Aumencourt",
+  "ville": "Couvron-et-Aumencourt",
+  "dep": "02",
+  "lat": 49.63303,
+  "lon": 3.53565,
+  "piste": true,
+  "longueur_probable": 398,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/2434181), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 9,3 km, et aucun équipement recensé à moins de 2647 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "02270",
+  "dep_nom": "Aisne",
+  "region": "Hauts-de-France"
+}

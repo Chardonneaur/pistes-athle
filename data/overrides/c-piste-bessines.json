@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-bessines",
+  "nom": "Piste de Bessines",
+  "ville": "Bessines",
+  "dep": "79",
+  "lat": 46.29335,
+  "lon": -0.50892,
+  "piste": true,
+  "longueur_probable": 406,
+  "note": "Anneau cartographié dans OpenStreetMap (way/760096487), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 406 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,0 km, et aucun équipement recensé à moins de 2748 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "79000",
+  "dep_nom": "Deux-Sèvres",
+  "region": "Nouvelle-Aquitaine"
+}

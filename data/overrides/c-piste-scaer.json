@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-scaer",
+  "nom": "Piste de Scaër",
+  "ville": "Scaër",
+  "dep": "29",
+  "lat": 48.02407,
+  "lon": -3.71889,
+  "piste": true,
+  "longueur_probable": 423,
+  "note": "Anneau cartographié dans OpenStreetMap (way/967651642), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 423 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 10,3 km, et aucun équipement recensé à moins de 817 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "29390",
+  "dep_nom": "Finistère",
+  "region": "Bretagne"
+}

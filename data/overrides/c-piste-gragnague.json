@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-gragnague",
+  "nom": "Piste de Gragnague",
+  "ville": "Gragnague",
+  "dep": "31",
+  "lat": 43.69474,
+  "lon": 1.57437,
+  "piste": true,
+  "longueur_probable": 474,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1146521089), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 474 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,3 km, et aucun équipement recensé à moins de 3327 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "31380",
+  "dep_nom": "Haute-Garonne",
+  "region": "Occitanie"
+}

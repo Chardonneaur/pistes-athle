@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-colmar",
+  "nom": "Piste de Colmar",
+  "ville": "Colmar",
+  "dep": "68",
+  "lat": 48.09447,
+  "lon": 7.35773,
+  "piste": true,
+  "longueur_probable": 403,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/418740), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 403 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,5 km, et aucun équipement recensé à moins de 2477 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "68000",
+  "dep_nom": "Haut-Rhin",
+  "region": "Grand Est"
+}

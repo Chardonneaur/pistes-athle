@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-caraman",
+  "nom": "Piste de Caraman",
+  "ville": "Caraman",
+  "dep": "31",
+  "lat": 43.5246,
+  "lon": 1.76531,
+  "piste": true,
+  "longueur_probable": 424,
+  "note": "Anneau cartographié dans OpenStreetMap (way/129408173), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 424 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 10,7 km, et aucun équipement recensé à moins de 10719 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "31460",
+  "dep_nom": "Haute-Garonne",
+  "region": "Occitanie"
+}

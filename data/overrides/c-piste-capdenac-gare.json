@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-capdenac-gare",
+  "nom": "Piste de Capdenac-Gare",
+  "ville": "Capdenac-Gare",
+  "dep": "12",
+  "lat": 44.56979,
+  "lon": 2.07628,
+  "piste": true,
+  "longueur_probable": 417,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1367415060), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 417 m. OpenStreetMap y déclare un revêtement « compacted » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 5,7 km, et aucun équipement recensé à moins de 13039 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "12700",
+  "dep_nom": "Aveyron",
+  "region": "Occitanie"
+}

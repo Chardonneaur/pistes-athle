@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-saint-romain-le-puy",
+  "nom": "Piste de Saint-Romain-le-Puy",
+  "ville": "Saint-Romain-le-Puy",
+  "dep": "42",
+  "lat": 45.55906,
+  "lon": 4.11647,
+  "piste": true,
+  "longueur_probable": 416,
+  "note": "Anneau cartographié dans OpenStreetMap (way/786911034), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 416 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 7,3 km, et aucun équipement recensé à moins de 6923 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "42610",
+  "dep_nom": "Loire",
+  "region": "Auvergne-Rhône-Alpes"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-chalons-en-champagne",
+  "nom": "Piste de Châlons-en-Champagne",
+  "ville": "Châlons-en-Champagne",
+  "dep": "51",
+  "lat": 48.97135,
+  "lon": 4.37639,
+  "piste": true,
+  "longueur_probable": 438,
+  "note": "Anneau cartographié dans OpenStreetMap (way/547030443), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 438 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,5 km, et aucun équipement recensé à moins de 401 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "51000",
+  "dep_nom": "Marne",
+  "region": "Grand Est"
+}

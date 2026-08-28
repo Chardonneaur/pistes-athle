@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-montmiral",
+  "nom": "Piste de Montmiral",
+  "ville": "Montmiral",
+  "dep": "26",
+  "lat": 45.17251,
+  "lon": 5.13736,
+  "piste": true,
+  "longueur_probable": 392,
+  "note": "Anneau cartographié dans OpenStreetMap (way/439407002), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 392 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 13,4 km, et aucun équipement recensé à moins de 13165 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "26750",
+  "dep_nom": "Drôme",
+  "region": "Auvergne-Rhône-Alpes"
+}

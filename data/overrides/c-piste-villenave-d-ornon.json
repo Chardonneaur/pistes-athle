@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-villenave-d-ornon",
+  "nom": "Piste de Villenave-d'Ornon",
+  "ville": "Villenave-d'Ornon",
+  "dep": "33",
+  "lat": 44.77108,
+  "lon": -0.58877,
+  "piste": true,
+  "longueur_probable": 410,
+  "note": "Anneau cartographié dans OpenStreetMap (way/375037615), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 410 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,2 km, et aucun équipement recensé à moins de 1351 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "33140",
+  "dep_nom": "Gironde",
+  "region": "Nouvelle-Aquitaine"
+}

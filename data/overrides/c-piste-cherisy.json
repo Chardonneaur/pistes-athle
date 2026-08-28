@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-cherisy",
+  "nom": "Piste de Cherisy",
+  "ville": "Cherisy",
+  "dep": "28",
+  "lat": 48.75092,
+  "lon": 1.4307,
+  "piste": true,
+  "longueur_probable": 409,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/12796447), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 409 m. OpenStreetMap y déclare un revêtement « sand » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 5,6 km, et aucun équipement recensé à moins de 2452 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "28500",
+  "dep_nom": "Eure-et-Loir",
+  "region": "Centre-Val de Loire"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-augny",
+  "nom": "Piste de Augny",
+  "ville": "Augny",
+  "dep": "57",
+  "lat": 49.07005,
+  "lon": 6.11842,
+  "piste": true,
+  "longueur_probable": 412,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/10664502), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 412 m. OpenStreetMap y déclare un revêtement « clay » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,5 km, et aucun équipement recensé à moins de 2467 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "57685",
+  "dep_nom": "Moselle",
+  "region": "Grand Est"
+}

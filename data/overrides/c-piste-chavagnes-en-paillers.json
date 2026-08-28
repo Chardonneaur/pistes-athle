@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-chavagnes-en-paillers",
+  "nom": "Piste de Chavagnes-en-Paillers",
+  "ville": "Chavagnes-en-Paillers",
+  "dep": "85",
+  "lat": 46.88469,
+  "lon": -1.2608,
+  "piste": true,
+  "longueur_probable": 415,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1345232541), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 415 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 8,0 km, et aucun équipement recensé à moins de 7951 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "85250",
+  "dep_nom": "Vendée",
+  "region": "Pays de la Loire"
+}

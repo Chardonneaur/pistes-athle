@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-gerzat",
+  "nom": "Piste de Gerzat",
+  "ville": "Gerzat",
+  "dep": "63",
+  "lat": 45.83117,
+  "lon": 3.15737,
+  "piste": true,
+  "longueur_probable": 398,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/18496886), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 6,2 km, et aucun équipement recensé à moins de 2987 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "63360",
+  "dep_nom": "Puy-de-Dôme",
+  "region": "Auvergne-Rhône-Alpes"
+}

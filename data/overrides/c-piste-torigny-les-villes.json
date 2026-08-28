@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-torigny-les-villes",
+  "nom": "Piste de Torigny-les-Villes",
+  "ville": "Torigny-les-Villes",
+  "dep": "50",
+  "lat": 49.02781,
+  "lon": -0.9734,
+  "piste": true,
+  "longueur_probable": 415,
+  "note": "Anneau cartographié dans OpenStreetMap (way/887803528), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 415 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 12,0 km, et aucun équipement recensé à moins de 5481 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "50160",
+  "dep_nom": "Manche",
+  "region": "Normandie"
+}

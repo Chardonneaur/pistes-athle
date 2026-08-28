@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-le-cannet-des-maures",
+  "nom": "Piste de Le Cannet-des-Maures",
+  "ville": "Le Cannet-des-Maures",
+  "dep": "83",
+  "lat": 43.38088,
+  "lon": 6.38154,
+  "piste": true,
+  "longueur_probable": 423,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1422858156), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 423 m. OpenStreetMap y déclare un revêtement « tartan » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 17,4 km, et aucun équipement recensé à moins de 5430 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "83340",
+  "dep_nom": "Var",
+  "region": "Provence-Alpes-Côte d'Azur"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-saint-pourcain-sur-sioule",
+  "nom": "Piste de Saint-Pourçain-sur-Sioule",
+  "ville": "Saint-Pourçain-sur-Sioule",
+  "dep": "03",
+  "lat": 46.31298,
+  "lon": 3.29549,
+  "piste": true,
+  "longueur_probable": 401,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11106880), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 401 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 8,5 km, et aucun équipement recensé à moins de 8515 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "03500",
+  "dep_nom": "Allier",
+  "region": "Auvergne-Rhône-Alpes"
+}
