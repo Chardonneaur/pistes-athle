@@ -55,14 +55,22 @@ PAUSE = 1.5                # secondes entre deux requetes : on visite un bien co
 
 
 def code_osm(dep):
-    """Le code que porte le departement dans OSM, sous `ref:INSEE`.
+    """Les codes que porte le departement dans OSM, sous `ref:INSEE`.
 
-    C'est le code du departement tel quel — « 74 », « 2A », « 971 ». La
-    fonction existe pour que la requete lise bien, et pour porter cette
-    reserve : outre-mer, le departement est aussi une region et OSM le tague
-    en admin_level 4, la ou la requete demande 6. Ces departements-la sortent
-    donc en echec, ce que le releve final nomme."""
-    return dep
+    Une liste, et non un code, parce qu'un departement n'est pas toujours une
+    aire. Le Rhone n'en a plus depuis 2015 : la loi MAPTAM a detache la
+    Metropole de Lyon du departement, et OSM tague les deux moities « 69D » et
+    « 69M » — aucune aire ne porte « 69 ». La requete demandait donc une aire
+    inexistante, ce qu'Overpass ne traite pas comme une erreur : il rend un jeu
+    vide, en HTTP 200. Lyon, Villeurbanne et Venissieux sortaient du balayage
+    sans un mot au journal, sous une ligne de releve a zero.
+
+    Meme reserve qu'avant pour l'outre-mer : le departement y est aussi une
+    region et OSM le tague en admin_level 4, la ou la requete demande 6. Ces
+    departements-la sortent en echec ou a vide, ce que le releve final nomme.
+    On ne peut pas y remedier en acceptant l'admin_level 4 partout : en
+    metropole, « 11 » designe alors l'Occitanie plutot que l'Aude."""
+    return ["69D", "69M"] if dep == "69" else [dep]
 
 
 def dedans(point, g):
@@ -208,15 +216,30 @@ def interroger(dep, cache=None, silencieux=False):
 
     Meme prudence que dans osm_longueurs.py : le cache rend la campagne
     reprenable, et on reessaie plutot que d'abandonner un departement sur un
-    Overpass surcharge."""
+    Overpass surcharge.
+
+    Une reponse vide n'est jamais mise en cache. Sur un departement peuple,
+    zero objet dit qu'une requete n'a pas trouve son aire, pas qu'un
+    territoire est sans anneau ; la figer ferait passer le defaut pour un
+    resultat a chaque reprise de la campagne. Une petite collectivite d'outre-
+    mer peut, elle, etre vide pour de bon : on la reinterroge alors a chaque
+    passage, ce qui coute quelques requetes et ne ment jamais."""
     if cache and os.path.exists(cache):
         with open(cache, encoding="utf-8") as f:
-            return json.load(f)
-    data = overpass(REQUETE % code_osm(dep), quoi=f"({dep}) ")
+            data = json.load(f)
+        if data.get("elements"):
+            return data
+    data, vus = {"elements": []}, set()
+    for code in code_osm(dep):
+        for e in overpass(REQUETE % code, quoi=f"({dep}) ")["elements"]:
+            cle = (e.get("type"), e.get("id"))   # deux aires peuvent se recouvrir
+            if cle not in vus:
+                vus.add(cle)
+                data["elements"].append(e)
     if not silencieux:
         print(f"-> {len(data['elements'])} objets OSM recus")
-    if cache:
-        os.makedirs(os.path.dirname(cache), exist_ok=True)
+    if cache and data["elements"]:
+        os.makedirs(os.path.dirname(os.path.abspath(cache)), exist_ok=True)
         with open(cache, "w", encoding="utf-8") as f:
             json.dump(data, f)
     return data
@@ -586,7 +609,7 @@ def main():
     for s in tous_sites:
         par_dep.setdefault(s.get("dep"), []).append(s)
 
-    absents, echecs, ecartes = [], [], {}
+    absents, echecs, muets, ecartes = [], [], [], {}
     total_anneaux = total_connus = 0
     for i, dep in enumerate(deps, 1):
         cache = args.cache or (os.path.join(args.cache_dir, f"{dep}.json")
@@ -598,6 +621,8 @@ def main():
             echecs.append(dep)
             print(f"[{i:3d}/{len(deps)}] {dep:>4} : echec - {str(exc)[:60]}")
             continue
+        if not data["elements"]:
+            muets.append(dep)
         groupes, connus, manquants = examiner(
             dep, par_dep.get(dep, []), data, args.rayon, args.min, args.max, ecartes)
         total_anneaux += len(groupes)
@@ -642,6 +667,12 @@ def main():
             print(f"        {exemples}")
     if echecs:
         print(f"  departements en echec : {', '.join(echecs)}")
+    if muets:
+        print(f"\n  {len(muets)} departement(s) sans un seul objet OSM : "
+              f"{', '.join(muets)}\n"
+              f"  Un departement peuple ne l'est jamais : c'est la requete qui\n"
+              f"  n'a pas trouve son aire. Verifiez le `ref:INSEE` dans OSM avant\n"
+              f"  de lire ce releve comme une couverture complete.")
     if args.json:
         os.makedirs(os.path.dirname(os.path.abspath(args.json)), exist_ok=True)
         with open(args.json, "w", encoding="utf-8") as f:
