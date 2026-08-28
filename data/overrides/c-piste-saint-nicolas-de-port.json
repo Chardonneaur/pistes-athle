@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-saint-nicolas-de-port",
+  "nom": "Piste de Saint-Nicolas-de-Port",
+  "ville": "Saint-Nicolas-de-Port",
+  "dep": "54",
+  "lat": 48.63228,
+  "lon": 6.28734,
+  "piste": true,
+  "longueur_probable": 398,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/8457844), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 9,1 km, et aucun équipement recensé à moins de 4847 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "54210",
+  "dep_nom": "Meurthe-et-Moselle",
+  "region": "Grand Est"
+}

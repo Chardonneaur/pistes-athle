@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-mimizan",
+  "nom": "Piste de Mimizan",
+  "ville": "Mimizan",
+  "dep": "40",
+  "lat": 44.20129,
+  "lon": -1.22059,
+  "piste": true,
+  "longueur_probable": 412,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/12803818), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 412 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 20,9 km, et aucun équipement recensé à moins de 20888 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "40200",
+  "dep_nom": "Landes",
+  "region": "Nouvelle-Aquitaine"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-aurillac",
+  "nom": "Piste de Aurillac",
+  "ville": "Aurillac",
+  "dep": "15",
+  "lat": 44.93508,
+  "lon": 2.44135,
+  "piste": true,
+  "longueur_probable": 391,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/12926085), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 391 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,7 km, et aucun équipement recensé à moins de 842 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "15000",
+  "dep_nom": "Cantal",
+  "region": "Auvergne-Rhône-Alpes"
+}

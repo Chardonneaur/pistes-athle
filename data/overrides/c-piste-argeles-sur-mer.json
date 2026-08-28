@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-argeles-sur-mer",
+  "nom": "Piste de Argelès-sur-Mer",
+  "ville": "Argelès-sur-Mer",
+  "dep": "66",
+  "lat": 42.54858,
+  "lon": 3.03199,
+  "piste": true,
+  "longueur_probable": 396,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11719881), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 396 m. OpenStreetMap y déclare un revêtement « compacted » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,0 km, et aucun équipement recensé à moins de 3033 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "66700",
+  "dep_nom": "Pyrénées-Orientales",
+  "region": "Occitanie"
+}

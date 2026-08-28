@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-val-d-erdre-auxence",
+  "nom": "Piste de Val d'Erdre-Auxence",
+  "ville": "Val d'Erdre-Auxence",
+  "dep": "49",
+  "lat": 47.51756,
+  "lon": -0.87828,
+  "piste": true,
+  "longueur_probable": 432,
+  "note": "Anneau cartographié dans OpenStreetMap (way/149944440), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 432 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 17,3 km, et aucun équipement recensé à moins de 12235 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "49370",
+  "dep_nom": "Maine-et-Loire",
+  "region": "Pays de la Loire"
+}

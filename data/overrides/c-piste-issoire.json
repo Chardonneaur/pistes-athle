@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-issoire",
+  "nom": "Piste de Issoire",
+  "ville": "Issoire",
+  "dep": "63",
+  "lat": 45.52764,
+  "lon": 3.2489,
+  "piste": true,
+  "longueur_probable": 424,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1302895384), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 424 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,5 km, et aucun équipement recensé à moins de 2082 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "63500",
+  "dep_nom": "Puy-de-Dôme",
+  "region": "Auvergne-Rhône-Alpes"
+}

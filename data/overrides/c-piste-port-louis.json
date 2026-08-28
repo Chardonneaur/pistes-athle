@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-port-louis",
+  "nom": "Piste de Port-Louis",
+  "ville": "Port-Louis",
+  "dep": "971",
+  "lat": 16.41786,
+  "lon": -61.52751,
+  "piste": true,
+  "longueur_probable": 398,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11593721), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 16,7 km, et aucun équipement recensé à moins de 1426 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "97117",
+  "dep_nom": "Guadeloupe",
+  "region": "Guadeloupe"
+}

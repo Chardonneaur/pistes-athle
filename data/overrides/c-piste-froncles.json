@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-froncles",
+  "nom": "Piste de Froncles",
+  "ville": "Froncles",
+  "dep": "52",
+  "lat": 48.30507,
+  "lon": 5.14247,
+  "piste": true,
+  "longueur_probable": 407,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11156372), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 407 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 11,2 km, et aucun équipement recensé à moins de 5591 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "52320",
+  "dep_nom": "Haute-Marne",
+  "region": "Grand Est"
+}

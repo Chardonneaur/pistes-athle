@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-nouan-le-fuzelier",
+  "nom": "Piste de Nouan-le-Fuzelier",
+  "ville": "Nouan-le-Fuzelier",
+  "dep": "41",
+  "lat": 47.54626,
+  "lon": 2.03045,
+  "piste": true,
+  "longueur_probable": 435,
+  "note": "Anneau cartographié dans OpenStreetMap (way/293971177), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 435 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 13,0 km, et aucun équipement recensé à moins de 13030 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "41600",
+  "dep_nom": "Loir-et-Cher",
+  "region": "Centre-Val de Loire"
+}

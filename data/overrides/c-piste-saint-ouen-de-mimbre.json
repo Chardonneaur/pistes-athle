@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-saint-ouen-de-mimbre",
+  "nom": "Piste de Saint-Ouen-de-Mimbré",
+  "ville": "Saint-Ouen-de-Mimbré",
+  "dep": "72",
+  "lat": 48.29031,
+  "lon": 0.03003,
+  "piste": true,
+  "longueur_probable": 422,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1117404156), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 422 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 13,9 km, et aucun équipement recensé à moins de 904 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "72130",
+  "dep_nom": "Sarthe",
+  "region": "Pays de la Loire"
+}

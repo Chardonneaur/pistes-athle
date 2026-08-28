@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-pleneuf-val-andre",
+  "nom": "Piste de Pléneuf-Val-André",
+  "ville": "Pléneuf-Val-André",
+  "dep": "22",
+  "lat": 48.58648,
+  "lon": -2.53032,
+  "piste": true,
+  "longueur_probable": 398,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/11011458), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 12,6 km, et aucun équipement recensé à moins de 10073 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "22370",
+  "dep_nom": "Côtes-d'Armor",
+  "region": "Bretagne"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-ansac-sur-vienne",
+  "nom": "Piste de Ansac-sur-Vienne",
+  "ville": "Ansac-sur-Vienne",
+  "dep": "16",
+  "lat": 46.00671,
+  "lon": 0.66274,
+  "piste": true,
+  "longueur_probable": 397,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1194479742), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 397 m. OpenStreetMap y déclare un revêtement « grass » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 21,8 km, et aucun équipement recensé à moins de 585 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "16500",
+  "dep_nom": "Charente",
+  "region": "Nouvelle-Aquitaine"
+}

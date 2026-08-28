@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-la-bathie",
+  "nom": "Piste de La Bâthie",
+  "ville": "La Bâthie",
+  "dep": "73",
+  "lat": 45.618,
+  "lon": 6.44594,
+  "piste": true,
+  "longueur_probable": 397,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/17640369), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 397 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 7,8 km, et aucun équipement recensé à moins de 7627 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "73540",
+  "dep_nom": "Savoie",
+  "region": "Auvergne-Rhône-Alpes"
+}

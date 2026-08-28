@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-fraize",
+  "nom": "Piste de Fraize",
+  "ville": "Fraize",
+  "dep": "88",
+  "lat": 48.18654,
+  "lon": 6.99542,
+  "piste": true,
+  "longueur_probable": 413,
+  "note": "Anneau cartographié dans OpenStreetMap (way/168952742), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 413 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 10,8 km, et aucun équipement recensé à moins de 9581 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "88230",
+  "dep_nom": "Vosges",
+  "region": "Grand Est"
+}

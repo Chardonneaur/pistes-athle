@@ -31,6 +31,25 @@ PHOTOS_DIR = os.path.join(ROOT, "data", "photos")
 
 ID_RE = re.compile(r"^(I[0-9A-Z]{9,}|c-[a-z0-9-]{3,60})$")
 
+# Une boite par territoire, et non une seule pour tous. Le controle d'avant
+# tenait en une ligne — 41 <= lat <= 52 et -62 <= lon <= 56 — qui prenait la
+# latitude de la metropole et la longitude de la Guadeloupe a La Reunion : le
+# produit des deux ne decrit aucune terre francaise, place La Reunion en Asie
+# centrale et refusait tout l'outre-mer, que son propre message annoncait
+# pourtant couvrir. Aucune contribution ultramarine n'aurait pu etre acceptee.
+TERRITOIRES = {
+    "metropole": (41.3, 51.2, -5.2, 9.6),
+    "guadeloupe-martinique-saint-martin": (14.3, 18.2, -63.2, -60.7),
+    "guyane": (2.0, 6.0, -54.7, -51.5),
+    "reunion": (-21.4, -20.8, 55.2, 55.9),
+    "mayotte": (-13.1, -12.6, 45.0, 45.4),
+    "saint-pierre-et-miquelon": (46.7, 47.2, -56.5, -56.1),
+    "polynesie": (-28.0, -7.8, -154.8, -134.4),
+    "nouvelle-caledonie": (-22.8, -18.0, 162.4, 168.2),
+    "wallis-et-futuna": (-14.4, -13.2, -178.3, -176.1),
+}
+
+
 errors = []
 
 
@@ -130,7 +149,8 @@ def check(fn, rec):
         err(fn, "lat et lon doivent etre fournis ensemble")
     if lat is not None and not (-90 <= lat <= 90 and -180 <= lon <= 180):
         err(fn, "coordonnees hors limites")
-    if lat is not None and not (41 <= lat <= 52 and -62 <= lon <= 56):
+    if lat is not None and not any(a <= lat <= b and c <= lon <= d
+                                   for a, b, c, d in TERRITOIRES.values()):
         err(fn, f"coordonnees ({lat}, {lon}) hors de France et outre-mer : "
                 f"lat et lon sont-ils inverses ?")
 

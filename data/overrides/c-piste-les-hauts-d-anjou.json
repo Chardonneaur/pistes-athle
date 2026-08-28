@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-les-hauts-d-anjou",
+  "nom": "Piste de Les Hauts-d'Anjou",
+  "ville": "Les Hauts-d'Anjou",
+  "dep": "49",
+  "lat": 47.67895,
+  "lon": -0.49861,
+  "piste": true,
+  "longueur_probable": 453,
+  "note": "Anneau cartographié dans OpenStreetMap (way/266867991), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 453 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 7,6 km, et aucun équipement recensé à moins de 7564 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "49330",
+  "dep_nom": "Maine-et-Loire",
+  "region": "Pays de la Loire"
+}

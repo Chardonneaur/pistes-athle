@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-le-plessis-pate",
+  "nom": "Piste de Le Plessis-Pâté",
+  "ville": "Le Plessis-Pâté",
+  "dep": "91",
+  "lat": 48.59676,
+  "lon": 2.34693,
+  "piste": true,
+  "longueur_probable": 415,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1107152191), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 415 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,8 km, et aucun équipement recensé à moins de 2758 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "91220",
+  "dep_nom": "Essonne",
+  "region": "Île-de-France"
+}

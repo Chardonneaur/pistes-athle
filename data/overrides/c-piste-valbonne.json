@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-valbonne",
+  "nom": "Piste de Valbonne",
+  "ville": "Valbonne",
+  "dep": "06",
+  "lat": 43.61795,
+  "lon": 7.04414,
+  "piste": true,
+  "longueur_probable": 397,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/17428874), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 397 m. OpenStreetMap y déclare 6 couloirs et un revêtement « tartan » ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 7,6 km, et aucun équipement recensé à moins de 969 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "06560",
+  "dep_nom": "Alpes-Maritimes",
+  "region": "Provence-Alpes-Côte d'Azur"
+}

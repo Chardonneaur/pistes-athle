@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-chavanod",
+  "nom": "Piste de Chavanod",
+  "ville": "Chavanod",
+  "dep": "74",
+  "lat": 45.8823,
+  "lon": 6.05442,
+  "piste": true,
+  "longueur_probable": 399,
+  "note": "Anneau cartographié dans OpenStreetMap (way/1179983243), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 399 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 3,2 km, et aucun équipement recensé à moins de 3221 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "74650",
+  "dep_nom": "Haute-Savoie",
+  "region": "Auvergne-Rhône-Alpes"
+}

@@ -1,0 +1,14 @@
+{
+  "id": "c-piste-lannemezan",
+  "nom": "Piste de Lannemezan",
+  "ville": "Lannemezan",
+  "dep": "65",
+  "lat": 43.12646,
+  "lon": 0.38852,
+  "piste": true,
+  "longueur_probable": 400,
+  "note": "Anneau cartographié dans OpenStreetMap (relation/3159250), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 400 m. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 20,3 km, et aucun équipement recensé à moins de 12756 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "cp": "65300",
+  "dep_nom": "Hautes-Pyrénées",
+  "region": "Occitanie"
+}
