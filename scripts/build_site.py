@@ -20,7 +20,7 @@ import math
 import os
 import urllib.error
 import urllib.request
-from urllib.parse import quote_plus, urlsplit
+from urllib.parse import quote_plus, urlencode, urlsplit
 import re
 import shutil
 import unicodedata
@@ -32,6 +32,7 @@ from build_api import DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD, SURFACE_EN, slug
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
+A_VERIFIER = os.path.join(ROOT, "data", "a-verifier.json")
 
 # URL ecrite en dur dans index.html ; remplacee partout si --url differe.
 URL_DEFAUT = "https://pistes-athle.com"
@@ -131,6 +132,7 @@ T = {
         "seg_index": "departements", "seg_contrib": "contributeurs",
         "seg_pistes": "pistes", "seg_ville": "ville",
         "seg_prive": "confidentialite",
+        "seg_verif": "anneaux-a-verifier",
         "marque": "Où s'entraîner ?",
         "bascule": "English", "bascule_code": "EN",
         "accueil": "Accueil",
@@ -190,6 +192,29 @@ T = {
         "voir_carte": "Voir la carte interactive",
         "voir_dep_carte": "Voir ces sites sur la carte",
         "annuaire": "Annuaire par département",
+        "verif_titre": "Anneaux à vérifier",
+        "verif_desc": "Des anneaux de course cartographiés dans OpenStreetMap, absents "
+                      "du recensement du ministère, et que personne n'a encore vérifiés. "
+                      "Dites-nous si c'en est une.",
+        "verif_intro": "Ces anneaux ne sont pas des pistes : ce sont des candidats. Un "
+                       "balayage a comparé les anneaux de course cartographiés dans "
+                       "OpenStreetMap aux équipements que le ministère recense, et ceux-ci "
+                       "ne figurent nulle part. Mais un anneau peut être un circuit de "
+                       "karting, une piste de BMX, un anneau d'entraînement hippique, ou "
+                       "le tracé de quelque chose qui n'existe plus. Personne n'y est allé.",
+        "verif_appel": "Vous connaissez le lieu ? Votre réponse tranche.",
+        "verif_appel_texte": "Un « non » vaut autant qu'un « oui » : il retire du bruit de "
+                             "la liste et évite à quelqu'un de se déplacer pour rien. La "
+                             "vue aérienne suffit souvent ; habiter à côté suffit toujours.",
+        "verif_bouton": "Est-ce une piste ?",
+        "verif_osm": "Voir dans OpenStreetMap",
+        "verif_nb": lambda n: f"{n} anneau{'x' if n > 1 else ''} à vérifier",
+        "verif_dep_nb": lambda n: f"{n} anneau{'x' if n > 1 else ''}",
+        "verif_perimetre": lambda m: f"périmètre tracé d'environ {m} m",
+        "verif_osm_dit": "OpenStreetMap y déclare",
+        "verif_vue": "Vue aérienne IGN, mise à jour tous les trois ans environ : elle peut "
+                     "montrer un état ancien.",
+        "verif_retour": "Tous les départements",
         "contrib_titre": "Les contributeurs",
         "contrib_desc": "Qui a photographié, noté et corrigé les pistes d'athlétisme "
                         "françaises, et ce que chacun a apporté.",
@@ -257,6 +282,7 @@ T = {
         "seg_index": "departments", "seg_contrib": "contributors",
         "seg_pistes": "tracks", "seg_ville": "city",
         "seg_prive": "privacy",
+        "seg_verif": "loops-to-check",
         "marque": "Where to train?",
         "bascule": "Français", "bascule_code": "FR",
         "accueil": "Home",
@@ -316,6 +342,28 @@ T = {
         "voir_carte": "Open the interactive map",
         "voir_dep_carte": "Show these venues on the map",
         "annuaire": "Browse by department",
+        "verif_titre": "Loops to check",
+        "verif_desc": "Running loops mapped in OpenStreetMap, missing from the French "
+                      "ministry's census, that nobody has verified yet. Tell us whether "
+                      "they are tracks.",
+        "verif_intro": "These loops are not tracks: they are candidates. A sweep compared "
+                       "the running loops mapped in OpenStreetMap with the facilities the "
+                       "French ministry lists, and these appear nowhere. But a loop can be "
+                       "a karting circuit, a BMX track, a horse-training ring, or the trace "
+                       "of something long gone. Nobody has been there.",
+        "verif_appel": "You know the place? Your answer settles it.",
+        "verif_appel_texte": "A \u201cno\u201d is worth as much as a \u201cyes\u201d: it "
+                             "removes noise from the list and spares someone a wasted trip. "
+                             "The aerial view is often enough; living nearby always is.",
+        "verif_bouton": "Is it a running track?",
+        "verif_osm": "View in OpenStreetMap",
+        "verif_nb": lambda n: f"{n} loop{'s' if n > 1 else ''} to check",
+        "verif_dep_nb": lambda n: f"{n} loop{'s' if n > 1 else ''}",
+        "verif_perimetre": lambda m: f"traced perimeter of about {m} m",
+        "verif_osm_dit": "OpenStreetMap declares",
+        "verif_vue": "IGN aerial view, refreshed roughly every three years: it may show an "
+                     "older state.",
+        "verif_retour": "All departments",
         "contrib_titre": "Contributors",
         "contrib_desc": "Who photographed, rated and corrected France's athletics tracks, "
                         "and what each of them added.",
@@ -408,6 +456,11 @@ def url_contrib(lang):
 
 def url_prive(lang):
     return f"{T[lang]['prefixe']}{T[lang]['seg_prive']}/"
+
+
+def url_verif(lang, code=None):
+    base = f"{T[lang]['prefixe']}{T[lang]['seg_verif']}/"
+    return f"{base}{code.lower()}/" if code else base
 
 
 def url_critere(lang, cle, dep_slug=None):
@@ -753,7 +806,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <meta property="og:url" content="{url_base}/{chemin}">
 {og_image}<meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
-{liens}<link rel="stylesheet" href="{r}assets/page.css?v=13">
+{liens}<link rel="stylesheet" href="{r}assets/page.css?v=14">
 {mesure}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
@@ -769,13 +822,21 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <main class="wrap">"""
 
 
+# Evalue une fois : le pied de page est rendu deux fois par page, sur des
+# dizaines de milliers de pages. Un fork qui n'a pas construit data/a-verifier.json
+# publie le site sans ces pages, et sans un lien qui pointerait dans le vide.
+VERIF_PUBLIEE = os.path.exists(A_VERIFIER)
+
+
 def pied(lang, chemin, url_base, depot):
     r = rel(chemin)
+    verif = (f'\n     <a href="{r}{url_verif(lang)}">{E(T[lang]["verif_titre"])}</a> ·'
+             if VERIF_PUBLIEE else "")
     return f"""
 </main>
 <footer class="wrap src">
   <p><a href="{r}{url_appli(lang)}">{E(T[lang]['voir_carte'])}</a> ·
-     <a href="{r}{url_index(lang)}">{E(T[lang]['annuaire'])}</a> ·
+     <a href="{r}{url_index(lang)}">{E(T[lang]['annuaire'])}</a> ·{verif}
      <a href="{r}{url_prive(lang)}">{E(T[lang]['prive_titre'])}</a> ·
      <a href="https://github.com/{depot}">{E(T[lang]['code_source'])}</a></p>
 </footer>
@@ -1260,6 +1321,114 @@ def page_contributeurs(communaute, par_id, lang, url_base, depot, maj):
                   f'/blob/master/CONTRIBUTING.md">{E(tr["contrib_appel_lien"])}</a></div>')
     lignes.append(pied(lang, chemin, url_base, depot))
     return "\n".join(lignes)
+
+
+# --------------------------------------------------------------- a verifier
+# Ces anneaux ne sont pas dans l'annuaire, et n'ont rien a y faire tant que
+# personne ne les a vus : une fiche affirme, et il n'y a rien a affirmer ici.
+# Ils vivent donc sur leurs propres pages, ou la question est posee au lieu
+# d'etre tranchee. Le tri visuel de 1 618 anneaux depasse une personne ; il ne
+# depasse pas mille personnes qui connaissent chacune leur commune.
+def vue_candidat(c, largeur=560):
+    """Orthophoto IGN cadree sur l'anneau, servie en direct par la Geoplateforme.
+
+    Aucune image n'est stockee : a 1 618 candidats, le depot aurait double de
+    taille pour des vignettes que personne ne regardera deux fois. Le cadrage
+    suit la taille de l'anneau — un anneau peint de 80 m de tour se perdrait
+    dans le cadre d'un 400 m."""
+    lat, lon = c["lat"], c["lon"]
+    hauteur = round(largeur * 3 / 4)
+    champ = max(150, min(520, round(c.get("longueur", 120) * 2.6 / 10) * 10))
+    dlat = (champ * hauteur / largeur) / 2 / 111132
+    dlon = champ / 2 / (111320 * math.cos(math.radians(lat)))
+    bbox = f"{lat - dlat},{lon - dlon},{lat + dlat},{lon + dlon}"
+    return (f"{IGN_WMS}?SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap"
+            "&LAYERS=HR.ORTHOIMAGERY.ORTHOPHOTOS&STYLES=&CRS=EPSG:4326"
+            f"&BBOX={bbox}&WIDTH={largeur}&HEIGHT={hauteur}&FORMAT=image/jpeg")
+
+
+def lien_verification(c, lang, depot):
+    """Lien vers l'issue GitHub prete a remplir, sur le modele des autres
+    formulaires du site. Le referentiel OSM et la commune sont pre-remplis :
+    ce qui reste a saisir est ce que seul un humain sait."""
+    lieu = c.get("commune") or ""
+    if lieu and c.get("dep"):
+        lieu = f"{lieu} ({c['dep']})"
+    champs = urlencode({
+        "template": "verification.yml",
+        "title": f"[Vérification] {lieu or c['osm']}",
+        "osm": c["osm"],
+        "lieu": lieu,
+    })
+    return f"https://github.com/{depot}/issues/new?{champs}"
+
+
+def page_verification(candidats, lang, url_base, depot, dep=None, deps_noms=None,
+                      par_dep=None):
+    """La liste des anneaux qu'il reste a trancher, pour un departement ou tous."""
+    code = dep[0] if dep else None
+    chemin = url_verif(lang, code)
+    r = rel(chemin)
+    tr = T[lang]
+    alternatives = {l: url_verif(l, code) for l in T}
+    titre = (f"{tr['verif_titre']} — {dep[1]} ({code})" if dep
+             else f"{tr['verif_titre']} — {tr['marque']}")
+    fil = {"@context": "https://schema.org", "@type": "BreadcrumbList",
+           "itemListElement": [
+               {"@type": "ListItem", "position": 1, "name": tr["marque"],
+                "item": f"{url_base}/{url_appli(lang)}"},
+               {"@type": "ListItem", "position": 2, "name": tr["verif_titre"],
+                "item": f"{url_base}/{url_verif(lang)}"}]}
+    if dep:
+        fil["itemListElement"].append(
+            {"@type": "ListItem", "position": 3, "name": f"{dep[1]} ({code})",
+             "item": f"{url_base}/{chemin}"})
+
+    out = [entete(lang, titre, tr["verif_desc"], chemin, alternatives, [fil], url_base,
+                  preconnect=("https://data.geopf.fr",))]
+    out.append(f'<h1>{E(titre if dep else tr["verif_titre"])}</h1>')
+    out.append(f'<p class="lede">{E(tr["verif_intro"])}</p>')
+    out.append(f'<div class="appel"><strong>{E(tr["verif_appel"])}</strong>'
+               f'<p>{E(tr["verif_appel_texte"])}</p></div>')
+
+    if not dep:
+        out.append(f'<p>{E(tr["verif_nb"](len(candidats)))}</p>')
+        out.append('<ul class="liste">')
+        for code_d, liste in sorted(par_dep.items()):
+            nom = deps_noms.get(code_d, code_d)
+            out.append(f'<li><a href="{r}{url_verif(lang, code_d)}">{E(nom)} ({E(code_d)})'
+                       f'<span class="meta">{E(tr["verif_dep_nb"](len(liste)))}</span>'
+                       f'</a></li>')
+        out.append('</ul>')
+        out.append(pied(lang, chemin, url_base, depot))
+        return "\n".join(out)
+
+    out.append(f'<p><a href="{r}{url_verif(lang)}">{E(tr["verif_retour"])}</a></p>')
+    out.append(f'<p class="meta">{E(tr["verif_vue"])}</p>')
+    out.append('<ul class="candidats">')
+    for c in sorted(candidats, key=lambda c: ((c.get("commune") or "").lower(), c["osm"])):
+        dits = []
+        if c.get("couloirs"):
+            dits.append(f'{c["couloirs"]} couloirs' if lang == "fr" else f'{c["couloirs"]} lanes')
+        if c.get("surface"):
+            dits.append(f'« {c["surface"]} »' if lang == "fr" else f'"{c["surface"]}"')
+        dit = f' · {tr["verif_osm_dit"]} {" · ".join(dits)}' if dits else ""
+        lieu = c.get("commune") or c["osm"]
+        alt = (f'Vue aérienne de l\'anneau de {lieu}' if lang == "fr"
+               else f'Aerial view of the loop at {lieu}')
+        out.append(
+            f'<li><img loading="lazy" width="560" height="420" '
+            f'src="{E(vue_candidat(c))}" alt="{E(alt)}">'
+            f'<div class="quoi"><strong>{E(lieu)}</strong>'
+            f'<span class="meta">{E(tr["verif_perimetre"](round(c["perimetre"])))}{E(dit)}</span>'
+            f'<span class="liens">'
+            f'<a class="btn primary" href="{E(lien_verification(c, lang, depot))}" '
+            f'rel="nofollow noopener">{E(tr["verif_bouton"])}</a> '
+            f'<a href="{E(c["url"])}" rel="nofollow noopener">{E(tr["verif_osm"])}</a>'
+            f'</span></div></li>')
+    out.append('</ul>')
+    out.append(pied(lang, chemin, url_base, depot))
+    return "\n".join(out)
 
 
 # ------------------------------------------------------------ confidentialite
@@ -2483,7 +2652,7 @@ def page_404(url_base, total):
 <meta name="robots" content="noindex, follow">
 <meta name="theme-color" content="#0f172a">
 <link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="{url_base}/assets/page.css?v=13">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=14">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="{url_base}/assets/matomo.js?v=3" defer></script>
@@ -2690,6 +2859,16 @@ def main():
     brut, sites, deps = charger()
     maj = brut.get("generated") or date.today().isoformat()
 
+    # Les anneaux qu'il reste a trancher : ils ne sont pas dans l'annuaire et
+    # n'y entreront que quand quelqu'un aura repondu. Le fichier est facultatif
+    # — un fork qui ne l'a pas construit publie le site sans ces pages.
+    a_verifier, verif_par_dep = [], {}
+    if os.path.exists(A_VERIFIER):
+        with open(A_VERIFIER, encoding="utf-8") as f:
+            a_verifier = json.load(f).get("candidats") or []
+        for c in a_verifier:
+            verif_par_dep.setdefault(c.get("dep") or "00", []).append(c)
+
     # Le journal des dates se lit avant l'effacement : la construction locale
     # precedente sert de secours quand le site en ligne est injoignable.
     secours = lire_journal(os.path.join(out, JOURNAL))
@@ -2894,6 +3073,16 @@ def main():
                                   url_base, depot, maj))
         ecrire(os.path.join(out, url_index(lang), "index.html"),
                page_index(deps_tries, len(publiables), lang, url_base, depot, axes))
+        if a_verifier:
+            urls[lang].append((url_verif(lang), "0.6"))
+            ecrire(os.path.join(out, url_verif(lang), "index.html"),
+                   page_verification(a_verifier, lang, url_base, depot,
+                                     deps_noms=noms_dep, par_dep=verif_par_dep))
+            for code_v, liste_v in verif_par_dep.items():
+                ecrire(os.path.join(out, url_verif(lang, code_v), "index.html"),
+                       page_verification(liste_v, lang, url_base, depot,
+                                         dep=(code_v, noms_dep.get(code_v, code_v))))
+                urls[lang].append((url_verif(lang, code_v), "0.5"))
         for code, liste in par_dep.items():
             nom_dep = liste[0].get("dep_nom") or code
             region = liste[0].get("region") or ""
