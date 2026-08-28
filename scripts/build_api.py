@@ -687,7 +687,7 @@ PAGE_HTML = """<!DOCTYPE html>
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="{url_base}/api/tracks/">
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
-<link rel="stylesheet" href="../../assets/page.css?v=13">
+<link rel="stylesheet" href="../../assets/page.css?v=14">
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="../../assets/matomo.js?v=3" defer></script>

@@ -138,3 +138,15 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 
 /* Deux chemins côte à côte : avec compte GitHub, ou sans. */
 .appel .boutons{display:flex;flex-wrap:wrap;gap:9px}
+
+/* Les anneaux a verifier : une vue aerienne, ce qu'OpenStreetMap en dit, et
+   deux liens. Pas une fiche — rien ici n'est affirme, tout est demande. */
+.candidats{list-style:none;padding:0;margin:0;display:grid;gap:16px}
+.candidats li{background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden}
+.candidats img{width:100%;height:auto;display:block;background:var(--line)}
+.candidats .quoi{display:block;padding:11px 13px 13px}
+.candidats .quoi strong{font-size:15.5px}
+.candidats .meta{display:block;font-size:12.5px;color:var(--muted);margin:2px 0 9px}
+.candidats .liens{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13.5px}
+@media (min-width:620px){.candidats{grid-template-columns:repeat(2,1fr)}}
