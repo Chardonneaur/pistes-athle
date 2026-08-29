@@ -1,0 +1,122 @@
+name: Relever la Search Console
+
+# La moitie bete de la boucle : lire ce que Google a vu, en tirer une cle
+# stable, l'ecrire dans la base « pistes-athle-seo ». Aucune fiche n'est
+# touchee ici, aucun message n'est envoye — le jugement est fait separement,
+# par un agent, sur la file que ce releve prepare.
+#
+# Pourquoi tous les jours : Search Console ne sert rien a moins de deux jours
+# de latence (une fenetre d'un jour rend zero ligne), et ne nomme que 16 % des
+# impressions. Ce qu'on ne releve pas aujourd'hui, on ne le retrouve pas.
+
+on:
+  schedule:
+    # 5 h UTC, soit 7 h a Paris en heure d'ete. Les donnees de la veille sont
+    # de toute facon incompletes : l'heure exacte n'a aucune importance.
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+    inputs:
+      jours:
+        description: "Fenetre relevee, en jours"
+        default: "7"
+      simulation:
+        description: "Ne rien ecrire, afficher seulement"
+        type: boolean
+        default: false
+
+# Aucune ecriture dans le depot : ce workflow ne produit qu'une ligne en base.
+permissions:
+  contents: read
+
+concurrency:
+  group: releve-gsc
+  cancel-in-progress: false
+
+jobs:
+  relever:
+    runs-on: ubuntu-latest
+    # Un passage prend quelques secondes. Au-dela, quelque chose est bloque :
+    # mieux vaut echouer que laisser tourner.
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Relever
+        env:
+          GSC_CLIENT_ID: ${{ secrets.GSC_CLIENT_ID }}
+          GSC_CLIENT_SECRET: ${{ secrets.GSC_CLIENT_SECRET }}
+          GSC_REFRESH_TOKEN: ${{ secrets.GSC_REFRESH_TOKEN }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          # Pas un secret : un identifiant de base ne donne acces a rien sans
+          # le jeton. Il est deja en clair dans logs/wrangler.jsonc pour l'autre.
+          CF_DATABASE_ID: 91b914eb-f934-4415-957b-8792487f239e
+        run: |
+          python3 scripts/releve_gsc.py \
+            --jours "${{ inputs.jours || 7 }}" \
+            ${{ inputs.simulation == true && '--simulation' || '' }}
+
+  # Un releve qui s'arrete est invisible : il n'envoie rien meme quand tout va
+  # bien. Sans ce billet, on ne s'apercevrait de la panne qu'en constatant, des
+  # semaines plus tard, que la file ne bouge plus. Meme raisonnement que
+  # l'alerte de « Construire et publier le site ».
+  alerte:
+    needs: relever
+    if: failure()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Signaler que le releve a echoue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create releve-echoue --color B60205 \
+            --description "Le releve Search Console n'a pas tourne" 2>/dev/null || true
+
+          ouvert=$(gh issue list --label releve-echoue --state open \
+                     --limit 1 --json number --jq '.[0].number // empty')
+
+          if [ -n "$ouvert" ]; then
+            gh issue comment "$ouvert" --body "Nouvel echec : $RUN"
+            exit 0
+          fi
+
+          printf '%s\n' \
+            "Le releve quotidien de la Search Console ne s'est pas termine." \
+            "" \
+            "- Execution : $RUN" \
+            "" \
+            "**Rien n'est casse en production** : ce releve n'ecrit que dans la base" \
+            "\`pistes-athle-seo\`, jamais dans le site ni dans les fiches." \
+            "" \
+            "Causes les plus frequentes : le refresh token Google a ete revoque," \
+            "ou le jeton Cloudflare a expire. Le message d'erreur du job le dit." \
+            "" \
+            "Ce qui se perd pendant la panne : les requetes apparues ces jours-la," \
+            "si elles ne reapparaissent pas dans la fenetre de 7 jours au retour." \
+            > corps.md
+
+          gh issue create --label releve-echoue \
+            --title "Le releve Search Console a echoue" --body-file corps.md
+
+  clore:
+    needs: relever
+    if: success()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Refermer un signalement laisse ouvert
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          for n in $(gh issue list --label releve-echoue --state open \
+                       --limit 20 --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "Releve reussi : $RUN"
+          done
