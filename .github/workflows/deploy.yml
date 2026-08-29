@@ -138,6 +138,10 @@ jobs:
       - name: Signaler que la publication a echoue
         env:
           GH_TOKEN: ${{ github.token }}
+          # Sans checkout, gh cherche un depot git dans le repertoire
+          # courant et abandonne. GH_REPO le lui dit sans avoir a cloner :
+          # ces jobs n'ont besoin d'aucun fichier du depot.
+          GH_REPO: ${{ github.repository }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EVENEMENT: ${{ github.event_name }}
           COMMIT: ${{ github.sha }}
@@ -187,6 +191,10 @@ jobs:
       - name: Refermer un signalement laisse ouvert
         env:
           GH_TOKEN: ${{ github.token }}
+          # Sans checkout, gh cherche un depot git dans le repertoire
+          # courant et abandonne. GH_REPO le lui dit sans avoir a cloner :
+          # ces jobs n'ont besoin d'aucun fichier du depot.
+          GH_REPO: ${{ github.repository }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           for n in $(gh issue list --label publication-echouee --state open \

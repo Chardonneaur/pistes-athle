@@ -73,6 +73,10 @@ jobs:
       - name: Signaler que le releve a echoue
         env:
           GH_TOKEN: ${{ github.token }}
+          # Sans checkout, gh cherche un depot git dans le repertoire
+          # courant et abandonne. GH_REPO le lui dit sans avoir a cloner :
+          # ces jobs n'ont besoin d'aucun fichier du depot.
+          GH_REPO: ${{ github.repository }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           gh label create releve-echoue --color B60205 \
@@ -114,6 +118,10 @@ jobs:
       - name: Refermer un signalement laisse ouvert
         env:
           GH_TOKEN: ${{ github.token }}
+          # Sans checkout, gh cherche un depot git dans le repertoire
+          # courant et abandonne. GH_REPO le lui dit sans avoir a cloner :
+          # ces jobs n'ont besoin d'aucun fichier du depot.
+          GH_REPO: ${{ github.repository }}
           RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           for n in $(gh issue list --label releve-echoue --state open \
