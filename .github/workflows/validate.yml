@@ -22,9 +22,36 @@ jobs:
         run: python3 scripts/validate_overrides.py
 
       - name: Vérifier que le site se construit
+        run: python3 scripts/build_data.py
+
+      # Le 29 aout 2026, l'export du portail est tombe a 616 sites sur 7 280,
+      # et variait d'un appel a l'autre. « Construire et publier le site »
+      # portait deja ce controle et a refuse de publier ; celui-ci ne l'avait
+      # pas, et la PR #50 est passee au vert sur un jeu ampute de 43 %.
+      # Une contribution validee sur des donnees partielles ne prouve rien :
+      # la moitie des fiches auxquelles elle se rattache n'est pas la.
+      - name: Vérifier que le jeu de données est plausible
         run: |
-          python3 scripts/build_data.py
-          python3 scripts/build_site.py --out _site
+          python3 - <<'PY'
+          import json, sys
+          d = json.load(open("data/tracks.json"))
+          n = len(d["tracks"])
+          print(f"{n} sites generes")
+          if n < 5000:
+              sys.exit(
+                  f"ERREUR : seulement {n} sites, contre plus de 7 000 attendus.\n"
+                  f"\n"
+                  f"CE N'EST PAS VOTRE CONTRIBUTION : l'etape precedente a valide\n"
+                  f"vos fichiers. C'est l'export du ministere qui est incomplet au\n"
+                  f"moment de cette execution — il l'a deja ete, et il se retablit\n"
+                  f"de lui-meme.\n"
+                  f"\n"
+                  f"Relancez cette verification plus tard (Actions > Re-run jobs).\n"
+                  f"Rien a corriger de votre cote.")
+          PY
+
+      - name: Assembler le site
+        run: python3 scripts/build_site.py --out _site
 
       - name: Résumé
         run: |
