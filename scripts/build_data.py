@@ -451,11 +451,9 @@ def fetch_raw(offline=False):
     # equipement d'athletisme. Filtrer en amont demanderait une clause `in`
     # de 7 000 identifiants, qu'aucune URL ne porte.
     voulues = {e.get("installation_numero") for e in equipements}
-    installations = {
-        i["numero"]: _assainir(i)
-        for i in _export(API_INST, {"select": ",".join(CHAMPS_INST)}, "installations")
-        if i.get("numero") in voulues
-    }
+    toutes = _export(API_INST, {"select": ",".join(CHAMPS_INST)}, "installations")
+    installations = {i["numero"]: _assainir(i)
+                     for i in toutes if i.get("numero") in voulues}
     print(f"   {len(installations)} installations retenues")
 
     data, orphelins = [], 0
@@ -467,6 +465,25 @@ def fetch_raw(offline=False):
         ligne = {ancien: inst.get(neuf) for neuf, ancien in CHAMPS_INST.items()}
         ligne.update({ancien: e.get(neuf) for neuf, ancien in CHAMPS_EQUIP.items()})
         data.append(ligne)
+    # Un equipement dont l'installation a disparu du jeu arrive : les deux
+    # exports sont verifies complets chacun de son cote, mais rien ne verifie
+    # qu'ils se referment l'un sur l'autre. Le 29 aout 2026, 3 530 equipements
+    # sur 9 608 — 37 % — pointaient sur une installation absente des 103 437
+    # recues, et le jeu partait a l'assemblage sans que rien ne s'y oppose.
+    #
+    # Le controle de _export ne pouvait pas le voir : il est par jeu, et la
+    # rupture est relationnelle. Le seuil est ici a 5 %, large parce qu'une
+    # poignee d'installations retirees entre deux exports est normale, et
+    # etroit devant une jointure qui lache.
+    if orphelins > max(20, len(equipements) // 20):
+        raise SystemExit(
+            f"ERREUR : jointure rompue — {orphelins} equipements sur "
+            f"{len(equipements)} ({100 * orphelins / len(equipements):.0f} %) "
+            f"designent une installation absente des {len(toutes)} "
+            f"recues. Les deux exports sont pourtant complets : c'est la "
+            f"cle installation_numero qui ne se referme plus. Rien n'est "
+            f"publie — un annuaire ampute affirmerait l'absence de ce qui "
+            f"n'a pas ete joint.")
     if orphelins:
         print(f"   [!] {orphelins} equipement(s) sans installation, ignore(s)")
     print(f"   {len(data)} equipements d'athletisme recus")
