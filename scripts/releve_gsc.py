@@ -168,7 +168,12 @@ def cible(page):
     if tete in ("ville", "city") and len(parts) > 1:
         return "ville:" + parts[1]
     if tete in ("departement", "department") and len(parts) > 1:
-        return "dep:" + parts[1]
+        # Le site publie « /departement/07/ » et redirige « /departement/7/ »
+        # vers elle ; Google rapporte parfois l'URL non completee. Sans ce
+        # rembourrage, « dep:7 » et « dep:07 » seraient deux questions
+        # distinctes sur un seul departement.
+        code = parts[1]
+        return "dep:" + (code.zfill(2) if code.isdigit() and len(code) < 2 else code)
     if tete == "pistes" and len(parts) > 1:
         return "critere:" + "/".join(parts[1:])
     return "inconnu"

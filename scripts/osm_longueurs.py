@@ -87,7 +87,12 @@ area["ref:INSEE"="%s"]["admin_level"="6"]->.a;
   way["athletics"](area.a);
   relation["athletics"](area.a);
 );
-out geom tags;
+// « out geom » et non « out geom tags » : le mode tags reduit la sortie aux
+// etiquettes et fait perdre les MEMBRES des relations. Les anneaux traces en
+// multipolygone — un contour exterieur, un contour interieur — revenaient
+// alors vides, et etaient silencieusement ignores. Sur le Nord, cela cachait
+// 43 anneaux sur 139, soit trois sites apparies sur dix.
+out geom;
 """
 
 
