@@ -56,8 +56,15 @@ BASE = "pistes-athle-seo"
 MAX_APPELS_GSC = 6          # appels d'API par execution, tout compris
 LIGNES_PAR_APPEL = 25000    # maximum accepte par l'API
 MAX_LIGNES = 50000          # au-dela, on s'arrete et on le dit
-MAX_REQUETES_D1 = 40        # ecritures HTTP vers la base, par execution
-LIGNES_PAR_ECRITURE = 100   # lignes groupees dans une seule requete SQL
+MAX_REQUETES_D1 = 120       # ecritures vers la base, par execution
+
+# L'API D1 refuse plus de 100 parametres lies par requete. Un groupage plus
+# large echoue avec « too many SQL variables » — et seulement sur ce transport,
+# car wrangler interpole les valeurs au lieu de les lier. Le compte se fait
+# donc ici, pas a vue de nez : 9 colonnes par ligne.
+MAX_PARAMS_D1 = 100
+COLONNES_UPSERT = 9
+LIGNES_PAR_ECRITURE = MAX_PARAMS_D1 // COLONNES_UPSERT
 
 JETON_MCP = os.path.expanduser("~/.config/gsc-mcp/token.json")
 
@@ -361,10 +368,9 @@ def main():
 
     db = D1(simulation=args.simulation)
 
-    connues = set()
-    if not args.simulation:
-        for r in db.sql("SELECT cle FROM requetes_gsc"):
-            connues.add(r["cle"])
+    # Meme en simulation : lire ne modifie rien, et sans cette lecture l'essai
+    # a blanc annoncerait chaque clef comme nouvelle, ce qui est faux.
+    connues = {r["cle"] for r in D1().sql("SELECT cle FROM requetes_gsc")}
     neuves = [c for c in cles if c not in connues]
     print(f"           -> {len(neuves)} nouvelles, {len(cles) - len(neuves)} deja connues")
 

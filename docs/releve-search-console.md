@@ -87,6 +87,12 @@ dépassement facturé. Les limites D1 sont de 5 Go de stockage, 5 millions de
 lignes lues et 100 000 écrites par jour ; un passage en écrit quelques
 dizaines, dans une base qui pèse quelques dizaines de kilo-octets.
 
+Les écritures sont groupées par onze lignes : l'API D1 refuse plus de cent
+paramètres liés par requête, et neuf colonnes par ligne en consomment
+quatre-vingt-dix-neuf. Cette limite ne se voit pas en local — `wrangler`
+interpole les valeurs au lieu de les lier — elle n'apparaît qu'à travers
+l'API HTTP.
+
 Le jeton d'API doit être créé avec **la seule permission `D1:Edit`**, et rien
 d'autre : même compromis, il ne donne accès ni au DNS, ni aux Workers, ni au
 domaine.
@@ -107,7 +113,7 @@ chose dérape — une boucle qui se relance, un paramètre erroné.
 |---|---|---|
 | `MAX_APPELS_GSC` | 6 par exécution | 1 |
 | `MAX_LIGNES` | 50 000 | 179 |
-| `MAX_REQUETES_D1` | 40 par exécution | 5 |
+| `MAX_REQUETES_D1` | 120 par exécution | 14 |
 
 ## Mettre en place
 
