@@ -1,5 +1,39 @@
 {
   "id": "I441900011",
+  "surface": "cendree",
   "longueur_probable": 400,
-  "note": "Développement estimé à 400 m d'après le tracé de l'anneau dans OpenStreetMap (w46596667), non mesuré sur place."
+  "eclairage": true,
+  "acces_libre": true,
+  "agres": [
+    "longueur",
+    "perche",
+    "poids"
+  ],
+  "acces_note": "Visite du 29 août 2026, en fin de soirée : le portail était ouvert et on accède à l'anneau sans rien franchir. Il existe donc bien une clôture et un portail, et cette ouverture est celle d'un soir de fin août — elle ne dit rien des créneaux du club ni des périodes de fermeture. Aucun panneau d'horaires ni de règlement n'a été relevé, et rien n'affichait de créneaux réservés. Le club-house et le bâtiment des vestiaires sont bien présents en bord de piste, ainsi qu'une tribune, mais ils n'ont été vus que de l'extérieur : les quatre vestiaires, les douches et les sanitaires que déclare le recensement n'ont pas été vérifiés ouverts. Le site est partagé avec le Saint-Sébastien Football Club, dont le siège est au 1 boulevard des Pas Enchantés et qui utilise le terrain central : une occupation par le football est à prévoir aux heures d'entraînement.",
+  "note": "Visite sur place le 29 août 2026, en fin de soirée. Revêtement confirmé au sol : cendrée, conforme au recensement — un stabilisé rouge, régulier, sans nid-de-poule ni ravinement visible sur le virage parcouru, et manifestement entretenu. C'est une piste en meilleur état que ce que laisse attendre une cendrée de 1993, et le contraste est net avec la cendrée détrempée et envahie d'herbe du Complexe Vertou Centre visitée le même jour.\n\nAucun couloir n'est tracé sur l'anneau : la cendrée est nue, la seule ligne blanche visible sur les photos courant en bord extérieur. On ne peut donc pas y travailler au couloir ni y placer un départ précis, et le recensement ne renseigne d'ailleurs aucun nombre de couloirs.\n\nSur le développement, rien n'a été mesuré sur place, ni au décamètre ni à la montre. La fiche conserve l'estimation de 400 m tirée du tracé de l'anneau dans OpenStreetMap (w46596667), et le recensement ne donne aucune longueur. L'anneau paraît de dimension normale à l'œil, ce qui n'est pas une mesure : un relevé au décamètre en couloir 1, à 30 cm de la bordure, reste à faire.\n\nL'anneau est en plein air, tracé autour d'un terrain de football en gazon tondu et en bon état, avec ses buts en place. Une clôture bois à lisses puis une barrière métallique séparent la piste du parking et des bâtiments. Des mâts d'éclairage sont en place le long de l'anneau, ce qui confirme l'éclairage déclaré au recensement ; ils n'ont pas été vus allumés. Une tribune et un club-house bordent le terrain, conformes aux 200 places et aux vestiaires déclarés.\n\nTrois agrès ont été vus. Le saut en longueur dispose d'une fosse de sable rectangulaire et large, bordée d'une bavette caoutchouc noire, sable en place et propre, avec une aire en enrobé marquée de repères clairs qui lui sert d'élan. Le sautoir à la perche est du type ancien : le tapis est rangé dans un abri en bois à toit bleu posé en bord de fosse, il faut donc l'en sortir pour sauter — l'agrès existe, mais il n'est pas prêt à l'emploi. Le lancer du poids dispose de deux aires distinctes, matérialisées par deux dalles béton implantées dans l'herbe hors de l'anneau : cercles peints en blanc, lignes de secteur tracées au sol, et un butoir blanc posé — non fixé — sur l'une des dalles le soir de la visite. Aucune cage de disque ou de marteau, aucun couloir de javelot, aucune rivière de steeple, aucun sautoir en hauteur, aucune planche de triple n'ont été repérés. Le recensement ne déclarait jusqu'ici aucun agrès nommé pour ce site, seulement une « aire de saut » indéterminée.\n\nContexte : le stade est en bord de Loire, boulevard des Pas Enchantés, face à l'extrémité est de l'île de Nantes. Il est partagé avec le Saint-Sébastien Football Club, qui en fait l'un de ses trois terrains.",
+  "photos": [
+    {
+      "fichier": "01-virage-cendree-terrain-de-football-stade-rene-masse-saint-sebastien-sur-loire.jpg",
+      "legende": "Le virage en fin de journée : cendrée rouge régulière et sans couloir tracé, terrain de football en gazon au centre, clôture bois puis club-house et clocher du bourg en fond",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "02-fosse-saut-longueur-et-abri-du-tapis-de-perche-stade-rene-masse-saint-sebastien-sur-loire.jpg",
+      "legende": "La fosse de saut en longueur, large et bordée d'une bavette caoutchouc noire, l'aire d'élan en enrobé marquée à gauche, et l'abri en bois à toit bleu où est rangé le tapis du sautoir à la perche",
+      "credit": "Ronan Chardonneau"
+    },
+    {
+      "fichier": "03-aires-de-lancer-du-poids-stade-rene-masse-saint-sebastien-sur-loire.jpg",
+      "legende": "Les deux aires de lancer du poids, dalles béton implantées dans l'herbe hors de l'anneau : cercles peints, lignes de secteur au sol et butoir blanc simplement posé sur la dalle de gauche",
+      "credit": "Ronan Chardonneau"
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan Chardonneau",
+      "date": "2026-08-29",
+      "note": 4,
+      "texte": "Belle surprise. Je m'attendais à une vieille cendrée fatiguée et j'ai trouvé un anneau régulier, propre et manifestement entretenu, autour d'un terrain de football en bon état. J'ai visité une autre cendrée le même jour, sous la pluie, et la comparaison tourne nettement à l'avantage de celle-ci. Elle doit faire 400 m, sans que je l'aie mesurée. Il n'y a aucun couloir tracé : c'est parfait pour du footing et on peut tout à fait y faire du fractionné, mais ne comptez pas y chronométrer quoi que ce soit de précis. Bon point pour les agrès, rares sur ce genre de site : un sautoir à la perche à l'ancienne dont le tapis est rangé dans un abri en bois, une belle fosse de saut en longueur avec son sable en place, et deux aires de lancer du poids sur dalle béton dans l'herbe. De quoi faire découvrir les sauts et les lancers. Le portail était ouvert le soir de ma visite ; le stade sert aussi au club de foot, donc à prévoir selon les créneaux."
+    }
+  ]
 }
