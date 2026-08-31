@@ -41,13 +41,21 @@ import math
 import os
 import re
 import sys
+import time
 import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
 OVERRIDES = os.path.join(ROOT, "data", "overrides")
-OVERPASS = "https://overpass-api.de/api/interpreter"
+# Overpass rend regulierement des 504 quand il est charge : sur un balayage de
+# la France entiere, un departement sur trois se perdait ainsi. Ce ne sont pas
+# des refus, ce sont des attentes — la meme requete passe quelques secondes plus
+# tard. Deux miroirs, essayes dans l'ordre, et trois tentatives par miroir.
+OVERPASS = ("https://overpass-api.de/api/interpreter",
+            "https://overpass.kumi.systems/api/interpreter")
+TENTATIVES = 3
+ATTENTE = 20          # secondes, doublees a chaque echec
 
 # Developpements normalises rencontres sur le terrain.
 NORMALISES = (200, 250, 300, 333, 400)
@@ -122,11 +130,34 @@ def interroger(dep, cache=None):
         print(f"-> lecture du cache {cache}")
         with open(cache, encoding="utf-8") as f:
             return json.load(f)
-    req = urllib.request.Request(
-        OVERPASS, data=urllib.parse.urlencode({"data": REQUETE % dep}).encode(),
-        headers={"User-Agent": "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"})
-    with urllib.request.urlopen(req, timeout=280) as r:
-        data = json.load(r)
+    charge = urllib.parse.urlencode({"data": REQUETE % dep}).encode()
+    entetes = {"User-Agent": "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"}
+    data = dernier = None
+    for miroir in OVERPASS:
+        for essai in range(1, TENTATIVES + 1):
+            try:
+                req = urllib.request.Request(miroir, data=charge, headers=entetes)
+                with urllib.request.urlopen(req, timeout=280) as r:
+                    data = json.load(r)
+                break
+            except (urllib.error.HTTPError, urllib.error.URLError,
+                    TimeoutError, json.JSONDecodeError) as exc:
+                dernier = exc
+                code = getattr(exc, "code", None)
+                # 400 = la requete elle-meme est fautive, 404 = pas de zone :
+                # reessayer ne changera rien, et masquerait l'erreur.
+                if code in (400, 404):
+                    raise
+                pause = ATTENTE * 2 ** (essai - 1)
+                print(f"   {type(exc).__name__} {code or ''} sur {urllib.parse.urlsplit(miroir).netloc}"
+                      f" — tentative {essai}/{TENTATIVES}, nouvelle dans {pause} s")
+                if essai < TENTATIVES:
+                    time.sleep(pause)
+        if data is not None:
+            break
+    if data is None:
+        raise SystemExit(f"Overpass injoignable pour le departement {dep} apres "
+                         f"{TENTATIVES} tentatives sur {len(OVERPASS)} miroirs : {dernier}")
     print(f"-> {len(data['elements'])} objets OSM recus")
     if cache:
         with open(cache, "w", encoding="utf-8") as f:
