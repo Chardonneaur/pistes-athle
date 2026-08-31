@@ -2,6 +2,12 @@
   "id": "I441090180",
   "lat": 47.20973,
   "lon": -1.53276,
-  "agres_probables": ["longueur", "poids", "disque", "marteau"],
-  "note": "Coordonnées du ministère corrigées : elles pointaient sur un bâtiment à 135 m de la piste. Agrès déduits d'OpenStreetMap et de la cage de lancer visible sur l'orthophoto IGN. Non vérifié sur place."
+  "agres_probables": [
+    "longueur",
+    "poids",
+    "disque",
+    "marteau"
+  ],
+  "note": "Coordonnées du ministère corrigées : elles pointaient sur un bâtiment à 135 m de la piste. Agrès déduits d'OpenStreetMap et de la cage de lancer visible sur l'orthophoto IGN. Non vérifié sur place. 8 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r1632596), non comptés sur place.",
+  "couloirs": 8
 }

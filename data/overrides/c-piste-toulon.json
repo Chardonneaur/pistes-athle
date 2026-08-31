@@ -7,8 +7,9 @@
   "lon": 5.91831,
   "piste": true,
   "longueur_probable": 398,
-  "note": "Anneau cartographié dans OpenStreetMap (relation/6173736), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. OpenStreetMap y déclare 6 couloirs ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,0 km, et aucun équipement recensé à moins de 506 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés.",
+  "note": "Anneau cartographié dans OpenStreetMap (relation/6173736), puis lu sur la vue aérienne IGN : un anneau de course fermé, d'un périmètre tracé d'environ 398 m. OpenStreetMap y déclare 6 couloirs ; ce sont les mots d'un contributeur, que personne n'a vérifiés sur place. Ce chiffre est le périmètre du tracé, pas un développement : celui-ci se mesure à 30 cm de la lice, jamais sur le bord extérieur de l'anneau, et rien ne dit par où passe le trait d'un contributeur. Site absent du recensement du ministère : aucune piste déclarée à moins de 2,0 km, et aucun équipement recensé à moins de 506 m. Rien n'a été vérifié sur place : le revêtement, l'accès, l'éclairage, les services et les agrès ne sont pas renseignés. 6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r6173736), non comptés sur place.",
   "cp": "83000",
   "dep_nom": "Var",
-  "region": "Provence-Alpes-Côte d'Azur"
+  "region": "Provence-Alpes-Côte d'Azur",
+  "couloirs": 6
 }

@@ -1,5 +1,6 @@
 {
   "id": "I595600001",
   "longueur_probable": 200,
-  "note": "Développement estimé à 200 m d'après le tracé de l'anneau dans OpenStreetMap (r18762328), non mesuré sur place."
+  "note": "Développement estimé à 200 m d'après le tracé de l'anneau dans OpenStreetMap (r18762328), non mesuré sur place. 4 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r18762328), non comptés sur place.",
+  "couloirs": 4
 }
