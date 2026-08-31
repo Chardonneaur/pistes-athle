@@ -43,7 +43,15 @@ CREATE TABLE IF NOT EXISTS requetes_gsc (
   -- « file » est le seul statut non terminal : tout le reste ferme le dossier.
   -- Seul « sans-source » se rouvre, et a une condition stricte : impressions
   -- triplees ET plus de 90 jours, au cas ou une source soit parue entre-temps.
-  detail        TEXT               -- URL de la PR, source citee, ou raison
+  detail        TEXT,              -- URL de la PR, source citee, ou raison
+
+  -- L'etat de la question AU MOMENT ou on l'a fermee. Sans ce gel, il est
+  -- impossible de savoir si le traitement a servi a quelque chose : le releve
+  -- quotidien ecrase impressions et position, et revu_le avec elles. On saurait
+  -- « la position est de 3,1 » sans pouvoir dire d'ou elle vient.
+  impressions_avant INTEGER,
+  position_avant    REAL,
+  traite_le         TEXT             -- date du gel, ISO 8601
 );
 
 -- La file du jour se lit par statut puis par position : l'index porte les deux.
@@ -71,3 +79,20 @@ CREATE TABLE IF NOT EXISTS passages (
 );
 
 CREATE INDEX IF NOT EXISTS idx_passages_date ON passages (lance_le);
+
+-- Le gel doit etre automatique, pas une discipline.
+--
+-- Un agent qui ferme un dossier a dix choses en tete ; relever les valeurs
+-- d'avant est celle qu'on oublie, et elle ne se rattrape jamais — le releve du
+-- lendemain a deja ecrase la ligne. Le declencheur l'ecrit a sa place, une
+-- seule fois, au passage de « file » a un statut terminal.
+CREATE TRIGGER IF NOT EXISTS gel_au_traitement
+AFTER UPDATE OF statut ON requetes_gsc
+WHEN OLD.statut = 'file' AND NEW.statut <> 'file' AND NEW.traite_le IS NULL
+BEGIN
+  UPDATE requetes_gsc
+     SET impressions_avant = NEW.impressions,
+         position_avant    = NEW.position,
+         traite_le         = date('now')
+   WHERE cle = NEW.cle;
+END;

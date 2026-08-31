@@ -154,6 +154,35 @@ npx wrangler d1 execute pistes-athle-seo --remote --command \
    WHERE statut='file' ORDER BY intention='existence' DESC, position LIMIT 10;"
 ```
 
+## Savoir si tout cela sert à quelque chose
+
+Fermer un dossier ne dit pas qu'on a bien fait. Trois colonnes gèlent donc
+l'état de la question au moment où on la ferme — `impressions_avant`,
+`position_avant`, `traite_le` — parce que le relevé quotidien écrase
+`impressions` et `position` le lendemain matin. Sans ce gel, on saurait « la
+position est de 3,1 » sans pouvoir dire d'où elle vient.
+
+Le gel est écrit par un **déclencheur SQL**, au passage de `file` à un statut
+terminal. Ce n'est pas une discipline à tenir : relever les valeurs d'avant est
+exactement ce qu'on oublie, et cela ne se rattrape jamais.
+
+La comparaison n'aura de sens qu'avec du recul — plusieurs semaines, et une
+trentaine de dossiers fermés. Trois fiches ne feront jamais une conclusion.
+D'ici là :
+
+```bash
+npx wrangler d1 execute pistes-athle-seo --remote --command \
+  "SELECT cle, traite_le, position_avant, position,
+          round(position_avant - position, 1) AS gagne
+     FROM requetes_gsc
+    WHERE statut='traite' AND julianday('now') - julianday(traite_le) > 30
+    ORDER BY gagne DESC;"
+```
+
+Une position qui baisse est un gain. Si la colonne `gagne` reste autour de
+zéro sur trente dossiers, c'est que le travail de l'étage 2 ne déplace rien —
+et il vaudra mieux le savoir que le supposer.
+
 ## La règle qui prime sur tout le reste
 
 L'étage 2 n'écrit dans une fiche **que** des faits déjà présents dans
