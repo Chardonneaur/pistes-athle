@@ -15,7 +15,11 @@ message. Du code déterministe, sans modèle.
 
 **L'étage 2 — le traitement.** Un agent lit la file préparée, cherche des
 sources, ouvre une pull request. C'est là qu'il y a du jugement, donc de
-l'erreur possible, donc une relecture humaine.
+l'erreur possible, donc une relecture humaine. Il est lui-même coupé en deux :
+[`scripts/dossier_gsc.py`](../scripts/dossier_gsc.py) monte le dossier et écrit
+le verdict — du code, aucun jugement — et la compétence
+[`traitement-gsc`](../.claude/skills/traitement-gsc/SKILL.md) porte les règles
+de ce qu'on a le droit d'écrire.
 
 La coupure n'est pas cosmétique. La mémoire de la boucle doit être la pièce la
 plus fiable du montage : le jour où l'agent ne tourne pas, le relevé, lui, doit
@@ -192,10 +196,56 @@ et sur `wrangler` : rien à configurer pour un essai sur la machine.
 Lire la file :
 
 ```bash
+python3 scripts/dossier_gsc.py                    # les questions les plus payantes
+python3 scripts/dossier_gsc.py --dossier '<clé>'  # tout ce qu'on sait sur l'une
+```
+
+Le SQL direct reste possible pour ce que le script ne montre pas :
+
+```bash
 npx wrangler d1 execute pistes-athle-seo --remote --command \
   "SELECT cle, requete, impressions, position FROM requetes_gsc
    WHERE statut='file' ORDER BY intention='existence' DESC, position LIMIT 10;"
 ```
+
+## Traiter une question
+
+`scripts/dossier_gsc.py` est à l'étage 2 ce que `releve_gsc.py` est à l'étage 1 :
+la moitié bête. Il rassemble devant l'agent la ligne de la file, la fiche visée,
+les champs renseignés et ceux qui ne le sont pas, l'override existant — puis, le
+travail fait, il écrit le verdict.
+
+Ce partage n'est pas cosmétique non plus. Le montage du dossier est la partie où
+l'on se trompe **sans s'en apercevoir** : regarder le mauvais identifiant,
+croire qu'un champ manque alors qu'il est rempli, rouvrir une question déjà
+close. Ce sont des erreurs de lecture, pas de jugement, et un script les évite
+toutes. Ce qui reste à l'agent est alors le seul vrai travail — trouver une
+source, ou constater qu'il n'y en a pas.
+
+L'ordre de la file n'est pas « la meilleure position d'abord ». Les fiches déjà
+dans le podium sont écartées : il n'y a rien à y gagner. Le premier lot l'a
+montré — « stade de luminy » était en position 1,0, et son dossier s'est fermé
+sur « rien à corriger ». Passent devant les `existence`, puis ce qui est déjà
+visible sans être gagné.
+
+Fermer un dossier :
+
+```bash
+python3 scripts/dossier_gsc.py --fermer '<clé>' \
+    --statut traite --detail "ce qui a été fait, ou pourquoi rien ne l'a été"
+```
+
+| statut | quand |
+|---|---|
+| `traite` | la fiche a été corrigée, **ou** elle répondait déjà |
+| `sans-source` | question légitime, aucune source citable |
+| `candidat` | lieu peut-être réel, versé dans `data/a-verifier.json` |
+| `hors-sujet` | la requête ne parle pas d'une piste d'athlétisme |
+
+`--detail` est obligatoire, et le script refuse une chaîne vide : un dossier
+fermé sans raison écrite est un dossier qu'il faudra rouvrir pour comprendre. Il
+refuse aussi de refermer un dossier déjà clos, parce que le gel des compteurs
+aurait lieu une seconde fois et écraserait le point de départ.
 
 ## Savoir si tout cela sert à quelque chose
 
@@ -238,3 +288,8 @@ Un lieu sans fiche va dans `data/a-verifier.json` avec sa source, jamais dans
 `tracks.json` : une requête n'est pas une preuve d'existence — les gens
 cherchent des pistes fermées, démolies, ou situées dans la commune d'à côté.
 Voir [trouver-les-pistes-manquantes.md](trouver-les-pistes-manquantes.md).
+
+Ces règles ne sont pas seulement écrites ici : elles sont dans la compétence
+[`traitement-gsc`](../.claude/skills/traitement-gsc/SKILL.md), qui se charge
+d'elle-même quand on ouvre la file. Une règle qu'il faut penser à aller lire
+est une règle qu'on oubliera.
