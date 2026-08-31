@@ -1,5 +1,15 @@
 {
   "id": "I440150013",
-  "agres_probables": ["longueur", "hauteur", "perche", "poids", "disque", "marteau", "javelot", "steeple"],
-  "note": "Agrès déduits d'OpenStreetMap ; la cage de lancer et son cercle sont nettement identifiables sur l'orthophoto IGN. Non vérifié sur place."
+  "agres_probables": [
+    "longueur",
+    "hauteur",
+    "perche",
+    "poids",
+    "disque",
+    "marteau",
+    "javelot",
+    "steeple"
+  ],
+  "note": "Agrès déduits d'OpenStreetMap ; la cage de lancer et son cercle sont nettement identifiables sur l'orthophoto IGN. Non vérifié sur place. 6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r12407368), non comptés sur place.",
+  "couloirs": 6
 }

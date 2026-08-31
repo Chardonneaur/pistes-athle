@@ -1,5 +1,13 @@
 {
   "id": "I441840005",
-  "agres_probables": ["hauteur", "perche", "poids", "disque", "marteau", "javelot"],
-  "note": "Agrès déduits d'OpenStreetMap. L'orthophoto IGN confirme un anneau synthétique 400 m et une aire de lancer. Non vérifié sur place."
+  "agres_probables": [
+    "hauteur",
+    "perche",
+    "poids",
+    "disque",
+    "marteau",
+    "javelot"
+  ],
+  "note": "Agrès déduits d'OpenStreetMap. L'orthophoto IGN confirme un anneau synthétique 400 m et une aire de lancer. Non vérifié sur place. 6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r3251729), non comptés sur place.",
+  "couloirs": 6
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Estime le developpement des pistes d'un departement d'apres OpenStreetMap.
+"""Tire d'OpenStreetMap ce que le recensement ne dit pas : developpement et couloirs.
 
     python3 scripts/osm_longueurs.py 44
     python3 scripts/osm_longueurs.py 44 --ecrire
@@ -19,6 +19,19 @@ refuse de conclure quand rien ne tombe assez pres.
 Le resultat va dans `longueur_probable`, jamais dans `longueur_piste` : c'est
 la meme discipline que `agres_probables`. Une mesure au decametre ou un panneau
 de club l'emportent, et l'effacent.
+
+LES COULOIRS. Le tag « lanes » d'OSM donne leur nombre. C'est le champ le plus
+rare de la base — 123 fiches sur 7 280 — et OSM le porte sur environ 15 % de ses
+anneaux : de quoi doubler ce compte. Il n'est pas exploitable brut. Des anneaux
+de 400 m portent lanes=1, 2 ou 3, ce qui ne decrit pas une piste a trois
+couloirs mais la ligne que le contributeur tracait. D'ou la fourchette de
+plausibilite COULOIRS_MIN..COULOIRS_MAX, hors de laquelle on se tait.
+
+Les deux champs se gagnent SEPAREMENT, et c'est voulu : un anneau donne souvent
+l'un sans l'autre. Le ministere declare parfois la longueur et jamais les
+couloirs ; OSM fait souvent l'inverse. Les lier ferait perdre la moitie du gain.
+
+Ni l'un ni l'autre n'ecrase une valeur deja presente.
 
 (c) OpenStreetMap contributors, ODbL — https://www.openstreetmap.org/copyright
 """
@@ -50,6 +63,14 @@ TOLERANCE = 0.08
 MIN_POINTS = 10
 # Distance maximale entre le centre de l'anneau et le point du ministere.
 RAYON = 200.0
+
+# Le tag « lanes » d'OSM donne le nombre de couloirs — le champ le plus rare de
+# la base : 123 fiches sur 7 280. Il n'est pas exploitable brut. Des anneaux de
+# 400 m portent lanes=1, 2 ou 3 : ce n'est pas une piste a trois couloirs,
+# c'est un contributeur qui a decrit la ligne qu'il tracait, pas l'equipement.
+# Une piste d'athletisme en a quatre au minimum, huit ou neuf au plus large.
+# Hors de cette fourchette, on ne conclut pas.
+COULOIRS_MIN, COULOIRS_MAX = 4, 10
 
 R_TERRE = 6371000.0
 
@@ -157,6 +178,20 @@ def recaler(metres):
     return cible if abs(cible - estime) / cible <= TOLERANCE else None
 
 
+def couloirs_de(lanes):
+    """Le nombre de couloirs, si le tag OSM est croyable — sinon rien.
+
+    Meme discipline que recaler() pour le developpement : on prefere se taire a
+    publier un chiffre qu'on n'aurait pas su defendre. Un blanc ne dit pas
+    « pas de couloirs », il ne dit rien.
+    """
+    try:
+        n = int(str(lanes).strip())
+    except (TypeError, ValueError):
+        return None
+    return n if COULOIRS_MIN <= n <= COULOIRS_MAX else None
+
+
 def apparier(sites, boucles):
     for s in sites:
         proches = [(dist((s["lat"], s["lon"]), b["c"]), b) for b in boucles]
@@ -182,19 +217,43 @@ def charger_sites(dep):
     return out
 
 
-def ecrire_override(site_id, longueur, source):
-    """Ajoute `longueur_probable` sans toucher au reste du fichier."""
+def ecrire_override(site_id, source, longueur=None, couloirs=None):
+    """Ajoute `longueur_probable` et/ou `couloirs` sans toucher au reste.
+
+    Les deux s'ecrivent separement parce qu'ils se gagnent separement : un
+    anneau peut donner un developpement sans porter de tag « lanes », et
+    l'inverse arrive aussi — le ministere declare parfois la longueur et jamais
+    les couloirs. Lier les deux ferait perdre la moitie de ce qu'OSM donne.
+
+    Chaque phrase de note est ecrite une seule fois : le script est relance
+    departement par departement, et sans ce controle la note s'allongerait d'une
+    repetition a chaque passage.
+    """
     chemin = os.path.join(OVERRIDES, f"{site_id}.json")
     if os.path.exists(chemin):
         with open(chemin, encoding="utf-8") as f:
             data = json.load(f)
     else:
         data = {"id": site_id}
-    data["longueur_probable"] = longueur
-    note = (f"Développement estimé à {longueur} m d'après le tracé de l'anneau "
-            f"dans OpenStreetMap ({source}), non mesuré sur place.")
-    if note not in (data.get("note") or ""):
-        data["note"] = ((data.get("note") + " ") if data.get("note") else "") + note
+
+    phrases = []
+    if longueur is not None:
+        data["longueur_probable"] = longueur
+        # Phrase inchangee au caractere pres : 232 contributions la portent
+        # deja, et la reecrire ferait un diff sur des fiches qui n'ont pas
+        # bouge.
+        phrases.append(f"Développement estimé à {longueur} m d'après le tracé "
+                       f"de l'anneau dans OpenStreetMap ({source}), non mesuré "
+                       f"sur place.")
+    if couloirs is not None:
+        data["couloirs"] = couloirs
+        phrases.append(f"{couloirs} couloirs d'après le tracé de l'anneau dans "
+                       f"OpenStreetMap ({source}), non comptés sur place.")
+
+    for note in phrases:
+        if note not in (data.get("note") or ""):
+            data["note"] = ((data.get("note") + " ") if data.get("note") else "") + note
+
     with open(chemin, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         f.write("\n")
@@ -208,20 +267,43 @@ def main():
     ap.add_argument("--ecrire", action="store_true",
                     help="ecrit longueur_probable dans data/overrides/")
     ap.add_argument("--cache", help="fichier de cache de la reponse Overpass")
+    ap.add_argument("--sites", metavar="IDS",
+                    help="ne traiter que ces identifiants, separes par des "
+                         "virgules. Sert a l'etage 2 : la file Search Console "
+                         "designe des fiches, pas des departements.")
     args = ap.parse_args()
 
     sites = charger_sites(args.dep)
+    if args.sites:
+        voulus = {i.strip() for i in args.sites.split(",") if i.strip()}
+        connus = {s["id"] for s in sites}
+        absents = voulus - connus
+        if absents:
+            sys.exit(f"pas en departement {args.dep} : {', '.join(sorted(absents))}")
+        sites = [s for s in sites if s["id"] in voulus]
     if not sites:
         sys.exit(f"aucun site en departement {args.dep} dans data/tracks.json")
     boucles = anneaux(interroger(args.dep, args.cache))
     print(f"-> {len(boucles)} anneau(x) exploitable(s) dans OSM\n")
 
     accords = desaccords = nouveaux = refus = 0
-    ecrits = []
-    print(f"{'declare':>8} {'OSM':>7} {'estime':>7}  site")
+    couloirs_neufs = 0
+    ecrits = set()
+    print(f"{'declare':>8} {'OSM':>7} {'estime':>7} {'coul':>5}  site")
     for s, b, d, cible in sorted(apparier(sites, boucles),
                                  key=lambda p: (p[0].get("longueur_piste") or 0)):
-        declare = s.get("longueur_piste")
+        # « declare » doit couvrir les DEUX champs, pas seulement celui du
+        # ministere. Ne regarder que longueur_piste ecrasait toute estimation
+        # deja etablie autrement : le releve des pistes absentes ecrit un
+        # longueur_probable dont la note dit explicitement que le perimetre
+        # trace n'est PAS un developpement, et ce script le remplacait par sa
+        # propre valeur recalee, en laissant les deux phrases se contredire
+        # dans la meme note. 143 contributions etaient dans ce cas, dont des
+        # anneaux courts releves sur place — 75 m, 85 m, 116 m.
+        #
+        # Regle : on comble un vide, on ne corrige jamais une valeur existante.
+        # Un desaccord se signale et se tranche a la main.
+        declare = s.get("longueur_piste") or s.get("longueur_probable")
         etat = ""
         if cible is None:
             refus += 1
@@ -233,17 +315,32 @@ def main():
         else:
             desaccords += 1
             etat = f"  <<< desaccord : le ministere dit {declare} m"
-        print(f"{str(declare or '?'):>8} {b['m']:7.1f} {str(cible or '-'):>7}  "
+
+        # Le developpement et les couloirs se gagnent separement : un anneau
+        # peut donner l'un sans l'autre, et souvent c'est le cas.
+        nb = couloirs_de(b.get("lanes"))
+        longueur_a_ecrire = cible if (cible is not None and declare is None) else None
+        couloirs_a_ecrire = nb if (nb is not None and not s.get("couloirs")) else None
+        if couloirs_a_ecrire:
+            couloirs_neufs += 1
+            etat += f"  (+{couloirs_a_ecrire} couloirs)"
+
+        print(f"{str(declare or '?'):>8} {b['m']:7.1f} {str(cible or '-'):>7} "
+              f"{str(s.get('couloirs') or nb or '-'):>5}  "
               f"{s['nom'][:44]}, {s['ville']}{etat}")
-        if args.ecrire and cible is not None and declare is None:
-            ecrits.append(ecrire_override(s["id"], cible, b["id"]))
+
+        if args.ecrire and (longueur_a_ecrire or couloirs_a_ecrire):
+            ecrits.add(ecrire_override(s["id"], b["id"],
+                                       longueur=longueur_a_ecrire,
+                                       couloirs=couloirs_a_ecrire))
 
     print(f"\n{accords} accord(s) avec le ministere, {desaccords} desaccord(s), "
           f"{nouveaux} site(s) sans developpement declare, {refus} refus.")
+    print(f"{couloirs_neufs} site(s) dont OSM donne les couloirs et le site pas encore.")
     if args.ecrire:
         print(f"-> {len(ecrits)} fichier(s) ecrit(s) dans data/overrides/")
-    elif nouveaux:
-        print("-> relancez avec --ecrire pour renseigner les sites sans developpement.")
+    elif nouveaux or couloirs_neufs:
+        print("-> relancez avec --ecrire pour renseigner ce qui manque.")
     print("\nLes desaccords ne sont pas ecrits : une estimation ne renverse pas "
           "une donnee declaree.\nVerifiez-les a la vue aerienne "
           "(scripts/ortho.py) avant de trancher a la main.")
