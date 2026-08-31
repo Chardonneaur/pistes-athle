@@ -135,6 +135,49 @@ L'identifiant de la base n'est pas un secret : il est en clair dans le
 workflow, comme celui du journal des robots l'est dans `logs/wrangler.jsonc`.
 Sans jeton, il ne donne accès à rien.
 
+### L'application OAuth doit rester « En production »
+
+C'est le piège qui a arrêté la boucle pendant deux jours, du 30 au 31 août 2026,
+et rien dans ce document ne prévenait.
+
+Une application OAuth dont l'écran de consentement est resté en mode **« Test »**
+reçoit des refresh tokens qui **expirent au bout de sept jours**. Pas d'alerte,
+pas de préavis : le huitième jour, Google répond `400` et le relevé s'arrête.
+Le symptôme est celui d'un jeton révoqué, et il envoie chercher au mauvais
+endroit — le jeton n'a pas été révoqué, il a atteint sa date.
+
+Le projet `piste-athle` est donc publié **« In production »**, sur
+[Google Auth Platform > Audience](https://console.cloud.google.com/auth/audience?project=piste-athle).
+Il doit le rester. En production, le refresh token n'expire plus ; il ne meurt
+que révoqué à la main, ou après six mois sans usage — le relevé tourne tous les
+jours, ce cas ne se présentera pas.
+
+Trois choses à savoir le jour où il faut ré-autoriser :
+
+- Le bouton **Publish app** est sous *Google Auth Platform > Audience*, et non
+  plus sous *APIs et services*. Il reste grisé tant que la page **Branding** ne
+  porte pas la page d'accueil (`https://pistes-athle.com`), le lien de
+  confidentialité (`https://pistes-athle.com/confidentialite/`) et le domaine
+  autorisé (`pistes-athle.com`). Le formulaire ne dit pas lesquels manquent.
+- La portée `auth/webmasters` est **sensible**, donc l'écran
+  « Google n'a pas validé cette application » s'affiche à chaque autorisation.
+  C'est attendu et sans conséquence : publier ne demande aucune vérification,
+  seule la levée de cet écran en demanderait une. *Paramètres avancés* >
+  *Accéder à Pistes Athlé*.
+- **Publier ne ressuscite pas un jeton déjà mort.** Il faut refaire
+  `uv run --directory ~/gsc gsc-mcp auth`, puis repousser le secret :
+
+```bash
+python3 -c "import json;print(json.load(open('$HOME/.config/gsc-mcp/token.json'))['refresh_token'],end='')" \
+  | gh secret set GSC_REFRESH_TOKEN
+```
+
+La sortie de secours, si l'écran de consentement redevient un jour bloquant :
+un **compte de service** ajouté comme utilisateur de la propriété dans Search
+Console. Pas de consentement, pas d'expiration. Le serveur MCP le gère déjà
+(`GSC_SERVICE_ACCOUNT`) ; `scripts/releve_gsc.py`, lui, ne sait faire que le
+flux refresh token — il faudrait lui ajouter le JWT.
+
 ## S'en servir à la main
 
 ```bash
