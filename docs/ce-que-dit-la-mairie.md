@@ -5,6 +5,11 @@ Loire-Atlantique. Les chiffres cités sont ceux d'un échantillon de cinq
 communes : ils disent que le chemin est praticable, pas encore ce qu'il rend à
 l'échelle d'un département.*
 
+> **Mesuré le 31 août 2026 sur 167 communes — et le rendement est nul.**
+> Voir « [Ce que ça rend vraiment](#ce-que-ça-rend-vraiment-167-communes) » en fin
+> de document avant de lancer une campagne. Le chemin est praticable, comme
+> annoncé ; ce qu'il transporte ne remplit aucun champ.
+
 Le [Recensement des Équipements Sportifs](https://equipements.sports.gouv.fr/)
 décrit un **état**, et le décrit lentement. Il ne dit jamais qu'une piste vient
 d'être refaite, qu'un sautoir a été commandé, qu'une enceinte a rouvert. Ces
@@ -186,3 +191,54 @@ Annuaire de l'administration, DILA — Licence Ouverte 2.0.
 Base officielle des codes géographiques / geo.api.gouv.fr — Licence Ouverte 2.0.
 Les délibérations restent la propriété des communes : on n'en cite que des extraits,
 avec leur source.
+
+
+## Ce que ça rend vraiment (167 communes)
+
+Le paragraphe d'ouverture disait ne pas savoir ce que le chemin rendrait à
+l'échelle. On sait maintenant. Le 31 août 2026, le script a été passé sur les
+**167 communes** que désignait la file Search Console.
+
+| | | |
+|---|---|---|
+| site de la mairie trouvé via l'annuaire DILA | 166 | **99 %** |
+| actes PDF effectivement lus | 70 | 41 % |
+| au moins un signal « stade » | 38 | 22 % |
+| signaux parlant d'athlétisme ou de piste | 19 sur 326 | **5 %** |
+| **faits écrivables dans une fiche** | **0** | **0 %** |
+
+Pourquoi les autres se taisent : 84 communes ne publient aucun acte en PDF
+(`robots.txt`, ou pas de rubrique), 12 n'en publient aucun de lisible, 1 n'a pas
+de site connu de l'annuaire.
+
+### Ce n'est pas un défaut du script, c'est la nature de la source
+
+Les 19 signaux athlétisme étaient des subventions à des clubs, un transfert de
+compétence intercommunale, une piste de VTT autour d'un city-stade, un terrain de
+football synthétique. Aucun horaire, aucun revêtement, aucun agrès, aucune
+condition d'accès.
+
+C'est exactement ce que ce document annonce plus haut : **une délibération dit un
+projet voté, pas un état constaté**. Elle est faite pour *dater un changement*. Or
+les fiches ne manquent pas de dates — elles manquent d'états : un horaire affiché
+sur un portail, un revêtement foulé, une enceinte trouvée ouverte un dimanche.
+
+### L'OCR ne change rien
+
+267 PDF scannés restaient illisibles, et il était tentant d'y voir le gisement
+caché. Testé sur quatre communes : 42 PDF rendus lisibles, 12 signaux, **zéro sur
+l'athlétisme**, et un texte de qualité médiocre (« *A devis TTC : Fonctionnement a
+ferecementdescrang* »). Le silence est réel, pas caché. Inutile de refaire
+l'expérience.
+
+### Ce qu'il faut en garder
+
+- **Ne pas relancer une campagne** sur ce canal pour combler `horaires`, `surface`,
+  `agres` ou `acces_libre`. Le rendement mesuré est nul, et la raison est
+  structurelle.
+- **L'usage ciblé reste bon** : interroger une commune précise quand on soupçonne
+  des travaux récents que Data ES ignore encore. C'est ce pour quoi le script a été
+  écrit, et il le fait bien.
+- **Le contact de la mairie sort à 99 %** — site, courriel, téléphone. C'est le seul
+  rendement fiable. Attention : ce n'est pas le contact de l'installation, et
+  écrire l'un pour l'autre serait faux.
