@@ -193,6 +193,57 @@ python3 scripts/releve_gsc.py --amorcage     # tout l'historique, une fois
 Sans variables d'environnement, le script retombe sur le jeton du serveur MCP
 et sur `wrangler` : rien à configurer pour un essai sur la machine.
 
+### La session OAuth de wrangler ne donne pas accès à D1
+
+Constaté le 01/09/2026, après deux reconnexions inutiles. Le repli sur
+`wrangler` que promet la section précédente **ne marche pas** pour D1, et le
+diagnostic évident — « mon jeton a expiré » — est faux dans tous ses termes.
+
+Mesuré en interrogeant l'API Cloudflare directement, sans wrangler, avec un
+jeton OAuth fraîchement consenti :
+
+| appel | réponse |
+|---|---|
+| `/accounts/{id}` | 200 |
+| `/accounts/{id}/workers/scripts` | 200 |
+| `/accounts/{id}/d1/database` | **401, code 10000** |
+
+Le jeton est valide, non expiré, et sa liste de portées contient `d1:write` :
+tout le reste du compte l'accepte, **seul D1 le refuse**. Se déconnecter, se
+reconnecter, forcer `--scopes d1:write` : aucun effet. Ce n'est pas une panne de
+configuration locale, il n'y a rien à réparer de ce côté, et il ne sert à rien
+d'y retourner.
+
+Deux conséquences, dans cet ordre.
+
+**En local, prendre le même transport qu'en production.** `D1` préfère l'API
+HTTP dès que `CF_API_TOKEN`, `CF_ACCOUNT_ID` et `CF_DATABASE_ID` sont définis —
+c'est ce que font les GitHub Actions, et elles n'ont jamais eu ce problème. Un
+jeton d'API ne passe pas par OAuth, donc pas par le refus. Le fichier vit hors
+du dépôt :
+
+```bash
+# ~/.config/pistes-athle/d1.env, en chmod 600
+CF_API_TOKEN=<jeton cree avec la seule permission « Account · D1 · Edit »>
+CF_ACCOUNT_ID=f26c2472de6aba253abeb667c7a06205
+CF_DATABASE_ID=91b914eb-f934-4415-957b-8792487f239e
+```
+
+```bash
+set -a; . ~/.config/pistes-athle/d1.env; set +a
+python3 scripts/dossier_gsc.py
+```
+
+`CF_ACCOUNT_ID` et `CF_DATABASE_ID` ne sont pas des secrets : ils sont déjà en
+clair dans le workflow. Seul le jeton l'est.
+
+**Le diagnostic, qui coûtait plus cher que la panne.** Avec `--json`, wrangler
+écrit son erreur sur la **sortie standard** et laisse `stderr` vide ; le script
+ne lisait que `stderr` et affichait « ERREUR wrangler : » suivi de rien. Un
+message vide envoie chercher du côté du script alors que la panne est ailleurs.
+Corrigé le 01/09/2026 par `_erreur_wrangler`, qui lit les deux flux et, sur un
+code 10000, nomme le remède au lieu de laisser deviner.
+
 Lire la file :
 
 ```bash
