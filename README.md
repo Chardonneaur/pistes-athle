@@ -436,6 +436,9 @@ scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couvert
 scripts/marches_publics.py  marchés publics : les pistes payées mais pas recensées
 scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
 scripts/conseils_municipaux.py  délibérations des conseils municipaux : file de lecture
+scripts/releve_gsc.py       relevé quotidien de la Search Console -> base pistes-athle-seo
+scripts/dossier_gsc.py      monte le dossier d'une question relevée, écrit son verdict
+scripts/generative_gsc.py   ce que l'IA générative de Google prend au trafic du site
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
 data/photos/<id>/           photos optimisées, une par site
 data/tracks.json            jeu de données publié (généré, non versionné)

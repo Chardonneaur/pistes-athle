@@ -251,6 +251,15 @@ python3 scripts/dossier_gsc.py                    # les questions les plus payan
 python3 scripts/dossier_gsc.py --dossier '<clé>'  # tout ce qu'on sait sur l'une
 ```
 
+Mesurer ce que l'IA générative de Google prend au passage — c'est un troisième
+étage, indépendant des deux autres, décrit dans
+[mesurer-le-trafic-des-ia.md](mesurer-le-trafic-des-ia.md), § Instrument 3 :
+
+```bash
+python3 scripts/generative_gsc.py           # l'érosion du clic à rang constant
+python3 scripts/generative_gsc.py --sonde   # l'API a-t-elle ouvert une surface IA ?
+```
+
 Le SQL direct reste possible pour ce que le script ne montre pas :
 
 ```bash
