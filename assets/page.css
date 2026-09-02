@@ -150,3 +150,15 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .candidats .meta{display:block;font-size:12.5px;color:var(--muted);margin:2px 0 9px}
 .candidats .liens{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13.5px}
 @media (min-width:620px){.candidats{grid-template-columns:repeat(2,1fr)}}
+
+/* Emplacement publicitaire. Deux exigences tenues ici plutot qu'en JavaScript :
+   la hauteur est RESERVEE avant que l'annonce arrive — sans quoi elle pousse
+   le texte vers le bas, et ces fiches se battent en position 10 — et
+   l'etiquette est visible sans effort, parce qu'un visiteur doit pouvoir
+   distinguer ce que le ministere declare de ce qu'un annonceur paie.
+   assets/adsense.js replie le bloc entier si aucune annonce n'est servie. */
+.pub{margin:26px 0;padding:0;border:0;background:none}
+.pub-etiq{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 5px}
+.pub ins.adsbygoogle{display:block;min-height:250px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden}

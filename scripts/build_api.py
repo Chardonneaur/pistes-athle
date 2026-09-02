@@ -652,24 +652,66 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
 # listes qui derivent l'une de l'autre finissent par autoriser ce qu'on croyait
 # avoir ferme. Les pages statiques n'ouvrent pas de carte, elles n'utilisent
 # donc pas tile.openstreetmap.org, mais l'y laisser ne coute rien.
-CSP = (
-    "default-src 'self'; "
-    "base-uri 'self'; "
-    "object-src 'none'; "
+# Le bloc d'annonces des fiches. VIDE = rien n'est rendu : ni encart, ni espace
+# reserve, ni etiquette, ni assets/adsense.js — ET la politique de securite
+# reste fermee. C'est deliberement le cas par defaut : la concession de
+# securite ne se paie que le jour ou elle achete quelque chose.
+#
+# Il se cree dans AdSense > Annonces > Par bloc d'annonces > Display, format
+# responsive. Les 23 blocs du compte datent de 2008-2011, tous archives sauf un
+# skyscraper 120x600 : aucun ne convient a un site mobile de 2026. L'identifiant
+# se relit ensuite avec l'outil MCP « ad_units ».
+#
+# EN LE RENSEIGNANT, la CSP ci-dessous s'ouvre. index.html porte sa propre copie
+# de cette politique et verifier_csp() casse la construction si les deux
+# divergent : c'est voulu, ca force a mettre les deux a jour ensemble.
+ADSENSE_SLOT_FICHE = ""
+
+# Ce que la publicite oblige a ouvrir, et rien de plus. Chaque ligne est ici
+# parce qu'AdSense ne fonctionne pas sans elle, pas par precaution.
+_CSP_PUB = (
+    # Une annonce EST un cadre : c'est la directive dont l'ouverture se voit a
+    # l'oeil nu sur la page.
+    "frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com "
+    "https://www.google.com https://fundingchoicesmessages.google.com; "
+    "script-src 'self' https://cdn.matomo.cloud "
+    "https://pagead2.googlesyndication.com https://tpc.googlesyndication.com "
+    "https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com; "
+    # 'unsafe-inline' pour les styles est irreductible : adsbygoogle.js pose des
+    # styles en ligne sur nos propres elements pour dimensionner le cadre. C'est
+    # LA concession de cette politique, nommee ici pour qu'on sache ce qu'on a
+    # echange. Les scripts, eux, n'ont PAS besoin d'inline : voir adsense.js.
+    "style-src 'self' 'unsafe-inline'; "
+    # « https: » et non une liste : le visuel vient du serveur de l'annonceur
+    # qui a remporte l'enchere, et personne ne peut les enumerer d'avance. C'est
+    # ce qui rend impossible la liste exhaustive de serveurs que la page de
+    # confidentialite affichait — elle le dit desormais au lieu de le taire.
+    "img-src 'self' data: https:; "
+    "connect-src 'self' https://ronanchardonneau.matomo.cloud "
+    "https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net "
+    "https://fundingchoicesmessages.google.com; "
+)
+
+# Sans bloc d'annonces : la politique d'origine, plus le seul chargeur AdSense
+# en script-src pour que Google puisse examiner le site. Aucun cadre, aucun
+# visuel tiers, aucun style en ligne.
+_CSP_EXAMEN = (
     "frame-src 'none'; "
-    "form-action 'none'; "
-    # pagead2 est le chargeur AdSense, et il est SEUL ajoute : frame-src reste
-    # a 'none', donc aucune annonce ne peut s'afficher. C'est voulu. Le script
-    # n'est la que pour que Google puisse examiner le site (AdSense > Sites) ;
-    # ouvrir frame-src, img-src et connect-src aux iframes et aux visuels des
-    # annonceurs est une decision separee, a prendre quand l'examen aura repondu.
     "script-src 'self' https://cdn.matomo.cloud "
     "https://pagead2.googlesyndication.com; "
     "style-src 'self'; "
     "img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr "
     "https://ronanchardonneau.matomo.cloud; "
     "connect-src 'self' https://ronanchardonneau.matomo.cloud; "
-    "upgrade-insecure-requests"
+)
+
+CSP = (
+    "default-src 'self'; "
+    "base-uri 'self'; "
+    "object-src 'none'; "
+    "form-action 'none'; "
+    + (_CSP_PUB if ADSENSE_SLOT_FICHE else _CSP_EXAMEN)
+    + "upgrade-insecure-requests"
 )
 
 SECURITE_HEAD = (
@@ -689,6 +731,40 @@ ADSENSE_HEAD = (
     '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
     f'?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
 )
+
+# Charge en plus du chargeur AdSense, et seulement s'il y a un bloc a servir.
+ADSENSE_ENCART_JS = '<script src="{r}assets/adsense.js?v=1" defer></script>'
+
+
+def encart_adsense(slot, etiquette):
+    """Un emplacement d'annonce, ou la chaine vide si aucun bloc n'est configure.
+
+    Trois exigences, dans cet ordre :
+
+    L'ETIQUETTE. Le visiteur doit distinguer sans effort ce que le ministere
+    declare de ce qu'un annonceur paie. Une annonce non etiquetee sur une fiche
+    de donnees publiques, c'est laisser croire que le contenu commercial fait
+    partie du releve.
+
+    LA HAUTEUR RESERVEE. Une annonce qui arrive apres le rendu et pousse le
+    texte vers le bas est un decalage de mise en page, et ces fiches se battent
+    en position 10 dans Google. La reservation est dans .pub, en CSS.
+
+    AUCUN SCRIPT EN LIGNE. Google fait copier un <script> inline apres chaque
+    <ins> ; ici le push vit dans assets/adsense.js. Cela evite d'ouvrir
+    script-src a 'unsafe-inline', c'est-a-dire a toute injection future.
+    """
+    if not slot:
+        return ""
+    return (
+        f'<aside class="pub">'
+        f'<span class="pub-etiq">{etiquette}</span>'
+        f'<ins class="adsbygoogle" data-ad-client="{ADSENSE_CLIENT}" '
+        f'data-ad-slot="{slot}" data-ad-format="auto" '
+        f'data-full-width-responsive="true"></ins>'
+        f'</aside>'
+    )
+
 
 MATOMO_HEAD = """<link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">

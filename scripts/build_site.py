@@ -28,8 +28,9 @@ from datetime import date
 
 import build_api
 import indexnow
-from build_api import (ADSENSE_CLIENT, ADSENSE_HEAD, DISCIPLINES, MATOMO_HEAD,
-                       SECURITE_HEAD, SURFACE_EN, slug)
+from build_api import (ADSENSE_CLIENT, ADSENSE_ENCART_JS, ADSENSE_HEAD,
+                       ADSENSE_SLOT_FICHE, DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD,
+                       SURFACE_EN, encart_adsense, slug)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
@@ -151,6 +152,7 @@ T = {
         "nb_sites": lambda n: f"{n} site{'s' if n > 1 else ''}",
         "sec_piste": "Piste", "sec_agres": "Agrès recensés",
         "sec_acces": "Accès & services", "sec_avis": "Avis des athlètes",
+        "pub_etiq": "Publicité",
         "sec_photos": "Photos", "sec_proches": "Autres sites du département",
         "sec_aerienne": "Vue aérienne",
         "aerienne_alt": lambda n: f"Vue aérienne de {n}",
@@ -301,6 +303,7 @@ T = {
         "nb_sites": lambda n: f"{n} venue{'s' if n > 1 else ''}",
         "sec_piste": "Track", "sec_agres": "Recorded facilities",
         "sec_acces": "Access & amenities", "sec_avis": "Athlete reviews",
+        "pub_etiq": "Advertisement",
         "sec_photos": "Photos", "sec_proches": "Other venues in the department",
         "sec_aerienne": "Aerial view",
         "aerienne_alt": lambda n: f"Aerial view of {n}",
@@ -785,6 +788,9 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
     # hors CORS, et une connexion CORS preouverte ne leur servirait pas.
     liens = "".join(f'<link rel="preconnect" href="{o}">\n' for o in preconnect)
     mesure = MATOMO_HEAD.format(r=r)
+    # Charge seulement s'il y a un bloc : une page sans encart ne
+    # telecharge pas le script qui met les encarts en service.
+    encart_js = ADSENSE_ENCART_JS.format(r=r) if ADSENSE_SLOT_FICHE else ""
     return f"""<!DOCTYPE html>
 <html lang="{T[lang]['html_lang']}">
 <head>
@@ -810,6 +816,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 {liens}<link rel="stylesheet" href="{r}assets/page.css?v=14">
 {mesure}
 {ADSENSE_HEAD}
+{encart_js}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
 {blocs}
@@ -1110,6 +1117,13 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
         lignes.append(f'<h2>{E(tr["sec_acces"])}</h2><dl class="grid">{acces}</dl>')
     if t.get("acces_note"):
         lignes.append(f'<p>{E(t["acces_note"])}</p>')
+
+    # L'encart va ICI, et le choix se defend : le lecteur a deja obtenu la
+    # reponse qu'il venait chercher — revetement, couloirs, agres, acces — donc
+    # rien n'est bloque par une annonce. Et Matomo dit qu'une visite de fiche
+    # dure 30 secondes pour un ecran : plus bas, personne ne le verrait ; plus
+    # haut, il s'interposerait entre la question et sa reponse.
+    lignes.append(encart_adsense(ADSENSE_SLOT_FICHE, E(tr["pub_etiq"])))
 
     lignes.append(f'<h2>{E(tr["sec_avis"])}</h2>')
     if t["avis"]:
@@ -1454,6 +1468,119 @@ def page_verification(candidats, lang, url_base, depot, dep=None, deps_noms=None
 # mailto — un humain comme un agent la reconstitue, un moissonneur naif non.
 CONTACT_BOITE, CONTACT_DOMAINE = "ronanchardonneau", "gmail.com"
 
+# La publicite change ce que cette page doit dire, et les deux ne doivent pas
+# pouvoir se desynchroniser. Ces textes sont donc DERIVES de
+# ADSENSE_SLOT_FICHE, pas ecrits a cote : tant qu'aucun bloc n'est configure,
+# la section publicitaire n'existe pas et la ligne « aucune publicite » reste
+# vraie ; le jour ou un identifiant est renseigne, les deux basculent ensemble.
+# C'est la seule facon de tenir la regle posee plus haut sans y penser.
+_PUB = bool(ADSENSE_SLOT_FICHE)
+
+PUB_TEXTES = {
+    "fr": {
+        "PUB_TITRE_COOKIE": ("Pas de cookie pour la mesure, un bandeau pour la publicité"
+                             if _PUB else "Pas de cookie, donc pas de bandeau"),
+        "PUB_SECTION_TITRE": "La publicité" if _PUB else "",
+        "PUB_BANDEAU": ("""
+<p>La publicité, elle, ne peut pas s'en dispenser : une annonce accède à votre appareil, donc
+   elle demande votre consentement. Le bandeau que vous voyez à la première visite ne concerne
+   que ça. La mesure d'audience de ce site n'en a jamais eu besoin, et n'en a toujours pas.</p>"""
+                        if _PUB else ""),
+        "PUB_NEGATIF": ("""<li>Aucun profil constitué par nous : la mesure d'audience reste sans
+      cookie et sans identifiant. L'emplacement publicitaire, lui, est décrit plus haut — nous
+      n'en recevons aucune donnée sur vous, seulement un total de revenus.</li>"""
+                        if _PUB else
+                        "<li>Aucune publicité, et donc aucun traceur publicitaire.</li>"),
+        "PUB_LIGNE_PAGEAD": ("""<li><strong>pagead2.googlesyndication.com</strong> et les serveurs
+      publicitaires de Google — l'emplacement décrit plus haut. Ils voient votre adresse IP, et
+      ce qu'ils en font relève des règles de Google.</li>"""
+                             if _PUB else """<li><strong>pagead2.googlesyndication.com</strong> — le
+      chargeur AdSense, posé sur chaque page pour que Google puisse examiner le site. Il ne
+      diffuse <strong>aucune annonce</strong> : la politique de sécurité de ce site interdit les
+      cadres tiers (<code>frame-src 'none'</code>), or une annonce s'affiche dans un cadre. Ce
+      serveur voit votre adresse IP, comme tout serveur sollicité ; ce qu'il en fait relève des
+      règles de Google et non des nôtres.</li>"""),
+        "PUB_SERVEURS": ("""
+<p><strong>Cette liste cesse d'être exhaustive dès qu'une annonce s'affiche.</strong> Le visuel
+   vient du serveur de l'annonceur qui a remporté l'enchère, et personne ne peut les énumérer
+   d'avance. C'est pourquoi la politique de sécurité de ce site, qui limitait les images à une
+   liste nommée, autorise désormais n'importe quel serveur en HTTPS. Nous préférons l'écrire
+   que de vous laisser croire à une liste complète.</p>""" if _PUB else ""),
+        "PUB_CORPS": ("""
+<p>Les fiches d'installation portent <strong>un emplacement publicitaire</strong>, servi par
+   Google AdSense. Un seul, toujours au même endroit : après la section « Accès &amp; services »,
+   c'est-à-dire après la réponse que vous veniez chercher. Il porte l'étiquette
+   <strong>« Publicité »</strong>, parce que vous devez pouvoir distinguer sans effort ce que le
+   ministère déclare de ce qu'un annonceur paie.</p>
+<p>Nulle part ailleurs : ni dans l'application, ni sur les pages de commune, de département ou
+   de critère. Et aucune annonce automatique — Google ne place rien où il veut.</p>
+<p><strong>Une annonce accède à votre appareil</strong>, ce que la mesure d'audience de ce site
+   ne fait pas. D'où le bandeau de consentement à la première visite : sans votre accord, aucune
+   annonce personnalisée ne peut être servie. Refuser n'enlève rien à l'annuaire — mêmes fiches,
+   mêmes filtres, mêmes données, même recherche.</p>
+<p>Ce que Google reçoit relève de ses règles et non des nôtres :
+   <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">comment Google
+   utilise les données des sites qui l'utilisent</a>. En retour, nous ne recevons aucune donnée
+   vous concernant : un total de revenus, et rien d'autre.</p>
+<p>Pourquoi de la publicité : ce site est gratuit, sans compte ni abonnement, et ses données
+   restent ouvertes et téléchargeables. La publicité paie le nom de domaine et une part du temps
+   passé à enrichir l'annuaire. Vous pouvez la bloquer sans rien perdre — le code replie
+   l'emplacement au lieu de vous réclamer quoi que ce soit :
+   <a href="https://github.com/{depot}/blob/master/assets/adsense.js" rel="noopener">assets/adsense.js</a>.</p>"""
+                      if _PUB else ""),
+    },
+    "en": {
+        "PUB_TITRE_COOKIE": ("No cookie for measurement, a banner for advertising"
+                             if _PUB else "No cookie, so no banner"),
+        "PUB_SECTION_TITRE": "Advertising" if _PUB else "",
+        "PUB_BANDEAU": ("""
+<p>Advertising cannot do without one: an advertisement accesses your device, so it asks for your
+   consent. The banner you see on your first visit is only about that. This site's audience
+   measurement never needed one, and still does not.</p>""" if _PUB else ""),
+        "PUB_NEGATIF": ("""<li>No profile built by us: audience measurement stays cookieless and
+      identifier-free. The advertising slot is described above — we receive no data about you
+      from it, only a revenue total.</li>""" if _PUB else
+                        "<li>No advertising, and therefore no advertising tracker.</li>"),
+        "PUB_LIGNE_PAGEAD": ("""<li><strong>pagead2.googlesyndication.com</strong> and Google's ad
+      servers — the slot described above. They see your IP address, and what they do with it
+      falls under Google's rules.</li>""" if _PUB else
+                             """<li><strong>pagead2.googlesyndication.com</strong> — the AdSense
+      loader, placed on every page so that Google can review the site. It serves <strong>no
+      advertisement</strong>: this site's content security policy forbids third-party frames
+      (<code>frame-src 'none'</code>), and an advertisement is displayed inside a frame. That
+      server sees your IP address, as any requested server does; what it does with it falls
+      under Google's rules, not ours.</li>"""),
+        "PUB_SERVEURS": ("""
+<p><strong>This list stops being exhaustive as soon as an advertisement is displayed.</strong>
+   The creative comes from the server of whichever advertiser won the auction, and nobody can
+   enumerate those in advance. That is why this site's security policy, which used to restrict
+   images to a named list, now allows any HTTPS server. We would rather write it down than let
+   you believe the list is complete.</p>""" if _PUB else ""),
+        "PUB_CORPS": ("""
+<p>Venue pages carry <strong>one advertising slot</strong>, served by Google AdSense. Just one,
+   always in the same place: after the &laquo;&nbsp;Access &amp; amenities&nbsp;&raquo; section,
+   that is, after the answer you came for. It is labelled <strong>&laquo;&nbsp;Advertisement&nbsp;&raquo;</strong>,
+   because you must be able to tell without effort what the ministry declares from what an
+   advertiser pays for.</p>
+<p>Nowhere else: not in the application, not on city, department or criterion pages. And no
+   automatic ads — Google does not place anything wherever it likes.</p>
+<p><strong>An advertisement accesses your device</strong>, which this site's audience measurement
+   does not. Hence the consent banner on your first visit: without your agreement, no
+   personalised advertisement can be served. Refusing takes nothing away from the directory —
+   same venues, same filters, same data, same search.</p>
+<p>What Google receives falls under its rules, not ours:
+   <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses
+   data from sites that use it</a>. In return we receive no data about you: a revenue total, and
+   nothing else.</p>
+<p>Why advertising: this site is free, with no account and no subscription, and its data stays
+   open and downloadable. Advertising pays for the domain name and part of the time spent
+   enriching the directory. You can block it and lose nothing — the code folds the slot away
+   instead of asking anything of you:
+   <a href="https://github.com/{depot}/blob/master/assets/adsense.js" rel="noopener">assets/adsense.js</a>.</p>"""
+                      if _PUB else ""),
+    },
+}
+
 PRIVE = {
     "fr": [
         ("Ce qui est mesuré", """
@@ -1484,7 +1611,7 @@ PRIVE = {
    en classant les arrivées venues de ChatGPT, Perplexity, Claude ou Gemini. Sans cette
    mesure, la réponse resterait une intuition.</p>"""),
 
-        ("Pas de cookie, donc pas de bandeau", """
+        ("PUB_TITRE_COOKIE", """
 <p>La première instruction du traceur est <code>disableCookies()</code> : aucun cookie n'est
    déposé, rien n'est écrit ni lu sur votre appareil pour mesurer l'audience. C'est ce qui
    dispense de vous demander votre consentement — la loi l'exige pour accéder à votre
@@ -1495,12 +1622,15 @@ PRIVE = {
    écrire cette phrase sans réserve.</p>
 <p>Le réglage tient en trente lignes, et il est public :
    <a href="https://github.com/{depot}/blob/master/assets/matomo.js" rel="noopener">assets/matomo.js</a>.
-   Le jour où un cookie y apparaîtrait, cette page le dirait le même jour.</p>"""),
+   Le jour où un cookie y apparaîtrait, cette page le dirait le même jour.</p>
+PUB_BANDEAU"""),
+
+        ("PUB_SECTION_TITRE", """PUB_CORPS"""),
 
         ("Ce que le site ne fait pas", """
 <ul>
   <li>Aucun compte, aucun mot de passe, aucune inscription.</li>
-  <li>Aucune publicité, et donc aucun traceur publicitaire.</li>
+  PUB_NEGATIF
   <li>Aucune revente, aucun échange de données avec un tiers commercial.</li>
   <li>Aucune empreinte de navigateur (<em>fingerprinting</em>), aucun suivi d'un site à l'autre.</li>
   <li>Aucune adresse e-mail collectée à votre insu : vous n'en donnez une que si vous
@@ -1550,16 +1680,12 @@ PRIVE = {
   <li><strong>data.geopf.fr</strong> — les vues aériennes de l'IGN, affichées sur les fiches
       qui n'ont pas encore de photo. Les images ne sont pas stockées ici, elles sont demandées
       à la Géoplateforme au moment de l'affichage.</li>
-  <li><strong>pagead2.googlesyndication.com</strong> — le chargeur AdSense, posé sur chaque
-      page pour que Google puisse examiner le site. Il ne diffuse <strong>aucune annonce</strong> :
-      la politique de sécurité de ce site interdit les cadres tiers
-      (<code>frame-src 'none'</code>), or une annonce s'affiche dans un cadre. Ce serveur voit
-      votre adresse IP, comme tout serveur sollicité ; ce qu'il en fait relève des règles de
-      Google et non des nôtres.</li>
+  PUB_LIGNE_PAGEAD
   <li><strong>Google Maps</strong> — seulement si vous cliquez « Itinéraire » ou
       « Horaires » : vous quittez alors le site, et ce sont les règles de Google qui
       s'appliquent.</li>
-</ul>"""),
+</ul>
+PUB_SERVEURS"""),
 
         ("Contribuer, c'est publier", """
 <p>Une photo, un avis ou une correction sont publiés sur le site sous licence ODbL, avec le
@@ -1618,7 +1744,7 @@ PRIVE = {
    from ChatGPT, Perplexity, Claude or Gemini. Without the measurement, the answer would stay
    a hunch.</p>"""),
 
-        ("No cookie, so no banner", """
+        ("PUB_TITRE_COOKIE", """
 <p>The tracker's first instruction is <code>disableCookies()</code>: no cookie is set, nothing
    is written to or read from your device in order to measure the audience. That is what makes
    a consent request unnecessary — the law requires it for accessing your terminal, which this
@@ -1629,12 +1755,15 @@ PRIVE = {
    without a footnote.</p>
 <p>The whole setting is thirty lines long, and it is public:
    <a href="https://github.com/{depot}/blob/master/assets/matomo.js" rel="noopener">assets/matomo.js</a>.
-   The day a cookie appeared there, this page would say so the same day.</p>"""),
+   The day a cookie appeared there, this page would say so the same day.</p>
+PUB_BANDEAU"""),
+
+        ("PUB_SECTION_TITRE", """PUB_CORPS"""),
 
         ("What this site does not do", """
 <ul>
   <li>No account, no password, no sign-up.</li>
-  <li>No advertising, and therefore no advertising tracker.</li>
+  PUB_NEGATIF
   <li>No selling, no exchange of data with a commercial third party.</li>
   <li>No browser fingerprinting, no cross-site tracking.</li>
   <li>No email address collected behind your back: you only give one by writing in, and it is
@@ -1680,16 +1809,12 @@ PRIVE = {
   <li><strong>data.geopf.fr</strong> — the IGN aerial views shown on venues that have no photo
       yet. The images are not stored here; they are requested from the French Géoplateforme as
       the page is displayed.</li>
-  <li><strong>pagead2.googlesyndication.com</strong> — the AdSense loader, placed on every page
-      so that Google can review the site. It serves <strong>no advertisement</strong>: this
-      site's content security policy forbids third-party frames
-      (<code>frame-src 'none'</code>), and an advertisement is displayed inside a frame. That
-      server sees your IP address, as any requested server does; what it does with it falls
-      under Google's rules, not ours.</li>
+  PUB_LIGNE_PAGEAD
   <li><strong>Google Maps</strong> — only if you click &laquo;&nbsp;Directions&nbsp;&raquo; or
       &laquo;&nbsp;Opening hours&nbsp;&raquo;: you then leave this site, and Google's rules
       apply.</li>
-</ul>"""),
+</ul>
+PUB_SERVEURS"""),
 
         ("Contributing means publishing", """
 <p>A photo, a review or a correction is published on the site under the ODbL licence, with the
@@ -1747,6 +1872,19 @@ def page_confidentialite(lang, url_base, depot, maj):
     lignes.append(f'<p class="lede">{tr["prive_lede"]}</p>')
     lignes.append('<div class="prose">')
     for sous_titre, corps in PRIVE[lang]:
+        # Les jetons PUB_* d'abord : ils portent eux-memes du « {depot} », donc
+        # ils doivent etre en place avant le format(). Substitues du plus long
+        # au plus court, sans quoi « PUB_TITRE_COOKIE » se ferait manger par un
+        # jeton qui en serait le prefixe.
+        for jeton in sorted(PUB_TEXTES[lang], key=len, reverse=True):
+            valeur = PUB_TEXTES[lang][jeton]
+            sous_titre = sous_titre.replace(jeton, valeur)
+            corps = corps.replace(jeton, valeur)
+        # Une section vide disparait entierement, titre compris : c'est ce qui
+        # fait qu'aucune section publicitaire n'existe tant qu'aucun bloc n'est
+        # configure. Un titre seul serait pire qu'une absence.
+        if not corps.strip():
+            continue
         lignes.append(f"<h2>{E(sous_titre)}</h2>")
         lignes.append(corps.format(depot=depot)
                       .replace("BOITE", CONTACT_BOITE)
