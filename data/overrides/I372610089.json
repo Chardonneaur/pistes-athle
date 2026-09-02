@@ -1,5 +1,8 @@
 {
   "id": "I372610089",
   "couloirs": 8,
-  "note": "8 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r4734623), non comptés sur place."
+  "adresse": "3 avenue de Sévigné",
+  "url": "https://www.tours.fr/equipement/stade-de-grandmont/",
+  "acces_note": "La ville de Tours écrit, pour ce stade : « Accès selon les créneaux d'occupation. » Elle ne publie pas les créneaux eux-mêmes.",
+  "note": "8 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r4734623), non comptés sur place. Condition d'accès et adresse relevées le 2 septembre 2026 sur la fiche officielle de l'équipement, tours.fr. Des créneaux publics du dimanche matin circulent sur des forums et des sites de clubs : ils ne figurent pas sur la page de la ville et ne sont donc pas repris ici."
 }
