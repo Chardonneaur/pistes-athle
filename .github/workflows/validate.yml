@@ -1,10 +1,11 @@
 name: Vérifier les contributions
 
+# Aucun filtre « paths » : ce workflow est un controle requis sur master, et un
+# controle requis qui ne se declenche pas laisse la PR en attente pour toujours
+# (« Expected — waiting for status »). Il doit donc se prononcer sur chaque PR,
+# meme celle qui ne touche qu'un document — trois minutes de runner par PR.
 on:
   pull_request:
-    paths:
-      - "data/overrides/**"
-      - "scripts/**"
 
 permissions:
   contents: read

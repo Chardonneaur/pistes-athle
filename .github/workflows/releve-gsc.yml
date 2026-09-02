@@ -54,10 +54,20 @@ jobs:
           # Pas un secret : un identifiant de base ne donne acces a rien sans
           # le jeton. Il est deja en clair dans logs/wrangler.jsonc pour l'autre.
           CF_DATABASE_ID: 91b914eb-f934-4415-957b-8792487f239e
+          # Les entrees du declenchement manuel passent par l'environnement,
+          # jamais dans la ligne de commande : ${{ }} est remplace AVANT que
+          # bash ne lise la ligne, donc un « $(...) » saisi dans le champ
+          # « jours » s'executerait ici, dans le seul job du depot qui porte a
+          # la fois les jetons Google et Cloudflare. Passer par $JOURS le rend
+          # inerte : bash le lit comme une donnee, pas comme du code.
+          JOURS: ${{ inputs.jours || 7 }}
+          SIMULATION: ${{ inputs.simulation }}
         run: |
-          python3 scripts/releve_gsc.py \
-            --jours "${{ inputs.jours || 7 }}" \
-            ${{ inputs.simulation == true && '--simulation' || '' }}
+          simulation=""
+          if [ "$SIMULATION" = "true" ]; then
+            simulation="--simulation"
+          fi
+          python3 scripts/releve_gsc.py --jours "$JOURS" $simulation
 
   # Un releve qui s'arrete est invisible : il n'envoie rien meme quand tout va
   # bien. Sans ce billet, on ne s'apercevrait de la panne qu'en constatant, des

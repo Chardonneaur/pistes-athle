@@ -119,9 +119,13 @@ jobs:
         # le site est en ligne, seul le faire-part s'est perdu. Le script rend
         # deja 0 sur toutes ses abstentions ; ceci couvre le reste.
         continue-on-error: true
+        env:
+          # Meme raison que dans « Relever la Search Console » : une variable de
+          # depot n'a rien d'hostile, mais une valeur ne se colle pas dans une
+          # ligne de shell — elle se lit depuis l'environnement.
+          SITE_URL: ${{ vars.SITE_URL || 'https://pistes-athle.com' }}
         run: |
-          python3 scripts/indexnow.py \
-            --url "${{ vars.SITE_URL || 'https://pistes-athle.com' }}" --envoyer
+          python3 scripts/indexnow.py --url "$SITE_URL" --envoyer
 
   # Un echec ici ne casse rien en production — le site en ligne reste le
   # dernier build valide — et c'est precisement le probleme : rien ne le dit.
