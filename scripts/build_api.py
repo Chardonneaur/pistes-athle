@@ -658,7 +658,13 @@ CSP = (
     "object-src 'none'; "
     "frame-src 'none'; "
     "form-action 'none'; "
-    "script-src 'self' https://cdn.matomo.cloud; "
+    # pagead2 est le chargeur AdSense, et il est SEUL ajoute : frame-src reste
+    # a 'none', donc aucune annonce ne peut s'afficher. C'est voulu. Le script
+    # n'est la que pour que Google puisse examiner le site (AdSense > Sites) ;
+    # ouvrir frame-src, img-src et connect-src aux iframes et aux visuels des
+    # annonceurs est une decision separee, a prendre quand l'examen aura repondu.
+    "script-src 'self' https://cdn.matomo.cloud "
+    "https://pagead2.googlesyndication.com; "
     "style-src 'self'; "
     "img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr "
     "https://ronanchardonneau.matomo.cloud; "
@@ -669,6 +675,19 @@ CSP = (
 SECURITE_HEAD = (
     f'<meta http-equiv="Content-Security-Policy" content="{CSP}">\n'
     '<meta name="referrer" content="strict-origin-when-cross-origin">'
+)
+
+# L'editeur AdSense du compte pub-1527587552576457, cree en 2008. Le prefixe
+# « ca- » vaut pour la balise ; ads.txt attend la forme sans prefixe.
+ADSENSE_CLIENT = "ca-pub-1527587552576457"
+
+# Present pour un seul motif aujourd'hui : permettre l'examen du site par
+# Google. Tant que frame-src vaut 'none' dans CSP, ce script se charge et ne
+# peut rien afficher — ni iframe, ni visuel, ni appel publicitaire.
+ADSENSE_HEAD = (
+    '<link rel="preconnect" href="https://pagead2.googlesyndication.com">\n'
+    '<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js'
+    f'?client={ADSENSE_CLIENT}" crossorigin="anonymous"></script>'
 )
 
 MATOMO_HEAD = """<link rel="preconnect" href="https://cdn.matomo.cloud">
@@ -691,6 +710,8 @@ PAGE_HTML = """<!DOCTYPE html>
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="../../assets/matomo.js?v=3" defer></script>
+<link rel="preconnect" href="https://pagead2.googlesyndication.com">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1527587552576457" crossorigin="anonymous"></script>
 <script type="application/json" id="capabilities">{capacites}</script>
 </head>
 <body>

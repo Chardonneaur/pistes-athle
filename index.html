@@ -11,7 +11,7 @@
      moyen sur cet hebergement. style-src ne porte pas 'unsafe-inline' : le
      site n'a ni balise <style> ni attribut style="". Doit rester identique a
      CSP dans scripts/build_api.py, qui couvre les pages statiques. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdn.matomo.cloud; style-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr https://ronanchardonneau.matomo.cloud; connect-src 'self' https://ronanchardonneau.matomo.cloud; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; form-action 'none'; script-src 'self' https://cdn.matomo.cloud https://pagead2.googlesyndication.com; style-src 'self'; img-src 'self' data: https://*.tile.openstreetmap.org https://data.geopf.fr https://ronanchardonneau.matomo.cloud; connect-src 'self' https://ronanchardonneau.matomo.cloud; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0f172a">
 <meta name="google-site-verification" content="kzX2eR3I5nadv2_Q132pxypVhQGP7ax79PMayaBXi-U">
@@ -49,6 +49,15 @@
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="assets/matomo.js?v=3" defer></script>
+
+<!-- Chargeur AdSense. Il n'est la que pour permettre a Google d'examiner le
+     site (AdSense > Sites) : frame-src vaut 'none' dans la politique ci-dessus,
+     donc ce script ne peut afficher AUCUNE annonce — ni iframe, ni visuel. Le
+     jour ou l'examen aboutit, ouvrir frame-src, img-src et connect-src est une
+     decision separee, qui se prend en connaissance de ce qu'elle ouvre.
+     Doit rester en accord avec ADSENSE_HEAD dans scripts/build_api.py. -->
+<link rel="preconnect" href="https://pagead2.googlesyndication.com">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1527587552576457" crossorigin="anonymous"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

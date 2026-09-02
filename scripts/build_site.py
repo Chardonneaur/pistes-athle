@@ -28,7 +28,8 @@ from datetime import date
 
 import build_api
 import indexnow
-from build_api import DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD, SURFACE_EN, slug
+from build_api import (ADSENSE_CLIENT, ADSENSE_HEAD, DISCIPLINES, MATOMO_HEAD,
+                       SECURITE_HEAD, SURFACE_EN, slug)
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
@@ -808,6 +809,7 @@ def entete(lang, titre, desc, chemin, alternatives, jsonld, url_base,
 <link rel="icon" href="{r}assets/icon.svg" type="image/svg+xml">
 {liens}<link rel="stylesheet" href="{r}assets/page.css?v=14">
 {mesure}
+{ADSENSE_HEAD}
 <link rel="service-desc" type="application/json" href="{url_base}/openapi.json">
 <link rel="alternate" type="application/json" href="{url_base}/api/index.json" title="Index des installations (JSON)">
 {blocs}
@@ -1548,6 +1550,12 @@ PRIVE = {
   <li><strong>data.geopf.fr</strong> — les vues aériennes de l'IGN, affichées sur les fiches
       qui n'ont pas encore de photo. Les images ne sont pas stockées ici, elles sont demandées
       à la Géoplateforme au moment de l'affichage.</li>
+  <li><strong>pagead2.googlesyndication.com</strong> — le chargeur AdSense, posé sur chaque
+      page pour que Google puisse examiner le site. Il ne diffuse <strong>aucune annonce</strong> :
+      la politique de sécurité de ce site interdit les cadres tiers
+      (<code>frame-src 'none'</code>), or une annonce s'affiche dans un cadre. Ce serveur voit
+      votre adresse IP, comme tout serveur sollicité ; ce qu'il en fait relève des règles de
+      Google et non des nôtres.</li>
   <li><strong>Google Maps</strong> — seulement si vous cliquez « Itinéraire » ou
       « Horaires » : vous quittez alors le site, et ce sont les règles de Google qui
       s'appliquent.</li>
@@ -1672,6 +1680,12 @@ PRIVE = {
   <li><strong>data.geopf.fr</strong> — the IGN aerial views shown on venues that have no photo
       yet. The images are not stored here; they are requested from the French Géoplateforme as
       the page is displayed.</li>
+  <li><strong>pagead2.googlesyndication.com</strong> — the AdSense loader, placed on every page
+      so that Google can review the site. It serves <strong>no advertisement</strong>: this
+      site's content security policy forbids third-party frames
+      (<code>frame-src 'none'</code>), and an advertisement is displayed inside a frame. That
+      server sees your IP address, as any requested server does; what it does with it falls
+      under Google's rules, not ours.</li>
   <li><strong>Google Maps</strong> — only if you click &laquo;&nbsp;Directions&nbsp;&raquo; or
       &laquo;&nbsp;Opening hours&nbsp;&raquo;: you then leave this site, and Google's rules
       apply.</li>
@@ -2656,6 +2670,7 @@ def page_404(url_base, total):
 <link rel="preconnect" href="https://cdn.matomo.cloud">
 <link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
 <script src="{url_base}/assets/matomo.js?v=3" defer></script>
+{ADSENSE_HEAD}
 </head>
 <body>
 <header class="page-bar">
@@ -3151,6 +3166,12 @@ def main():
     if domaine:
         ecrire(os.path.join(out, "CNAME"), domaine + "\n")
     ecrire(os.path.join(out, "robots.txt"), robots(url_base))
+    # Google reclame ads.txt des qu'un site est declare dans AdSense, et son
+    # absence fait apparaitre un avertissement « vendeurs non autorises ». Une
+    # seule ligne suffit a un editeur direct. f08c47fec0942fa0 est l'identifiant
+    # de Google dans le registre TAG, le meme pour tout le monde.
+    ecrire(os.path.join(out, "ads.txt"),
+           f"google.com, {ADSENSE_CLIENT.removeprefix('ca-')}, DIRECT, f08c47fec0942fa0\n")
     # Preuve de possession du domaine pour IndexNow : le moteur va chercher ce
     # fichier avant d'accepter la moindre annonce. Il doit donc etre en ligne
     # avant elle — d'ou son ecriture ici, et l'annonce apres le deploiement.
