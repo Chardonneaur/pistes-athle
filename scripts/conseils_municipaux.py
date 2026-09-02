@@ -174,11 +174,28 @@ def lire(url, cache=None, binaire=False, timeout=30):
 
 
 def robots(base):
-    """Un robot poli demande d'abord. Un robots.txt illisible ne bloque pas."""
+    """Un robot poli demande d'abord. Un robots.txt illisible ne bloque pas.
+
+    On telecharge le fichier soi-meme au lieu d'appeler rp.read(), et ce n'est
+    pas une coquetterie : rp.read() ouvre l'URL SANS en-tete User-Agent, et
+    beaucoup de sites communaux repondent alors 403. Or RobotFileParser traite
+    un 401 ou un 403 sur robots.txt comme un « tout est interdit » — sans lever
+    d'exception, donc sans que le try/except ci-dessous n'y puisse rien.
+
+    Mesure le 2 septembre 2026 : nice.fr, ville-chamalieres.fr et beauvais.fr
+    etaient ainsi declares interdits alors que leur robots.txt n'interdit que
+    /wp-admin/ et quelques chemins de recherche. Trois communes sur six d'un
+    lot de controle, ecartees pour rien — et le silence ressemblait a une
+    donnee manquante.
+    """
     rp = urllib.robotparser.RobotFileParser()
-    rp.set_url(urllib.parse.urljoin(base, "/robots.txt"))
+    url = urllib.parse.urljoin(base, "/robots.txt")
+    rp.set_url(url)
+    texte = lire(url)
+    if texte is None:
+        return None                      # illisible : on ne bloque pas
     try:
-        rp.read()
+        rp.parse(texte.splitlines())
     except Exception:
         return None
     return rp
