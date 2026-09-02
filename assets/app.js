@@ -8,7 +8,7 @@
 // Version de l'application. À incrémenter à chaque déploiement du code :
 // scripts/build_data.py la recopie dans tracks.json, ce qui permet à un
 // navigateur exécutant une version périmée de s'en rendre compte tout seul.
-const APP_VERSION = '14';
+const APP_VERSION = '15';
 
 // Laisser vide pour une détection automatique depuis l'URL *.github.io.
 const REPO_OVERRIDE = '';
@@ -60,6 +60,12 @@ const trier = list => [...list].sort((a, b) => ORDRE_AGRES.indexOf(a) - ORDRE_AG
 const FILTERS = [
   { id: 'near',   test: null },
   { id: 'piste',  test: t => t.piste },
+  /* « Avec piste » ne dit pas si l'on peut y courir un tour : 4 015 des 6 534
+     sites qui en portent une sont une « piste isolee », c'est-a-dire hors
+     stade d'athletisme, et le ministere n'en declare presque jamais le
+     developpement. Ce filtre-la est celui qu'on vient chercher quand on veut
+     un anneau, et il n'existait pas. */
+  { id: 'anneau', test: t => t.type_piste === 'stade' },
   { id: 'synth',  test: t => t.surface === 'synthetique' },
   { id: 'libre',  test: t => t.acces_libre },
   { id: 'perche', test: t => has(t, 'perche') },
@@ -704,6 +710,7 @@ function openSheet(id) {
       ${kv(U.kv_revetement, sol)}
       ${kv(U.kv_developpement, t.longueur_piste ? t.longueur_piste + ' m'
             : (t.longueur_probable ? `${t.longueur_probable} m — ${U.lp_estime}` : null))}
+      ${kv(U.kv_type_piste, U.type_piste[t.type_piste] || null)}
       ${kv(U.kv_couloirs, t.couloirs)}
       ${kv(U.kv_config, t.couvert ? U.kv_couverte : (t.piste ? U.kv_plein_air : null))}
       ${kv(U.kv_service, t.annee)}

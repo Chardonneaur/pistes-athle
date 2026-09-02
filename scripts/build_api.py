@@ -112,6 +112,8 @@ def compact(t):
         r["cl"] = t["couloirs"]
     if t.get("surface"):
         r["s"] = t["surface"]
+    if t.get("type_piste"):
+        r["tp"] = t["type_piste"]
     if t.get("acces_libre"):
         r["al"] = 1                       # jamais 0 : l'absence n'est pas un non
     if t.get("agres"):
@@ -126,7 +128,7 @@ def compact(t):
 
 
 KEYMAP = {"i": "id", "n": "nom", "v": "ville", "d": "departement", "cp": "code_postal",
-          "y": "latitude", "x": "longitude", "p": "piste",
+          "y": "latitude", "x": "longitude", "p": "piste", "tp": "type_piste",
           "lp": "longueur_piste_m", "lpp": "longueur_probable_m", "cl": "couloirs",
           "s": "revetement", "al": "acces_libre", "g": "agres_declares",
           "gp": "agres_probables", "nv": "nb_avis", "nt": "note_moyenne"}
@@ -143,7 +145,7 @@ def plein(t, url_base):
     r = {"id": t["i"], "nom": t.get("n"), "ville": t.get("v"),
          "departement": t.get("d"), "code_postal": t.get("cp"),
          "latitude": t.get("y"), "longitude": t.get("x"),
-         "piste": bool(t.get("p")),
+         "piste": bool(t.get("p")), "type_piste": t.get("tp"),
          "longueur_piste_m": t.get("lp"), "longueur_probable_m": t.get("lpp"),
          "couloirs": t.get("cl"), "revetement": t.get("s"),
          "acces_libre": True if t.get("al") else None,
@@ -234,6 +236,11 @@ def facettes(index, deps):
             seau(f"surface/{SURFACE_EN[t['s']]}/{dep}",
                  {"surface": t["s"], "department": dep})["ids"].append(sid)
 
+        if t.get("tp"):
+            seau(f"track-type/{t['tp']}", {"track_type": t["tp"]})["ids"].append(sid)
+            seau(f"track-type/{t['tp']}/{dep}",
+                 {"track_type": t["tp"], "department": dep})["ids"].append(sid)
+
         if t.get("nv"):
             seau("reviewed", {"has_reviews": True})["ids"].append(sid)
             seau(f"reviewed/{dep}",
@@ -277,6 +284,7 @@ def comptes(index):
         "total": len(index),
         "longueur": sum(1 for t in index if t.get("lp")),
         "couloirs": sum(1 for t in index if t.get("cl")),
+        "type_stade": sum(1 for t in index if t.get("tp") == "stade"),
         "acces_inconnu": sum(1 for t in index if not t.get("al")),
         "sans_avis": sum(1 for t in index if not t.get("nv")),
     }
@@ -305,6 +313,11 @@ def parametres_recherche(c):
                                  f"n'est renseigne que sur {n(c['couloirs'])} sites sur "
                                  f"{n(c['total'])} ; ce filtre exclut de fait tous les autres."),
         ("surface", "string", "Revetement : " + ", ".join(f"`{SURFACE_EN[s]}`" for s in SURFACES) + "."),
+        ("track_type", "string", "Type declare : `stade` (anneau d'un stade "
+                                 "d'athletisme), `couloirs_2_4`, `isolee` (piste hors "
+                                 "stade d'athletisme). C'est le filtre a poser pour ne "
+                                 "garder que les sites ou l'on court un tour : "
+                                 f"{n(c['type_stade'])} des {n(c['total'])} installations."),
         ("free_access", "string", "`true` : les sites declares en acces libre. "
                                   f"`unknown` : les {n(c['acces_inconnu'])} dont l'acces "
                                   "n'est pas renseigne. `false` est **refuse** (400) — un "
@@ -368,6 +381,17 @@ def openapi(url_base, api_url, index, maj):
                             "description": "Renseigne seulement si la requete portait "
                                            "`lat`/`lon`."},
             "piste": {"type": "boolean"},
+            "type_piste": {"type": ["string", "null"],
+                           "enum": ["stade", "couloirs_2_4", "isolee", None],
+                           "description": "Type declare par le ministere. `stade` : anneau "
+                                          "d'un stade d'athletisme. `couloirs_2_4` : piste "
+                                          "de 2 a 4 couloirs. `isolee` : piste qui "
+                                          "n'appartient pas a un stade d'athletisme — ce qui "
+                                          "ne veut pas dire qu'elle n'a pas d'anneau. Ce "
+                                          "champ explique la plupart des "
+                                          "`longueur_piste_m` nuls : le ministere ne declare "
+                                          "le developpement que de 0,2 % des pistes isolees, "
+                                          "contre 95 % des stades d'athletisme."},
             "longueur_piste_m": {"type": ["integer", "null"],
                                  "description": "Developpement declare par le ministere."},
             "longueur_probable_m": {"type": ["integer", "null"],
@@ -496,6 +520,9 @@ def openapi(url_base, api_url, index, maj):
         ("/api/tracks/surface/{surface}.json", "listBySurface",
          "Installations d'un revetement", "surface", "Revetement", "synthetic",
          [SURFACE_EN[s] for s in SURFACES]),
+        ("/api/tracks/track-type/{track_type}.json", "listByTrackType",
+         "Installations d'un type de piste donne", "track_type",
+         "Type declare par le ministere", "stade", ["stade", "couloirs_2_4", "isolee"]),
         ("/api/tracks/lanes/{n}.json", "listByLanes",
          "Installations d'au moins N couloirs", "n", "Nombre minimal de couloirs", "6", None),
         ("/api/tracks/lanes/{n}/{department}.json", "listByLanesAndDepartment",
@@ -606,6 +633,7 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
                 f"{url_base}/api/tracks/discipline/{{discipline}}/{{department}}.json",
             "length": f"{url_base}/api/tracks/length/{{metres}}.json",
             "surface": f"{url_base}/api/tracks/surface/{{surface}}.json",
+            "track_type": f"{url_base}/api/tracks/track-type/{{track_type}}.json",
             "lanes_min": f"{url_base}/api/tracks/lanes/{{n}}.json",
             "free_access": f"{url_base}/api/tracks/free-access.json",
             "reviewed": f"{url_base}/api/tracks/reviewed.json",
@@ -614,6 +642,7 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
         "vocabularies": {
             "disciplines": sorted(DISCIPLINES),
             "surfaces": [SURFACE_EN[s] for s in SURFACES],
+            "track_types": ["stade", "couloirs_2_4", "isolee"],
         },
         "contract": {
             "free_access": f"true | unknown. `false` est refuse : {n(c['acces_inconnu'])} "

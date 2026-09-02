@@ -146,8 +146,29 @@ DISCIPLINE_PATTERNS = [
 JUMP_DISCIPLINES = {"longueur", "hauteur", "perche", "triple"}
 THROW_DISCIPLINES = {"poids", "disque", "marteau", "javelot"}
 
-TRACK_TYPES = {"Stade d’athlétisme", "Stade d'athlétisme",
-               "Piste d'athlétisme isolée", "Piste d'athlétisme 2 à 4 couloirs"}
+# Le ministere type chaque equipement, et c'est la seule source ouverte qui
+# distingue l'anneau d'un stade d'athletisme de la ligne droite peinte au fond
+# d'une cour. Le site a longtemps fondu les trois dans un meme `piste: true`,
+# et cette confusion coutait cher : sur 6 540 installations portant une piste,
+# 4 019 (61 %) ne sont qu'une « Piste d'athletisme isolee ». Une fiche
+# promettait donc « une piste » sans jamais pouvoir dire si l'on peut y courir
+# un tour.
+#
+# Le chiffre qui tranche, mesure le 2 septembre 2026 sur le brut Data ES :
+# 2 284 des 2 409 equipements « Stade d'athletisme » (95 %) declarent leur
+# developpement, contre 9 des 4 333 « Piste d'athletisme isolee » (0,2 %). Le
+# developpement vide de ces fiches n'est pas un oubli a combler : c'est une
+# consequence du type, et le dire vaut mieux que le chercher.
+TYPES_PISTE = {
+    "Stade d’athlétisme": "stade",
+    "Stade d'athlétisme": "stade",
+    "Piste d'athlétisme 2 à 4 couloirs": "couloirs_2_4",
+    "Piste d'athlétisme isolée": "isolee",
+}
+# Le rang tranche quand une installation porte plusieurs types : un stade prime
+# sur une ligne droite annexe, et non l'inverse.
+RANG_TYPE_PISTE = {"stade": 0, "couloirs_2_4": 1, "isolee": 2}
+TRACK_TYPES = set(TYPES_PISTE)
 
 
 # --- normalisation typographique des libelles ------------------------------
@@ -601,6 +622,7 @@ def aggregate(raw):
                 "commune_deleguee": None,
                 "lat": lat, "lon": lon,
                 "piste": False,
+                "type_piste": None,
                 "couloirs": None,
                 "longueur_piste": None,
                 "longueur_probable": None,
@@ -638,6 +660,10 @@ def aggregate(raw):
 
         if is_track:
             inst["piste"] = True
+            tp = TYPES_PISTE[type_name]
+            if (inst["type_piste"] is None
+                    or RANG_TYPE_PISTE[tp] < RANG_TYPE_PISTE[inst["type_piste"]]):
+                inst["type_piste"] = tp
             couloirs = as_int(e.get("equip_piste_nb"))
             if couloirs and (inst["couloirs"] is None or couloirs > inst["couloirs"]):
                 inst["couloirs"] = couloirs
@@ -707,7 +733,7 @@ def load_overrides():
 LIST_FIELDS = {"agres", "agres_probables"}
 ALLOWED_OVERRIDE_KEYS = {
     "id", "nom", "adresse", "cp", "ville", "dep", "commune_deleguee",
-    "lat", "lon", "piste", "couloirs",
+    "lat", "lon", "piste", "type_piste", "couloirs",
     "longueur_piste", "longueur_probable", "surface", "couvert", "eclairage",
     "acces_libre", "ouvert_public",
     "horaires", "acces_note", "vestiaires", "douches", "sanitaires", "tribunes",
@@ -732,6 +758,7 @@ def apply_overrides(installations, overrides):
                 "insee": None, "dep": None, "dep_nom": None, "region": None,
                 "commune_deleguee": None,
                 "scolaire": False, "lat": None, "lon": None, "piste": True,
+                "type_piste": None,
                 "couloirs": None, "longueur_piste": None, "longueur_probable": None,
                 "surface": None,
                 "couvert": False, "eclairage": False, "acces_libre": False,
@@ -765,7 +792,7 @@ def apply_overrides(installations, overrides):
 KEYMAP = {
     "id": "i", "nom": "n", "adresse": "a", "cp": "cp", "ville": "v",
     "dep": "d", "commune_deleguee": "cd", "lat": "y", "lon": "x",
-    "piste": "p", "couloirs": "cl",
+    "piste": "p", "type_piste": "tp", "couloirs": "cl",
     "longueur_piste": "lp", "longueur_probable": "lpp", "surface": "s", "couvert": "cv", "eclairage": "ec",
     "acces_libre": "al", "ouvert_public": "op", "vestiaires": "ve", "douches": "du",
     "sanitaires": "wc", "tribunes": "tr", "agres": "g", "agres_probables": "gp",
