@@ -66,7 +66,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # DILA et le chargement des sites. Elles sont stables et deja eprouvees sur
 # 167 communes ; les recopier ici les ferait diverger.
 from conseils_municipaux import (           # noqa: E402
-    autorise, charger_sites, insee_du_site, lire, mairie, plier, robots,
+    ANNUAIRE, GEOAPI, autorise, charger_sites, insee_du_site, lire, mairie,
+    plier, robots,
 )
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -93,7 +94,19 @@ MAIRIE = re.compile(
     r"mairie|hotel de ville|accueil|etat civil|secretariat|"
     r"services? administratifs?|guichet|standard|permanence|ccas|"
     r"urbanisme|passeport|carte d.identite|elections|"
-    r"service (?:population|scolaire|jeunesse|technique)", re.I)
+    r"service (?:population|scolaire|jeunesse|technique)|"
+    # « Contact Service des sports [...] Ouvert du lundi [...] de 8h30 a
+    # 12h30 » : a Franconville, c'est le bureau qui repond au telephone, pas
+    # un gymnase. Un service des sports a des horaires, et ce ne sont jamais
+    # ceux de la piste.
+    r"services? (?:des )?sports?|direction des sports|sur rendez.vous|"
+    # Le pied de page, qui suit le lecteur sur toutes les pages du site. A
+    # Franconville il porte « Horaires d'ouverture Lundi, Mardi, Jeudi et
+    # Vendredi de 8h30 a 12h15 de 13h30 a 18h » sans jamais ecrire le mot
+    # mairie — et le samedi qu'il cite suffisait a le faire passer pour un
+    # equipement. Ces mots-la, eux, n'existent que dans le chrome d'un site.
+    r"nous contacter|\bcedex\b|\bbp\s?\d|\bfax\b|newsletter|"
+    r"plan du site|mentions legales|nous ecrire|suivez.nous", re.I)
 
 # Le contexte qui QUALIFIE, et il faut les DEUX. Un seul des deux ne suffit
 # pas : la fiche du complexe Robert Monseau a Saint-Medard porte le tableau
@@ -276,6 +289,52 @@ def meme_hote(a, b):
     return na == nb
 
 
+def epci(insee, cache_dir):
+    """Le site de l'intercommunalite, quand elle en a un.
+
+    C'est la moitie manquante du gisement, mesuree le 2 septembre 2026 : sur
+    les neuf horaires trouves a la main ce jour-la, cinq etaient sur le site de
+    la commune et QUATRE sur celui de l'agglomeration ou du gestionnaire —
+    beauvaisis.fr, valparisis.fr deux fois, m2a.fr. Un parcours limite a la
+    mairie plafonne donc a la moitie du possible.
+
+    Le chemin passe par deux jeux, parce que l'annuaire DILA ne rattache pas
+    toujours l'EPCI a ses communes : geo.api.gouv.fr donne le SIREN de
+    l'intercommunalite d'une commune, et c'est ce SIREN qui retrouve la fiche
+    DILA — et son site. Interroger DILA directement sur le code INSEE de la
+    commune ne rend rien pour Ermont, Franconville ni Cachan.
+
+    Limite connue : geo.api rattache Clamart a la Metropole du Grand Paris,
+    alors que son stade est gere par l'etablissement public territorial Vallee
+    Sud - Grand Paris, que ni l'un ni l'autre des deux jeux ne nomme. Les EPT
+    de la petite couronne echappent a ce chemin.
+    """
+    txt = lire(f"{GEOAPI}/communes/{insee}?fields=epci",
+               os.path.join(cache_dir, "epci", f"{insee}.json"))
+    try:
+        code = (json.loads(txt).get("epci") or {}).get("code")
+    except (TypeError, ValueError, AttributeError):
+        return None
+    if not code:
+        return None
+    url = ANNUAIRE + "?" + urllib.parse.urlencode({
+        "where": f'siren="{code}"', "limit": 3,
+        "select": "nom,site_internet"})
+    txt = lire(url, os.path.join(cache_dir, "epci", f"siren-{code}.json"))
+    try:
+        res = (json.loads(txt).get("results") or [])
+    except (TypeError, ValueError):
+        return None
+    if not res:
+        return None
+    try:
+        v = json.loads(res[0].get("site_internet") or "[]")
+    except ValueError:
+        return None
+    site = (v[0].get("valeur") if v else None) or None
+    return {"nom": res[0].get("nom"), "site": site} if site else None
+
+
 def wp_recherche(base, insee, mots):
     """L'API de recherche de WordPress, qui ignore les menus.
 
@@ -385,6 +444,38 @@ def pages_sport(base, insee, rp):
     return gardees
 
 
+def chercher(base, insee, nom, cle_cache):
+    """Les pages d'un site, par les trois canaux, du plus sur au moins sur.
+
+    Rend (pages, canal, silence). `cle_cache` distingue le site de la mairie de
+    celui de l'agglomeration, qui portent les memes chemins pour des pages
+    differentes.
+    """
+    if not base.startswith("http"):
+        base = "https://" + base
+    rp = robots(base)
+    if not autorise(rp, base):
+        return [], None, "robots.txt interdit la visite"
+
+    noms = mots_du_nom(nom)
+    urls, canal = (wp_recherche(base, cle_cache, noms + [nom]),
+                   "recherche WordPress")
+    if not urls:
+        urls, canal = urls_devinees(base, nom, cle_cache, rp), "URL devinee"
+    pages = [(u, lire(u, os.path.join(
+                 CACHE, "page", cle_cache,
+                 re.sub(r"[^a-z0-9]+", "-", urllib.parse.urlsplit(u).path)[:70] + ".html")))
+             for u in urls]
+    pages = [(u, h) for u, h in pages if h]
+    if not pages:
+        pages, canal = pages_sport(base, cle_cache, rp), "exploration des pages"
+    if not pages:
+        return [], None, ("aucune page d'equipement trouvee : ni par la "
+                          "recherche WordPress, ni par URL devinee, ni en "
+                          "explorant depuis l'accueil")
+    return pages, canal, None
+
+
 def etudier(site):
     """Le dossier d'un site : la commune, ses pages, les horaires candidats."""
     fiche = {"id": site["id"], "nom": site["nom"], "ville": site["ville"],
@@ -399,38 +490,34 @@ def etudier(site):
         fiche["silence"] = "commune absente de l'annuaire DILA"
         return fiche
     fiche["commune"] = m.get("nom")
-    base = m.get("site")
-    if not base:
+    if not m.get("site"):
         fiche["silence"] = "l'annuaire DILA ne donne pas de site pour cette mairie"
         return fiche
-    if not base.startswith("http"):
-        base = "https://" + base
-    fiche["site"] = base
 
-    rp = robots(base)
-    if not autorise(rp, base):
-        fiche["silence"] = "robots.txt interdit la visite"
-        return fiche
+    # Deux sites a interroger, et l'ordre compte : la commune d'abord, parce
+    # qu'une fiche d'equipement y est plus souvent qu'ailleurs ; l'agglomeration
+    # ensuite, parce que c'est elle qui gere l'installation dans la moitie des
+    # cas ou l'horaire existe. Voir epci().
+    lieux = [(m["site"], insee, "mairie")]
+    e = epci(insee, CACHE)
+    if e:
+        lieux.append((e["site"], f"epci-{urllib.parse.urlsplit(e['site']).netloc}",
+                      f"agglomeration ({e['nom']})"))
 
-    noms = mots_du_nom(site["nom"])
-
-    # Trois canaux, du plus sur au moins sur. On s'arrete des qu'un rend.
-    urls, canal = wp_recherche(base, insee, noms + [site["nom"]]), "recherche WordPress"
-    if not urls:
-        urls, canal = urls_devinees(base, site["nom"], insee, rp), "URL devinee"
-    pages = [(u, lire(u, os.path.join(
-                 CACHE, "page", insee,
-                 re.sub(r"[^a-z0-9]+", "-", urllib.parse.urlsplit(u).path)[:70] + ".html")))
-             for u in urls]
-    pages = [(u, h) for u, h in pages if h]
-    if not pages:
-        pages, canal = pages_sport(base, insee, rp), "exploration des pages"
+    pages, canal, silences = [], None, []
+    for base, cle_cache, quoi in lieux:
+        p, c, silence = chercher(base, insee, site["nom"], cle_cache)
+        if silence:
+            silences.append(f"{quoi} : {silence}")
+            continue
+        fiche["site"] = fiche["site"] or base
+        pages += p
+        canal = canal or f"{c} sur le site de la {quoi}"
+    fiche["site"] = fiche["site"] or m["site"]
     fiche["canal"] = canal
     fiche["pages"] = len(pages)
     if not pages:
-        fiche["silence"] = ("aucune page d'equipement trouvee : ni par la "
-                            "recherche WordPress, ni par URL devinee, ni en "
-                            "explorant depuis l'accueil")
+        fiche["silence"] = " ; ".join(silences) or "aucune page d'equipement trouvee"
         return fiche
 
     # Plus le canal est large, plus le contenu doit etre strict. Une URL
@@ -441,8 +528,9 @@ def etudier(site):
     # page d'equipement avec de vrais horaires publics, mais pas ceux du
     # complexe cherche. On y exige donc que le nom du stade figure pres de la
     # plage.
-    exige_le_nom = canal == "exploration des pages"
+    exige_le_nom = bool(canal) and canal.startswith("exploration des pages")
 
+    noms = mots_du_nom(site["nom"])
     vus = set()
     for url, html in pages:
         for e in extraits_horaires(html, noms, url):

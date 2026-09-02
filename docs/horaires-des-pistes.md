@@ -34,7 +34,22 @@ python3 scripts/horaires_municipaux.py I940160010
 python3 scripts/horaires_municipaux.py 94 --limite 20 --json .work/horaires-94.json
 ```
 
-### Trois canaux, du plus sûr au moins sûr
+### Deux sites, trois canaux
+
+**Deux sites**, et l'ordre compte. La commune d'abord, parce qu'une fiche
+d'équipement y est plus souvent qu'ailleurs. **L'intercommunalité ensuite,
+parce que c'est elle qui gère l'installation dans la moitié des cas où
+l'horaire existe** : sur les neuf horaires trouvés à la main le 2 septembre
+2026, cinq étaient sur le site de la commune et quatre ailleurs —
+`beauvaisis.fr`, `valparisis.fr` deux fois, `m2a.fr`.
+
+Le chemin vers l'EPCI passe par deux jeux, parce que l'annuaire DILA ne
+rattache pas toujours l'intercommunalité à ses communes :
+`geo.api.gouv.fr` donne le SIREN de l'EPCI d'une commune, et c'est ce SIREN qui
+retrouve la fiche DILA et son site. Interroger DILA directement sur le code
+INSEE ne rend rien pour Ermont, Franconville ni Cachan.
+
+**Trois canaux**, du plus sûr au moins sûr, appliqués à chacun des deux sites :
 
 1. **La recherche WordPress** (`/wp-json/wp/v2/search`). C'est le meilleur, et
    pour une raison de fond : la page cherchée n'est presque jamais liée depuis
@@ -59,7 +74,9 @@ positif :
 
 | règle | pourquoi |
 |---|---|
-| un mot de mairie près de la plage → **écarté** | guichet, accueil, état civil, CCAS, urbanisme |
+| un mot de mairie près de la plage → **écarté** | guichet, accueil, état civil, CCAS, urbanisme, **service des sports** |
+| un mot de pied de page → **écarté** | « Nous contacter », Cedex, BP, Fax, newsletter, mentions légales |
+| une page ou un texte d'association → **écarté** | `/association/`, entraînement, créneaux jeunes, licenciés |
 | pas de mot d'installation autour → **écarté** | piste, stade, terrain, gymnase, complexe |
 | pas de mot d'ouverture ou d'accès → **écarté** | un tableau nu est un planning d'activités |
 | pas de jour cité → **écarté** | une plage sans jour ne dit pas quand elle vaut |
@@ -77,12 +94,15 @@ n'ouvrir que de 9h à 17h. Elle n'est qu'un motif parmi cinq, et tout ce qui est
 
 ## Ce que le script ne sait pas faire
 
-**L'agglomération n'est pas explorée.** L'annuaire DILA donne le site de la
-*mairie*. Or l'équipement est souvent géré par l'intercommunalité, qui a son
-propre site : les horaires de Beauvais sont sur `beauvaisis.fr`, ceux de
-Clamart dans un règlement intérieur de Vallée Sud - Grand Paris, ceux d'Ermont
-et de Franconville sur `valparisis.fr`. Un silence d'ici veut dire « rien sur
-le site de la mairie », **pas** « rien n'existe ».
+**Les EPT de la petite couronne échappent au chemin de l'EPCI.**
+`geo.api.gouv.fr` rattache Clamart à la Métropole du Grand Paris, alors que son
+stade est géré par l'établissement public territorial Vallée Sud - Grand Paris,
+que ni geo.api ni DILA ne nomme. Les horaires de Clamart sont d'ailleurs dans
+un règlement intérieur en PDF, que ce script ne lit pas.
+
+**Un silence n'est pas une absence.** Il veut dire « rien sur le site de la
+mairie ni sur celui de son intercommunalité, par ces trois canaux » — pas
+« rien n'existe ».
 
 **Certaines communes interdisent la visite, et c'est leur droit.** Beauvais et
 Chamalières tournent sur un CMS dont le `robots.txt` porte `Disallow: /` pour
@@ -93,6 +113,13 @@ publics et ont été trouvés à la main le même jour.
 Monseau à Saint-Médard porte aussi le tableau horaire de la piscine. C'est la
 règle « un mot d'ouverture en plus d'un mot de lieu » qui fait tomber le
 tableau nu ; elle ne suffira pas toujours.
+
+**Les quatre visages du même piège.** L'horaire administratif ne se présente
+pas deux fois de la même façon, et chacun a fallu le rencontrer pour l'écarter :
+l'accueil de la mairie (Maurepas), le pied de page qui suit le lecteur partout
+sans jamais écrire le mot mairie (Franconville), le **service des sports** —
+un bureau qui répond au téléphone, pas un gymnase (Franconville encore), et le
+créneau de club (Couëron). Il y en aura un cinquième.
 
 ## Contrôle de recall, 2 septembre 2026
 
