@@ -1,0 +1,43 @@
+{
+  "id": "I441090215",
+  "longueur_piste": 300,
+  "couloirs": 3,
+  "surface": "bitume",
+  "eclairage": true,
+  "acces_libre": true,
+  "agres": [
+    "longueur"
+  ],
+  "acces_note": "Visite du 2 septembre 2026, en fin de journée : l'enceinte est accessible en continu parce que le grillage a été découpé et replié sur un panneau, côté rue. Ce n'est pas une ouverture officielle — c'est une brèche, et elle peut être réparée à tout moment. Aucun panneau d'horaires ni règlement n'a été vu à l'entrée. L'éclairage a été vu en place ; rien ne dit à quelles heures il fonctionne.",
+  "note": "Le développement déclaré par le recensement est faux. Le ministère annonce 333 m ; la mesure sur place à la montre GPS, le 2 septembre 2026, donne 300 m. OpenStreetMap le confirme de son côté : le tracé de l'anneau (way/170610160, leisure=track) a un périmètre de 296,6 m. Deux sources indépendantes contre une : c'est 300 m qui est écrit ici, et 333 qui est écarté.\n\nCe qui explique cette longueur se voit sur place : l'anneau ceinture au plus près un terrain de football, sans dégagement entre les deux — OpenStreetMap tague ce terrain surface=compacted, un stabilisé, et on le voit moussu au centre sur la photo du virage. C'est le tour strict d'un terrain de foot, pas un anneau d'athlétisme dimensionné pour lui-même. Visuellement, rien ne distingue une telle piste d'un 400 m : il faut la parcourir pour s'en rendre compte.\n\nTrois couloirs sont tracés sur l'anneau, et jusqu'à cinq sur la ligne droite. Le revêtement est du bitume, foulé sur place et non déduit d'une image. Un sautoir en longueur a été vu ; aucun autre agrès ne l'a été, ce qui ne dit pas qu'il n'y en a pas.",
+  "photos": [
+    {
+      "fichier": "01-virage-et-lice-plaine-de-jeux-de-la-geraudiere-nantes.jpg",
+      "legende": "Un virage : l'anneau de bitume, la lice qui le sépare du terrain central en stabilisé, la haie qui le borde à l'extérieur",
+      "credit": "Ronan C."
+    },
+    {
+      "fichier": "02-departs-decales-plaine-de-jeux-de-la-geraudiere-nantes.jpg",
+      "legende": "Les lignes de départ décalées, peintes en blanc sur le bitume le long du grillage",
+      "credit": "Ronan C."
+    },
+    {
+      "fichier": "03-ligne-droite-plaine-de-jeux-de-la-geraudiere-nantes.jpg",
+      "legende": "La ligne droite : marquage des couloirs encore lisible, mousse et gravillons le long de la bordure extérieure",
+      "credit": "Ronan C."
+    },
+    {
+      "fichier": "04-grillage-decoupe-plaine-de-jeux-de-la-geraudiere-nantes.jpg",
+      "legende": "Le grillage découpé et replié côté rue : c'est par cette brèche que l'enceinte est accessible en continu",
+      "credit": "Ronan C."
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan C.",
+      "date": "2026-09-02",
+      "note": 3,
+      "texte": "Cette piste m'a permis de comprendre ce qu'est une piste de 300 m : en gros, c'est une piste en bitume qui fait le tour strict d'un terrain de foot, sans vraiment d'écart entre l'anneau et le terrain. Visuellement, il est difficile de voir la différence entre 300 et 400 m. Je pense que c'est une piste qui peut répondre au besoin de certains coureurs occasionnels."
+    }
+  ]
+}
