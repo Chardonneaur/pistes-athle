@@ -1,5 +1,8 @@
 {
   "id": "I940160010",
   "couloirs": 6,
-  "note": "6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r1271113), non comptés sur place."
+  "url": "https://ville-cachan.fr/annuaire-des-equipements/complexe-sportif-leo-lagrange/",
+  "horaires": "Piste d'athlétisme — hors vacances scolaires : mardi de 17h30 à 21h30, jeudi de 17h30 à 21h30, samedi et dimanche de 9h à 20h. Pendant les vacances scolaires : du lundi au vendredi de 8h à 21h30, le week-end de 9h à 20h.",
+  "acces_note": "« La piste d'athlétisme est accessible au public (sous réserve de l'actualité liée aux compétitions, tournois et stages associatifs). »",
+  "note": "6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r1271113), non comptés sur place. Horaires et conditions d'accès de la piste relevés le 2 septembre 2026 sur la fiche officielle de la ville de Cachan (ville-cachan.fr, annuaire des équipements)."
 }
