@@ -24,12 +24,20 @@ Sans l'amont, une page qui ne rapporte rien ne dit pas si elle convertit mal ou
 si son encart n'est jamais rempli — deux problemes opposes, deux remedes
 opposes. Sans l'aval, on ne sait rien de l'argent.
 
-IDENTIFIANTS. AdSense reutilise ceux du serveur MCP, dans
-~/.config/adsense-mcp/ : rien a creer. Matomo demande un jeton d'API, a poser
-dans l'environnement — sans lui, le script rend la moitie AdSense seule, ce qui
-reste utile :
+IDENTIFIANTS, ET POURQUOI ILS SONT DANS DES FICHIERS. AdSense reutilise ceux du
+serveur MCP, dans ~/.config/adsense-mcp/ : rien a creer. Matomo demande un jeton
+d'API, a deposer dans ~/.config/matomo/token, une seule ligne, chmod 600.
 
-    MATOMO_TOKEN=xxxxxxxx python3 scripts/revenu_par_page.py
+Un fichier et non une variable de ligne de commande : « MATOMO_TOKEN=xxx python3
+... » ecrit le secret en clair dans l'historique du shell, et dans la trace de
+qui l'a tape. Un fichier hors du depot ne fuite ni par git, ni par
+l'historique, ni par une transcription.
+
+Reduire aussi ce que le jeton ouvre : un jeton Matomo vaut pour un UTILISATEUR,
+pas pour un site. Creer un utilisateur dedie en vue seule sur le site 149 et
+generer le jeton pour lui — meme fuite, il lit un site et n'ecrit rien.
+
+Sans jeton Matomo, le script rend la moitie AdSense seule, ce qui reste utile.
 
 Les revenus sont des ESTIMATIONS jusqu'a la cloture du mois.
 """
@@ -46,6 +54,7 @@ ADSENSE_CONF = os.path.expanduser("~/.config/adsense-mcp")
 ADSENSE_API = "https://adsense.googleapis.com/v2"
 MATOMO_URL = "https://ronanchardonneau.matomo.cloud/index.php"
 MATOMO_SITE = "149"
+MATOMO_JETON = os.path.expanduser("~/.config/matomo/token")
 UA = {"User-Agent": "pistes-athle/1.0 (github.com/Chardonneaur/pistes-athle)"}
 
 # Les trois etats que assets/adsense.js pousse dans Matomo, et le quatrieme
@@ -137,9 +146,32 @@ def chemin_de(url):
 
 # ----------------------------------------------------------------- Matomo
 
+def jeton_matomo():
+    """Le jeton, lu dans un fichier — jamais affiche, jamais journalise.
+
+    On accepte encore la variable d'environnement pour ne casser personne, mais
+    le fichier passe d'abord : c'est le seul des deux qui ne laisse pas le
+    secret dans l'historique du shell.
+    """
+    try:
+        with open(MATOMO_JETON, encoding="utf-8") as f:
+            jeton = f.read().strip()
+    except OSError:
+        return os.environ.get("MATOMO_TOKEN") or None
+    if not jeton:
+        return None
+    mode = os.stat(MATOMO_JETON).st_mode & 0o077
+    if mode:
+        print(f"AVERTISSEMENT : {MATOMO_JETON} est lisible par d'autres "
+              f"comptes. chmod 600 le referme.", file=sys.stderr)
+    return jeton
+
+
 def matomo(methode, jeton, **extra):
     p = {"module": "API", "method": methode, "idSite": MATOMO_SITE,
          "format": "JSON", "token_auth": jeton, "filter_limit": "-1", **extra}
+    # Le jeton part dans le CORPS de la requete, jamais dans l'URL : une URL
+    # finit dans les journaux d'acces du serveur, et le secret avec elle.
     rep = _json(MATOMO_URL, data=urllib.parse.urlencode(p).encode())
     if isinstance(rep, dict) and rep.get("result") == "error":
         sys.exit(f"ERREUR Matomo : {rep.get('message')}")
@@ -207,8 +239,9 @@ def raconter(pages, devise, avec_matomo):
             "  bloq             la part de visiteurs qui bloquent les annonces,\n"
             "                   la seule chose qu'AdSense ne dira jamais.")
     else:
-        print("Sans MATOMO_TOKEN, seule la moitie AdSense est lue : on voit "
-              "l'argent,\nmais pas pourquoi une page n'en fait pas.")
+        print(f"Sans jeton Matomo, seule la moitie AdSense est lue : on voit "
+              f"l'argent,\nmais pas pourquoi une page n'en fait pas. Deposer le "
+              f"jeton dans\n{MATOMO_JETON} (chmod 600).")
 
 
 def main():
@@ -232,10 +265,10 @@ def main():
         if h.get("name") == "ESTIMATED_EARNINGS":
             devise = h.get("currencyCode") or devise
 
-    jeton_matomo = os.environ.get("MATOMO_TOKEN")
+    jm = jeton_matomo()
     fusion = {}
-    if jeton_matomo:
-        for chemin, d in matomo_par_page(jeton_matomo, debut, fin).items():
+    if jm:
+        for chemin, d in matomo_par_page(jm, debut, fin).items():
             fusion.setdefault(chemin, {}).update(d)
     for chemin, d in pub.items():
         fusion.setdefault(chemin, {}).update(d)
@@ -244,7 +277,7 @@ def main():
     # le revenu est nul partout et c'est l'audience qui ordonne utilement.
     pages = sorted(fusion.items(),
                    key=lambda kv: (-kv[1].get("revenu", 0), -kv[1].get("vues", 0)))
-    raconter(pages[:args.limite], devise, bool(jeton_matomo))
+    raconter(pages[:args.limite], devise, bool(jm))
 
     if args.json:
         os.makedirs(os.path.dirname(os.path.abspath(args.json)), exist_ok=True)
