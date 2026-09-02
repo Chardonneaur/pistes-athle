@@ -109,6 +109,17 @@ ACCES = re.compile(
     r"ouvert|ouverture|fermeture|acces|horaires?|creneaux?|"
     r"public|disposition|pratique libre|utilisation", re.I)
 
+# Le troisieme piege, mesure sur la Loire-Atlantique le 2 septembre 2026 : le
+# CRENEAU DE CLUB. La page du club de badminton de Coueron nomme bien le
+# complexe sportif Paul Langevin et donne bien des heures — celles de ses
+# entrainements. Les ecrire dans une fiche dirait a un coureur de venir
+# precisement quand la salle est occupee. C'est l'inverse de ce qu'on cherche.
+CLUB = re.compile(
+    r"/association|/club|entrainement|entrainements|licencie|adherent|"
+    r"cotisation|inscription|creneaux jeunes|categorie|"
+    r"benjamin|poussin|minime|cadet|junior|veteran|"
+    r"cours (?:de|d.|collectif)|saison sportive", re.I)
+
 MARGE = 220          # caracteres cites de part et d'autre d'une plage horaire
 # Le classement lit plus large que ce qu'il cite. Un titre « Horaires
 # d'ouverture de la piste d'athletisme au public » chapeaute souvent cinq ou
@@ -151,7 +162,7 @@ def signature_administrative(debut, fin, contexte):
     return not re.search(r"samedi|dimanche|week.?end", contexte, re.I)
 
 
-def classer(extrait, large, debut, fin):
+def classer(url, extrait, large, debut, fin):
     """Retenu, ou ecarte avec son motif. On ecarte par defaut.
 
     Un horaire faux vaut moins qu'un champ vide : il envoie quelqu'un devant un
@@ -165,6 +176,9 @@ def classer(extrait, large, debut, fin):
     """
     if MAIRIE.search(extrait):
         return None, "contexte administratif : mairie, accueil ou service"
+    if CLUB.search(url) or CLUB.search(extrait):
+        return None, ("creneau d'association, pas horaire d'ouverture : "
+                      "l'ecrire enverrait un coureur quand la piste est prise")
     if not LIEU.search(large):
         return None, "aucun mot d'installation autour de la plage"
     if not ACCES.search(large):
@@ -178,7 +192,7 @@ def classer(extrait, large, debut, fin):
     return True, None
 
 
-def extraits_horaires(html, noms):
+def extraits_horaires(html, noms, url=""):
     """Les plages horaires de la page, avec leur phrase et leur verdict.
 
     On cite le texte d'origine et on cherche dans le texte plie : `plier`
@@ -206,7 +220,7 @@ def extraits_horaires(html, noms):
             continue
         vus.add(cle)
         debut, fin = heure_en_minutes(m.group(1)), heure_en_minutes(m.group(2))
-        garde, motif = classer(extrait, large, debut, fin)
+        garde, motif = classer(url, extrait, large, debut, fin)
         # Le nom du stade dans la meme phrase est le signe le plus fort qu'on
         # tienne la bonne installation, et non la piscine d'a cote.
         nomme = any(n and plier(n) in plie[max(0, a - MARGE):b + MARGE]
@@ -419,9 +433,24 @@ def etudier(site):
                             "explorant depuis l'accueil")
         return fiche
 
+    # Plus le canal est large, plus le contenu doit etre strict. Une URL
+    # devinee ou une recherche WordPress porte deja le nom de l'equipement :
+    # la page est la bonne par construction. L'exploration, elle, ramene
+    # n'importe quelle page du site — a La Chapelle-sur-Erdre elle a rendu
+    # « Horaires d'ouverture du complexe de tennis de Gesvrine », une vraie
+    # page d'equipement avec de vrais horaires publics, mais pas ceux du
+    # complexe cherche. On y exige donc que le nom du stade figure pres de la
+    # plage.
+    exige_le_nom = canal == "exploration des pages"
+
     vus = set()
     for url, html in pages:
-        for e in extraits_horaires(html, noms):
+        for e in extraits_horaires(html, noms, url):
+            if e["retenu"] and exige_le_nom and not e["nomme"]:
+                e["retenu"], e["motif"] = False, (
+                    "page trouvee en explorant le site, et le nom de "
+                    "l'equipement n'est pas dans la phrase : rien ne dit "
+                    "qu'il s'agit de cette installation")
             if not e["retenu"]:
                 fiche["ecartes"] += 1
                 continue
