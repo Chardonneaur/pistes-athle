@@ -164,10 +164,43 @@ deux autres étant fermés par `robots.txt`. Les quatre autres étaient ailleurs
 `beauvaisis.fr` et `valparisis.fr` pour l'agglomération, un règlement intérieur
 en PDF pour Clamart, `sports.nice.fr` pour Nice.
 
-**Conclusion : le rendement d'un parcours limité au site de la mairie est bien
-inférieur aux 25 % mesurés à la main.** La moitié du gisement est sur les sites
-d'intercommunalité, et c'est la prochaine chose à construire — l'annuaire DILA
-donne aussi l'EPCI d'une commune.
+### Seconde mesure, le site de l'agglomération ajouté
+
+Le canal EPCI ajouté, le même lot rendu : **encore zéro sur douze, et 1 172
+plages examinées** au lieu de 312 — quatre fois plus de pages lues, autant
+d'horaires écrits.
+
+Deux vérifications à la main pour savoir si le silence est juste :
+
+- **Carquefou**, complexe du Moulin Boisseau : les seules heures publiées sont
+  celles du *Carquefou Athlétique Club*, « tous les jours de 18h à 20h30 ».
+  Ce sont des entraînements. Les écrire enverrait un coureur quand la piste
+  est prise.
+- **Bouguenais**, complexe de la Croix-Jeannette : les heures de la page sont
+  celles de la mairie — « samedi 9h à 12h, permanence état-civil » — et celles
+  des entraînements du club, mardi et jeudi 18h30.
+
+**Le silence est donc juste.** Ces communes ne publient pas d'horaire
+d'ouverture de leur piste au public : elles publient des horaires de bureau et
+des créneaux de club, et les deux sont des pièges.
+
+### Ce que ces deux mesures disent vraiment
+
+Les 25 % mesurés à la main ne se transportent pas. Ces 36 stades venaient de la
+file Search Console — donc de communes assez grandes pour que des gens
+cherchent leur stade sur Google, et assez organisées pour publier une fiche
+d'équipement. Sur une tranche de département prise dans l'ordre alphabétique,
+le taux s'effondre.
+
+**La valeur de ce script n'est donc pas de trouver des horaires : c'est de
+n'en écrire aucun quand il n'y en a pas.** Sur 1 172 plages horaires
+rencontrées, il n'en a retenu aucune, et les deux sondages montrent qu'il avait
+raison chaque fois. C'est exactement ce qu'on lui demande : un horaire faux est
+pire qu'un champ vide.
+
+Le chantier reste ouvert, mais son ordre de grandeur a changé. Il faut le viser
+là où il rend — les grandes communes, celles que la file Search Console
+désigne — et non le lancer sur les 1 720 communes portant un stade.
 
 ## Ce qu'on en fait ensuite
 
