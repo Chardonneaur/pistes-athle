@@ -84,6 +84,10 @@ const FR = {
     sec_avis:    'Avis des athlètes',
     kv_revetement: 'Revêtement',
     kv_developpement: 'Développement',
+    kv_type_piste: 'Type de piste',
+    type_piste: { stade: "Anneau de stade d'athlétisme",
+                  couloirs_2_4: 'Piste de 2 à 4 couloirs',
+                  isolee: 'Piste isolée' },
     kv_couloirs: 'Couloirs',
     kv_config:   'Configuration',
     kv_couverte: 'Couverte / indoor',
@@ -148,7 +152,8 @@ const FR = {
 
   filtres: {
     g_agres: 'Agrès', g_equip: 'Équipements',
-    near: '📍 Près de moi', piste: 'Avec piste', synth: 'Synthétique',
+    near: '📍 Près de moi', piste: 'Avec piste', anneau: 'Anneau de stade',
+    synth: 'Synthétique',
     libre: 'Accès libre', perche: 'Perche', long: 'Longueur', haut: 'Hauteur',
     poids: 'Poids', lancer: 'Lancers longs', sauts: 'Un sautoir', ecl: 'Éclairée',
     couv: 'Couverte', vest: 'Vestiaires', noeco: 'Hors enceinte scolaire',
@@ -339,6 +344,10 @@ const EN = {
     sec_avis:    'Athlete reviews',
     kv_revetement: 'Surface',
     kv_developpement: 'Lap length',
+    kv_type_piste: 'Track type',
+    type_piste: { stade: 'Athletics stadium oval',
+                  couloirs_2_4: '2 to 4 lane track',
+                  isolee: 'Standalone track' },
     kv_couloirs: 'Lanes',
     kv_config:   'Setting',
     kv_couverte: 'Covered / indoor',
@@ -402,7 +411,8 @@ const EN = {
 
   filtres: {
     g_agres: 'Field events', g_equip: 'Facilities',
-    near: '📍 Near me', piste: 'With a track', synth: 'Synthetic',
+    near: '📍 Near me', piste: 'With a track', anneau: 'Stadium oval',
+    synth: 'Synthetic',
     libre: 'Free access', perche: 'Pole vault', long: 'Long jump', haut: 'High jump',
     poids: 'Shot put', lancer: 'Long throws', sauts: 'A jump area', ecl: 'Floodlit',
     couv: 'Indoor', vest: 'Changing rooms', noeco: 'Outside school grounds',

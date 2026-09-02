@@ -190,6 +190,7 @@ Expliquez la raison dans la description de la pull request.
 | `adresse`, `cp`, `ville`, `dep` | texte | `dep` = code département, ex. `"35"`, `"2A"` |
 | `lat`, `lon` | nombre | coordonnées décimales, à fournir ensemble |
 | `piste` | booléen | présence d'une piste de course |
+| `type_piste` | texte | `stade` (anneau d'un stade d'athlétisme), `couloirs_2_4`, `isolee` (piste hors stade d'athlétisme) — repris du recensement, à ne corriger qu'après une visite |
 | `surface` | texte | `synthetique`, `bitume`, `cendree`, `sable`, `gazon`, `naturel`, `interieur` |
 | `couloirs` | entier | nombre de couloirs |
 | `longueur_piste` | entier | développement en mètres (`400`, `333`, `250`, `200`…) — **mesuré ou déclaré** |
