@@ -111,6 +111,37 @@ horaire :
 Et un contrôle négatif : **Challans**, dont la page municipale annonce une mise
 à disposition sans donner d'heures, ne rend rien — ce qui est le bon résultat.
 
+## Mesure sur douze communes non vues, 2 septembre 2026
+
+`python3 scripts/horaires_municipaux.py 44 --limite 12`, sur douze stades de
+Loire-Atlantique qu'aucune recherche à la main n'avait touchés :
+
+**Zéro horaire retenu sur douze. 312 plages écartées.**
+
+Il faut lire ce zéro correctement, parce qu'il ne dit pas ce qu'il semble dire.
+
+- Le classement n'est pas trop strict : à Châteaubriant, les **55** plages
+  écartées sont **55 fois le même pied de page** — « Mairie de Châteaubriant,
+  Place Ernest Bréant, Horaires d'ouverture… » — répété sur chaque page du
+  site. Le rejet est juste.
+- Les deux seuls candidats du premier passage étaient tous deux de faux
+  positifs, et les règles ajoutées depuis les écartent : le complexe de tennis
+  de Gesvrine, et le planning du club de badminton de Couëron.
+- Deux des douze communes interdisent la visite par `robots.txt`.
+
+Ce que ce zéro mesure vraiment, c'est **l'écart entre la recherche à la main et
+le parcours du site de la mairie**. Sur les neuf horaires trouvés à la main le
+même jour, seuls cinq étaient sur le site de la commune (Cachan, Gap,
+Saint-Médard, Livry-Gargan, Chamalières) — et le script en retrouve trois, les
+deux autres étant fermés par `robots.txt`. Les quatre autres étaient ailleurs :
+`beauvaisis.fr` et `valparisis.fr` pour l'agglomération, un règlement intérieur
+en PDF pour Clamart, `sports.nice.fr` pour Nice.
+
+**Conclusion : le rendement d'un parcours limité au site de la mairie est bien
+inférieur aux 25 % mesurés à la main.** La moitié du gisement est sur les sites
+d'intercommunalité, et c'est la prochaine chose à construire — l'annuaire DILA
+donne aussi l'EPCI d'une commune.
+
 ## Ce qu'on en fait ensuite
 
 La sortie est une **file de lecture**, pas un fait. Chaque candidat porte son
