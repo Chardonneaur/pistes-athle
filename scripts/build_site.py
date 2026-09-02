@@ -164,12 +164,22 @@ T = {
                            "tapis rentré ne laisse rien voir. "
                            "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Revêtement", "developpement": "Développement",
+               "type_piste": "Type de piste",
                "couloirs": "Couloirs", "config": "Configuration",
                "service": "Mise en service", "renovation": "Dernière rénovation",
                "acces_libre": "Accès libre", "eclairage": "Éclairage",
                "vestiaires": "Vestiaires", "douches": "Douches",
                "sanitaires": "Sanitaires", "tribunes": "Tribunes",
                "type_site": "Type de site", "horaires": "Horaires"},
+        "type_piste": {"stade": "Anneau de stade d'athlétisme",
+                       "couloirs_2_4": "Piste de 2 à 4 couloirs",
+                       "isolee": "Piste isolée"},
+        "type_piste_phrase": {
+            "couloirs_2_4": "Le recensement du ministère la classe "
+                            "« piste d'athlétisme 2 à 4 couloirs »",
+            "isolee": "Le recensement du ministère la classe « piste isolée » : "
+                      "elle n'appartient pas à un stade d'athlétisme"},
+        "type_piste_sans_dev": ", et son développement n'est déclaré nulle part",
         "couverte": "Couverte / indoor", "plein_air": "Plein air",
         "oui": "Oui", "non": "Non", "non_reserve": "Non / réservé",
         "ouvert_horaires": "Ouvert au public (horaires)",
@@ -315,12 +325,22 @@ T = {
                            "mat put away leaves nothing to see. "
                            "© IGN — BD ORTHO®, Licence Ouverte 2.0",
         "kv": {"revetement": "Surface", "developpement": "Lap length",
+               "type_piste": "Track type",
                "couloirs": "Lanes", "config": "Setting",
                "service": "Opened", "renovation": "Last refurbished",
                "acces_libre": "Free access", "eclairage": "Floodlighting",
                "vestiaires": "Changing rooms", "douches": "Showers",
                "sanitaires": "Toilets", "tribunes": "Stand",
                "type_site": "Venue type", "horaires": "Opening hours"},
+        "type_piste": {"stade": "Athletics stadium oval",
+                       "couloirs_2_4": "2 to 4 lane track",
+                       "isolee": "Standalone track"},
+        "type_piste_phrase": {
+            "couloirs_2_4": "The ministry's register classes it as a "
+                            "2 to 4 lane athletics track",
+            "isolee": "The ministry's register classes it as a standalone track: "
+                      "it is not part of an athletics stadium"},
+        "type_piste_sans_dev": ", and its lap length is stated nowhere",
         "couverte": "Covered / indoor", "plein_air": "Outdoor",
         "oui": "Yes", "non": "No", "non_reserve": "No / members only",
         "ouvert_horaires": "Open to the public (set hours)",
@@ -555,6 +575,9 @@ def resume(t, lang):
             if t.get("couloirs"):
                 bout += f" with {t['couloirs']} lanes"
         p.append(bout + ".")
+        type_piste = phrase_type_piste(t, lang)
+        if type_piste:
+            p.append(type_piste)
 
     agres = [AGRES[lang][a].lower() for a in tri_agres(t["agres"]) if a in AGRES[lang]]
     if agres:
@@ -710,6 +733,26 @@ def developpement_affiche(t, lang):
     if not tour:
         return None
     return f"{tour} m" if sur else f"{tour} m — {T[lang]['lp_estime']}"
+
+
+def phrase_type_piste(t, lang):
+    """Ce que le ministere declare du type de piste, et rien de plus.
+
+    « Piste isolee » ne veut pas dire « pas d'anneau » : 796 d'entre elles ont
+    un anneau trace dans OpenStreetMap. Cela veut dire que l'equipement
+    n'appartient pas a un stade d'athletisme — c'est le mot du ministere, et la
+    phrase ne va pas plus loin que lui.
+
+    Elle existe parce qu'un developpement vide n'est pas le meme silence selon
+    le type : sur un stade d'athletisme il manque, sur une piste isolee il n'est
+    presque jamais renseigne. Le lecteur qui cherche a courir un tour merite de
+    savoir laquelle des deux il a sous les yeux.
+    """
+    phrase = T[lang]["type_piste_phrase"].get(t.get("type_piste"))
+    if not phrase:
+        return None
+    tour, _ = tour_de_piste(t)
+    return phrase + ("" if tour else T[lang]["type_piste_sans_dev"]) + "."
 
 
 def alt_photo(p, t, lang):
@@ -1078,6 +1121,7 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
     piste = "".join([
         kv(tr["kv"]["revetement"], SOL[lang].get(t.get("surface")) if t.get("surface") else None),
         kv(tr["kv"]["developpement"], developpement_affiche(t, lang)),
+        kv(tr["kv"]["type_piste"], tr["type_piste"].get(t.get("type_piste"))),
         kv(tr["kv"]["couloirs"], t.get("couloirs")),
         kv(tr["kv"]["config"], tr["couverte"] if t["couvert"] else (tr["plein_air"] if t["piste"] else None)),
         kv(tr["kv"]["service"], t.get("annee")),
@@ -2410,6 +2454,24 @@ def criteres(sites):
         if retenus:
             out.append({"slug": {"fr": sl_fr, "en": sl_en}, "titre": titre,
                         "desc": desc, "sites": retenus, "api": api})
+
+    # --- l'anneau lui-meme, avant meme sa longueur. C'est la question posee
+    # le plus souvent et a laquelle le site repondait le plus mal : « avec
+    # piste » melangeait l'anneau du stade et la ligne droite de cour d'ecole,
+    # et les secondes sont les plus nombreuses.
+    ajoute("stade-athletisme", "athletics-stadium",
+           {"fr": "Stades d'athlétisme{dep}",
+            "en": "Athletics stadiums{dep}"},
+           {"fr": "Les {n} installations dont le ministère déclare un anneau de stade "
+                  "d'athlétisme{dep} : développement, revêtement, couloirs, agrès. Les "
+                  "pistes isolées — celles qui n'appartiennent pas à un stade — sont "
+                  "écartées : le recensement n'en déclare presque jamais le développement.",
+            "en": "The {n} venues recorded as an athletics stadium oval{dep}: lap length, "
+                  "surface, lanes, equipment. Standalone tracks — those that are not part "
+                  "of a stadium — are left out: the register almost never states their "
+                  "lap length."},
+           [t for t in sites if t.get("type_piste") == "stade"],
+           "track-type/stade")
 
     # --- developpement de l'anneau
     compte = {}

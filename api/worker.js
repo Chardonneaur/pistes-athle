@@ -44,6 +44,12 @@ const SURFACES = {
   sand: "sable", grass: "gazon", natural: "naturel", indoor: "interieur",
 };
 
+// Le type declare par le ministere. « isolee » ne veut pas dire « sans
+// anneau » : elle dit que la piste n'appartient pas a un stade d'athletisme.
+// C'est le filtre que reclame quiconque cherche a courir un tour, et c'est
+// aussi ce qui explique la plupart des `longueur_piste_m` nuls.
+const TYPES_PISTE = ["stade", "couloirs_2_4", "isolee"];
+
 let INDEX = null, CHARGE_A = 0;
 const TTL_MS = 6 * 60 * 60 * 1000;   // le jeu de donnees bouge une fois par mois
 
@@ -203,6 +209,15 @@ export default {
       compris.surface = revetement;
     }
 
+    let typePiste = null;
+    if (q.has("track_type")) {
+      typePiste = q.get("track_type").toLowerCase();
+      if (!TYPES_PISTE.includes(typePiste)) {
+        return erreur("Type de piste inconnu", "track_type", TYPES_PISTE.join(" | "));
+      }
+      compris.track_type = typePiste;
+    }
+
     // --- avis. Le seul booleen dont le faux veut dire quelque chose : « aucun
     // contributeur n'a encore decrit ce site » est une affirmation que cette
     // base peut faire, et c'est la file d'attente de la contribution.
@@ -261,6 +276,7 @@ export default {
       if (lgMin !== null && !(t.lp >= lgMin && t.lp <= lgMax)) continue;
       if (couloirs !== null && !(t.cl >= couloirs)) continue;
       if (revetement && t.s !== revetement) continue;
+      if (typePiste && t.tp !== typePiste) continue;
       if (voulues.length) {
         const declares = t.g || [], probables = t.gp || [];
         const pool = certitude === "declared" ? declares

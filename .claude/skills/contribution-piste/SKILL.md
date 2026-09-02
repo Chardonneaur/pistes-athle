@@ -191,8 +191,8 @@ non vérifié sur place »*.
 
 `data/overrides/<id>.json`, un objet JSON, clés autorisées uniquement :
 
-`id` · `nom` `adresse` `cp` `ville` `dep` `dep_nom` `region` `surface` `url` `horaires`
-`acces_note` `note` — chaînes
+`id` · `nom` `adresse` `cp` `ville` `dep` `dep_nom` `region` `surface` `type_piste` `url`
+`horaires` `acces_note` `note` — chaînes
 `piste` `couvert` `eclairage` `acces_libre` `ouvert_public` `vestiaires` `douches`
 `sanitaires` `scolaire` `supprime` — booléens
 `couloirs` `longueur_piste` `longueur_probable` `tribunes` `annee` `renovation` — entiers

@@ -16,9 +16,15 @@ AGRES = {"longueur", "triple", "hauteur", "perche", "poids", "disque",
          "marteau", "javelot", "steeple"}
 SURFACES = {"synthetique", "bitume", "cendree", "sable", "gazon", "naturel", "interieur"}
 
+# Le vocabulaire du ministere, repris tel quel : un anneau de stade, une piste
+# de 2 a 4 couloirs, ou une piste isolee — c'est-a-dire hors stade
+# d'athletisme, souvent une ligne droite. Une visite peut corriger le type,
+# jamais l'inventer : hors de ces trois valeurs, on refuse.
+TYPES_PISTE = {"stade", "couloirs_2_4", "isolee"}
+
 STR = {"nom", "adresse", "cp", "ville", "dep", "dep_nom", "region", "surface",
-       "url", "horaires", "acces_note", "note", "photo", "proprietaire", "gestionnaire",
-       "commune_deleguee"}
+       "type_piste", "url", "horaires", "acces_note", "note", "photo",
+       "proprietaire", "gestionnaire", "commune_deleguee"}
 BOOL = {"piste", "couvert", "eclairage", "acces_libre", "ouvert_public", "vestiaires",
         "douches", "sanitaires", "scolaire", "supprime"}
 INT = {"couloirs", "longueur_piste", "longueur_probable", "tribunes", "annee", "renovation"}
@@ -143,6 +149,10 @@ def check(fn, rec):
 
     if rec.get("surface") and rec["surface"] not in SURFACES:
         err(fn, f"surface '{rec['surface']}' inconnue (valeurs : {', '.join(sorted(SURFACES))})")
+
+    if rec.get("type_piste") and rec["type_piste"] not in TYPES_PISTE:
+        err(fn, f"type_piste '{rec['type_piste']}' inconnu "
+                f"(valeurs : {', '.join(sorted(TYPES_PISTE))})")
 
     lat, lon = rec.get("lat"), rec.get("lon")
     if (lat is None) != (lon is None):
