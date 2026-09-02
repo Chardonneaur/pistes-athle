@@ -1,5 +1,8 @@
 {
   "id": "I334490001",
   "couloirs": 8,
-  "note": "8 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r18469482), non comptés sur place."
+  "url": "https://www.saint-medard-en-jalles.fr/points-interets/complexe-sportif-robert-monseau/",
+  "horaires": "Complexe sportif en accès libre de 8h à 22h.",
+  "acces_note": "La ville de Saint-Médard-en-Jalles écrit que le complexe est « En accès libre de 8h à 22h », en ajoutant aussitôt que « certaines infrastructures sportives ne sont pas en accès libre au sein du complexe sportif ». Elle ne dit pas si la piste d'athlétisme est de celles-là.",
+  "note": "8 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r18469482), non comptés sur place. Horaires et conditions relevés le 2 septembre 2026 sur la fiche officielle de l'équipement, saint-medard-en-jalles.fr. Les horaires portent sur le complexe entier : la piste peut relever de la réserve que la ville formule sans la détailler."
 }

@@ -1,5 +1,7 @@
 {
   "id": "I751160006",
   "couloirs": 6,
-  "note": "6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r3184489), non comptés sur place."
+  "url": "https://www.paris.fr/lieux/pelouses-de-l-hippodrome-d-auteuil-16592",
+  "acces_note": "« Les pelouses de l'hippodrome d'Auteuil sont accessibles depuis l'allée des fortifications en dehors des jours de courses hippiques. » La piste d'athlétisme fait partie des terrains en accès libre hors réservations.",
+  "note": "6 couloirs d'après le tracé de l'anneau dans OpenStreetMap (r3184489), non comptés sur place. Conditions d'accès relevées le 2 septembre 2026 sur paris.fr. Les horaires n'y sont pas repris ici : la Ville de Paris les publie par période de quelques semaines — 8h-19h30 en semaine du 1er au 30 septembre 2026, 8h-20h30 du 1er au 24 octobre — et les recopier ici les rendrait faux au mois suivant. La page officielle porte les horaires du moment."
 }
