@@ -766,7 +766,7 @@ ADSENSE_HEAD = (
 )
 
 # Charge en plus du chargeur AdSense, et seulement s'il y a un bloc a servir.
-ADSENSE_ENCART_JS = '<script src="{r}assets/adsense.js?v=1" defer></script>'
+ADSENSE_ENCART_JS = '<script src="{r}assets/adsense.js?v=2" defer></script>'
 
 
 def encart_adsense(slot, etiquette):
