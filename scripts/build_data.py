@@ -36,8 +36,19 @@ OVERRIDES_DIR = os.path.join(ROOT, "data", "overrides")
 # troisieme — celles-ci ne disent que « Saut / Lancer / Course sur piste »,
 # trop grossier pour ce site, qui nomme les agres. On ne les lit pas.
 API_BASE = "https://equipements.sports.gouv.fr/api/explore/v2.1/catalog/datasets"
-API_EQUIP = f"{API_BASE}/data-es-equipement-dcf/exports/json"
-API_INST = f"{API_BASE}/data-es-installation-dcf/exports/json"
+
+# LE PORTAIL RENOMME SES JEUX SANS PREVENIR, ET CHAQUE RENOMMAGE A CASSE LA
+# PUBLICATION. Le 25/08/2026 il a vide `data-es` et l'a scinde en trois. Le
+# 02/09/2026 il a retire le suffixe « -dcf » : `data-es-equipement-dcf`
+# repondait 404 a l'heure ou `data-es-equipement` rendait ses 334 340 lignes,
+# et la CI est tombee sur une PR qui ne touchait qu'a des fiches.
+#
+# On ne code donc plus un identifiant mais une liste, du plus recent au plus
+# ancien, et on prend le premier qui repond. Le jour ou le portail retirera
+# les anciens noms — il vient de le faire pour les equipements — le repli
+# suivant prendra le relais sans qu'on ait a s'en apercevoir un matin.
+JEUX_EQUIP = ("data-es-equipement", "data-es-equipement-dcf")
+JEUX_INST = ("data-es-installation", "data-es-installation-dcf")
 FAMILLE = "Equipement d'athlétisme"
 UA = {"User-Agent": "pistes-athle/1.0 (+github pages)"}
 
@@ -68,6 +79,8 @@ CHAMPS_EQUIP = {
     "nom": "equip_nom",
     "type": "equip_type_name",
     "coordonnees": "equip_coordonnees",
+    "coordonnees_y": "equip_lat",     # y = latitude, x = longitude : voir coordonnees()
+    "coordonnees_x": "equip_lon",
     "aire_nature_sol": "equip_sol",
     "nature": "equip_nature",
     # Intitule « Nombre de subdivision », mais c'est bien le nombre de
@@ -416,6 +429,31 @@ def _attendu(url, params):
         return json.load(r)["total_count"]
 
 
+@lru_cache(maxsize=None)
+def _jeu(candidats, quoi):
+    """L'URL d'export du premier jeu de la liste qui repond.
+
+    On interroge /records?limit=0 plutot que l'export : c'est la requete la
+    moins chere du portail, et elle suffit a distinguer un jeu vivant d'un
+    404.
+    """
+    for nom in candidats:
+        req = urllib.request.Request(f"{API_BASE}/{nom}/records?limit=0", headers=UA)
+        try:
+            with urllib.request.urlopen(req, timeout=60) as r:
+                json.load(r)["total_count"]
+        except (urllib.error.URLError, TimeoutError, ValueError, KeyError):
+            continue
+        if nom != candidats[0]:
+            print(f"   {quoi} : {candidats[0]} ne repond pas, repli sur {nom}")
+        return f"{API_BASE}/{nom}/exports/json"
+    raise SystemExit(
+        f"ERREUR : {quoi} — aucun des jeux connus ne repond "
+        f"({', '.join(candidats)}). Le portail les a probablement renommes une "
+        f"fois de plus : le catalogue est a "
+        f"{API_BASE}?limit=40, ajoutez le nouveau nom en tete de la liste.")
+
+
 def _export(url, params, quoi):
     """Un export complet du portail — verifie complet, ou rien.
 
@@ -463,7 +501,7 @@ def fetch_raw(offline=False):
             return json.load(f)
 
     print("-> telechargement Data ES (equipements puis installations) ...")
-    equipements = _export(API_EQUIP,
+    equipements = _export(_jeu(JEUX_EQUIP, "equipements d'athletisme"),
                           {"where": f'famille="{FAMILLE}"',
                            "select": ",".join(CHAMPS_EQUIP)},
                           "equipements d'athletisme")
@@ -472,7 +510,8 @@ def fetch_raw(offline=False):
     # equipement d'athletisme. Filtrer en amont demanderait une clause `in`
     # de 7 000 identifiants, qu'aucune URL ne porte.
     voulues = {e.get("installation_numero") for e in equipements}
-    toutes = _export(API_INST, {"select": ",".join(CHAMPS_INST)}, "installations")
+    toutes = _export(_jeu(JEUX_INST, "installations"),
+                     {"select": ",".join(CHAMPS_INST)}, "installations")
     installations = {i["numero"]: _assainir(i)
                      for i in toutes if i.get("numero") in voulues}
     print(f"   {len(installations)} installations retenues")
@@ -529,6 +568,35 @@ def detect_disciplines(label, type_name):
     return set(), set()
 
 
+def coordonnees(e):
+    """Le point d'un equipement, quelle que soit la forme que rend le portail.
+
+    Trois formes vues sur le meme champ en dix jours : un objet
+    {lat, lon} dans `data-es-equipement-dcf`, une chaine « 49.6622, 5.04724 »
+    dans `data-es-equipement` qui l'a remplace le 02/09/2026, et rien du tout
+    quand l'equipement n'est pas geolocalise. Les colonnes `coordonnees_x` et
+    `coordonnees_y` du nouveau jeu sont typees et sans ambiguite : on les
+    prefere, et on ne lit `coordonnees` qu'a defaut.
+
+    Attention au sens : x est la LONGITUDE, y la latitude, alors que la chaine
+    `coordonnees` donne la latitude en premier. Les inverser enverrait
+    l'annuaire entier au large de la Somalie.
+    """
+    y, x = e.get("equip_lat"), e.get("equip_lon")
+    if isinstance(y, (int, float)) and isinstance(x, (int, float)):
+        return float(y), float(x)
+    brut = e.get("equip_coordonnees")
+    if isinstance(brut, dict):
+        return brut.get("lat"), brut.get("lon")
+    if isinstance(brut, str) and "," in brut:
+        a, _, b = brut.partition(",")
+        try:
+            return float(a), float(b)
+        except ValueError:
+            return None, None
+    return None, None
+
+
 def aggregate(raw):
     installations = {}
 
@@ -536,8 +604,7 @@ def aggregate(raw):
         inst_id = e.get("inst_numero")
         if not inst_id:
             continue
-        coords = e.get("equip_coordonnees") or {}
-        lat, lon = coords.get("lat"), coords.get("lon")
+        lat, lon = coordonnees(e)
 
         inst = installations.get(inst_id)
         if inst is None:
