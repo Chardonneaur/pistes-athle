@@ -162,3 +162,9 @@ h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
   color:var(--muted);margin:0 0 5px}
 .pub ins.adsbygoogle{display:block;min-height:250px;background:var(--surface);
   border:1px solid var(--line);border-radius:12px;overflow:hidden}
+/* Le bloc est de forme carree et pleine largeur : sur un telephone de 360 px il
+   fait ~360 px de haut, pas 250. La reservation suit donc la largeur — faute de
+   pouvoir la connaitre, une annonce responsive n'annoncant pas sa taille
+   d'avance. Il reste quelques dizaines de pixels d'incertitude : mieux vaut
+   reserver a peu pres juste que franchement faux. */
+@media (max-width:420px){.pub ins.adsbygoogle{min-height:320px}}
