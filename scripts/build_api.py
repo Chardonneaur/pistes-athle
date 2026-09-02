@@ -665,7 +665,11 @@ def capacites(url_base, api_url, maj, c, facettes_dispo):
 # EN LE RENSEIGNANT, la CSP ci-dessous s'ouvre. index.html porte sa propre copie
 # de cette politique et verifier_csp() casse la construction si les deux
 # divergent : c'est voulu, ca force a mettre les deux a jour ensemble.
-ADSENSE_SLOT_FICHE = ""
+# Bloc « pistes-athle fiche », cree le 2 septembre 2026 : Display, forme
+# carree, responsive. Les attributs de l'encart sont identiques a ceux du
+# code que Google genere pour lui — data-ad-format="auto" et
+# data-full-width-responsive="true", verifie par l'outil MCP « ad_code ».
+ADSENSE_SLOT_FICHE = "1436017897"
 
 # Ce que la publicite oblige a ouvrir, et rien de plus. Chaque ligne est ici
 # parce qu'AdSense ne fonctionne pas sans elle, pas par precaution.
