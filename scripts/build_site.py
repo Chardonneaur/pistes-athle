@@ -607,8 +607,38 @@ def resume(t, lang):
     return " ".join(p)
 
 
+def minuscule(mot):
+    """Premiere lettre en minuscule, le reste intact.
+
+    Les etiquettes du site sont ecrites pour une colonne de tableau, donc
+    capitalisees : « Cendree / stabilise », « Sautoir longueur ». Recopiees au
+    milieu d'une phrase elles donnaient « Piste Sable, piste isolee, acces
+    libre » — une liste ou la moitie des items crient. `.lower()` ne convient
+    pas : il abimerait « Synthetique (tartan) » le jour ou une etiquette portera
+    un nom propre.
+    """
+    return mot[0].lower() + mot[1:] if mot else mot
+
+
 def description(t, lang):
-    """Meta description : les faits saillants, coupes a 160 caracteres."""
+    """Meta description : ce que la fiche sait deja, dans l'ordre ou on le demande.
+
+    Google en affiche environ 155 caracteres. La version precedente n'en tirait
+    que la ligne « piste » du recensement, et 653 des 1 131 fiches que Google
+    montrait s'arretaient sous 80 : « Cosec, Ostwald : Piste Bitume / goudron. »
+    Sur ces memes 653 fiches, le departement etait deja renseigne dans 100 % des
+    cas, le type de piste dans 83 %, les sanitaires dans 65 %, les vestiaires
+    dans 53 % — tout cela declare, tout cela deja affiche plus bas sur la meme
+    page, et rien de tout cela dans la promesse faite au moteur.
+
+    Mesure qui a decide du chantier : a position egale, le gabarit de fiche
+    convertissait de 18 a 30 % moins bien que celui de ville, sur les quatre
+    tranches de position a la fois (releve du 6 aout au 2 septembre 2026).
+
+    Rien de neuf n'est affirme ici. Chaque fait cite est un champ renseigne, et
+    l'ordre suit la question du coureur : ou courir, sur quoi, avec quoi, et
+    peut-on entrer.
+    """
     faits = []
     if t["piste"]:
         bout = []
@@ -616,19 +646,67 @@ def description(t, lang):
         if tour:
             bout.append(f"{tour} m" if sur else f"{tour} m ?")
         if t.get("surface"):
-            bout.append(SOL[lang].get(t["surface"], t["surface"]))
+            bout.append(minuscule(SOL[lang].get(t["surface"], t["surface"])))
         if t.get("couloirs"):
             bout.append(f"{t['couloirs']} couloirs" if lang == "fr" else f"{t['couloirs']} lanes")
         faits.append(("Piste " if lang == "fr" else "Track ") + ", ".join(bout) if bout
                      else ("Piste d'athlétisme" if lang == "fr" else "Running track"))
-    faits += [AGRES[lang][a] for a in tri_agres(t["agres"]) if a in AGRES[lang]]
+        # Le type ne se cite que s'il apprend quelque chose. Sur une piste dont
+        # ni le developpement ni les couloirs ne sont declares, « anneau de stade
+        # d'athletisme » ou « piste isolee » est le seul indice de ce qu'on
+        # trouvera sur place ; a cote d'un « 400 m, 8 couloirs » il ne ferait que
+        # manger la place d'un fait que le lecteur n'a pas encore.
+        if tour is None and not t.get("couloirs"):
+            type_lu = T[lang]["type_piste"].get(t.get("type_piste"))
+            if type_lu:
+                faits.append(minuscule(type_lu))
+    faits += [minuscule(AGRES[lang][a]) for a in tri_agres(t["agres"]) if a in AGRES[lang]]
+    if t["couvert"]:
+        faits.append("couverte" if lang == "fr" else "indoor")
     if t["eclairage"]:
-        faits.append("éclairée" if lang == "fr" else "floodlit")
+        # « eclairee » s'accorde avec la piste. Sur une fiche qui n'en a pas, la
+        # liste commencait par un adjectif sans nom — « Complexe Sportif de la
+        # Neustrie, Bouguenais : eclairee, acces libre ». Le nom du champ, lui,
+        # tient debout tout seul.
+        faits.append(("éclairée" if t["piste"] else "éclairage") if lang == "fr"
+                     else "floodlit")
+    # Un blanc n'est pas un non : on ne dit jamais l'acces ferme, seulement
+    # l'acces declare ouvert — libre, ou ouvert sur horaires.
     if t["acces_libre"]:
         faits.append("accès libre" if lang == "fr" else "free access")
-    tete = f"{nom_de(t, lang)}, {t.get('ville') or ''}"
-    texte = tete + (" : " if lang == "fr" else " — ") + ", ".join(faits) + "."
-    return texte[:157].rsplit(" ", 1)[0] + "…" if len(texte) > 160 else texte
+    elif t["ouvert_public"]:
+        faits.append("ouvert au public" if lang == "fr" else "open to the public")
+    faits += [nom for actif, nom in (
+        (t["vestiaires"], "vestiaires" if lang == "fr" else "changing rooms"),
+        (t["douches"], "douches" if lang == "fr" else "showers"),
+        (t["sanitaires"], "sanitaires" if lang == "fr" else "toilets")) if actif]
+    if t.get("tribunes"):
+        faits.append(T[lang]["places"](t["tribunes"]))
+
+    # Le departement desambigue : la base porte 136 « Complexe Sportif », 101
+    # « Stade Municipal » et 30 « Cosec ». La commune seule ne suffit pas a dire
+    # au lecteur d'un resultat de recherche si c'est bien de son coin qu'on parle.
+    # « 00 » est le code de repli des fiches sans departement, et dep_nom vaut
+    # alors « Departement non renseigne ». Cette etiquette a sa place dans un
+    # fil d'Ariane, aucune dans la phrase que Google affiche : elle occuperait
+    # trente caracteres pour dire qu'on ne sait pas.
+    lieu = t.get("ville") or ""
+    if t.get("dep_nom") and t.get("dep") not in (None, "", "00"):
+        lieu = f"{lieu} ({t['dep_nom']})" if lieu else t["dep_nom"]
+    tete = f"{nom_de(t, lang)}, {lieu}" if lieu else nom_de(t, lang)
+    if not faits:
+        return tete[:157].rsplit(" ", 1)[0] + "…" if len(tete) > 160 else tete
+
+    # On coupe par faits entiers, jamais au milieu d'un mot : « vestiaires,
+    # douches, sanitaires, 600… » laissait le lecteur avec un nombre sans unite
+    # et une virgule en suspens. Un fait de moins vaut mieux qu'un fait mutile.
+    lie = " : " if lang == "fr" else " — "
+    while faits:
+        texte = tete + lie + ", ".join(faits) + "."
+        if len(texte) <= 160:
+            return texte
+        faits.pop()
+    return tete[:157].rsplit(" ", 1)[0] + "…" if len(tete) > 160 else tete
 
 
 def fmt_note(n, lang):
