@@ -68,6 +68,31 @@ LIGNES_PAR_ECRITURE = MAX_PARAMS_D1 // COLONNES_UPSERT
 
 JETON_MCP = os.path.expanduser("~/.config/gsc-mcp/token.json")
 
+# Reouverture des dossiers fermes faute de source.
+#
+# La regle etait ecrite dans le schema depuis le premier jour et n'etait
+# executee nulle part : aucun dossier n'a jamais ete rouvert. Elle l'est ici,
+# une fois par releve, juste apres la mise a jour des impressions.
+#
+# Les trois nombres, et pourquoi ils valent ce qu'ils valent :
+#
+#   FACTEUR  une question doit avoir triple pour meriter un second regard. En
+#            dessous, c'est la respiration normale d'une longue traine.
+#   PLANCHER un triplement de 1 a 3 impressions ne prouve rien. A 10, la
+#            question n'est plus rare, et le « rien a ecrire » prononce quand
+#            elle en valait deux n'engage plus : ce qui a change n'est pas la
+#            source disponible, c'est l'effort que la question justifie.
+#   JOURS    l'autre porte, celle du temps long : au bout d'un trimestre, une
+#            source a pu paraitre la ou il n'y en avait pas.
+#
+# Le plancher est venu d'un cas precis. « complexe sportif pierre minssieux »
+# est passe de 2 a 36 impressions en quatre jours, position 8,4, zero clic,
+# premiere requete du site en clics manques. La seule regle des 90 jours la
+# gardait fermee jusqu'a fin novembre.
+REOUVERTURE_FACTEUR = 3
+REOUVERTURE_PLANCHER = 10
+REOUVERTURE_JOURS = 90
+
 
 # ---------------------------------------------------------------------------
 # Authentification Google
@@ -317,6 +342,39 @@ def _litteral(v):
     return "'" + str(v).replace("'", "''") + "'"
 
 
+# La condition, ecrite une fois. Le SELECT du rapport et l'UPDATE qui rouvre
+# doivent voir exactement le meme lot : deux copies finiraient par diverger, et
+# le releve annoncerait des reouvertures qui n'ont pas eu lieu.
+CONDITION_REOUVERTURE = f"""
+       statut = 'sans-source'
+   AND impressions_avant IS NOT NULL
+   AND impressions >= {REOUVERTURE_FACTEUR} * impressions_avant
+   AND (impressions >= {REOUVERTURE_PLANCHER}
+        OR julianday('now') - julianday(traite_le) > {REOUVERTURE_JOURS})
+"""
+
+# On lit avant d'ecrire : apres l'UPDATE, le gel vaut deja les nouvelles
+# valeurs et le rapport ne pourrait plus dire de combien la demande a grossi.
+A_ROUVRIR = f"""
+SELECT cle, requete, impressions, impressions_avant, position, traite_le
+  FROM requetes_gsc
+ WHERE {CONDITION_REOUVERTURE}
+"""
+
+# Le gel se refait au passage. Sans cela, un dossier rouvert a 36 impressions
+# garderait un gel a 2, se verrait triple des le lendemain, et rouvrirait chaque
+# matin sans fin. `detail` n'est pas touche : la raison de la fermeture
+# precedente est ce qui empeche de refaire la meme recherche infructueuse.
+REOUVRIR = f"""
+UPDATE requetes_gsc
+   SET statut = 'file',
+       rouvert_le = date('now'),
+       impressions_avant = impressions,
+       position_avant = position,
+       traite_le = date('now')
+ WHERE {CONDITION_REOUVERTURE}
+"""
+
 UPSERT = """
 INSERT INTO requetes_gsc
   (cle, cible, intention, requete, page, impressions, position, vu_le, revu_le)
@@ -383,6 +441,11 @@ def main():
         for cle, e in sorted(cles.items(), key=lambda x: -x[1]["impressions"])[:20]:
             print(f"   {e['impressions']:4} imp  pos {e['position']:5.1f}  "
                   f"{cle:45} « {e['requete']} »")
+        # Meme lecture qu'en vrai, par le transport non simule : un essai a
+        # blanc doit annoncer les reouvertures qu'il declencherait.
+        for r in D1().sql(A_ROUVRIR):
+            print(f"   rouvrirait  {r['impressions_avant']:3} -> {r['impressions']:3} imp"
+                  f"  « {r['requete'][:44]} »")
         print("\nSimulation : rien n'a ete ecrit.")
         return
 
@@ -397,15 +460,36 @@ def main():
                        e["impressions"], e["position"], aujourdhui, aujourdhui]
         db.sql(UPSERT.format(valeurs=",".join(valeurs)), params)
 
+    # Les impressions viennent d'etre mises a jour : c'est le seul moment ou
+    # l'on sait si une question fermee faute de source a change d'echelle.
+    rouverts = db.sql(A_ROUVRIR)
+    if rouverts:
+        db.sql(REOUVRIR)
+        print(f"\nReouverture : {len(rouverts)} dossier(s) fermes faute de source "
+              f"dont la demande a triple.")
+        for r in rouverts:
+            jours = "?"
+            try:
+                jours = (fin - datetime.date.fromisoformat(r["traite_le"])).days
+            except (TypeError, ValueError):
+                pass
+            print(f"   {r['impressions_avant']:3} -> {r['impressions']:3} imp en {jours} j"
+                  f"  pos {r['position']}  « {r['requete'][:44]} »")
+        print("   Elles reviennent en file avec leur ancien verdict dans `detail` :")
+        print("   la relire evite de refaire la meme recherche infructueuse.")
+
     restante = db.sql("SELECT COUNT(*) AS n FROM requetes_gsc WHERE statut='file'")
     restante = restante[0]["n"] if restante else 0
 
+    note = "amorcage" if args.amorcage else ""
+    if rouverts:
+        note = (note + " " if note else "") + f"{len(rouverts)} reouverture(s)"
     db.sql("INSERT INTO passages (lance_le, fenetre, appels_gsc, couples_vus,"
            " cles_neuves, cles_majes, file_restante, note)"
            " VALUES (?,?,?,?,?,?,?,?)",
            [datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds"),
             fenetre, appels, len(lignes), len(neuves), len(cles) - len(neuves),
-            restante, "amorcage" if args.amorcage else ""])
+            restante, note])
 
     print(f"Base : {len(cles)} cles ecrites, file a traiter = {restante}")
     print(f"       {db.requetes} requetes D1 (plafond {MAX_REQUETES_D1})")

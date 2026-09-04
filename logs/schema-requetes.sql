@@ -41,9 +41,23 @@ CREATE TABLE IF NOT EXISTS requetes_gsc (
   statut        TEXT NOT NULL DEFAULT 'file'
                 CHECK (statut IN ('file','traite','sans-source','candidat','hors-sujet')),
   -- « file » est le seul statut non terminal : tout le reste ferme le dossier.
-  -- Seul « sans-source » se rouvre, et a une condition stricte : impressions
-  -- triplees ET plus de 90 jours, au cas ou une source soit parue entre-temps.
+  -- Seul « sans-source » se rouvre, et a deux conditions, l'une ou l'autre,
+  -- toutes deux exigeant d'abord que les impressions aient triple :
+  --
+  --   a. elles atteignent 10 depuis le gel. La question n'est plus rare, et le
+  --      « rien a ecrire » avait ete juge quand elle valait deux impressions ;
+  --   b. ou 90 jours ont passe, au cas ou une source soit parue entre-temps.
+  --
+  -- Le (a) manquait, et il coutait cher. « complexe sportif pierre minssieux »
+  -- est passe de 2 a 36 impressions en quatre jours, position 8,4, zero clic,
+  -- premiere requete du site en clics manques : la seule regle du temps le
+  -- gardait ferme jusqu'a fin novembre. Un triplement seul ne suffit pas non
+  -- plus : de 1 a 3 impressions, c'est du bruit. D'ou le plancher.
   detail        TEXT,              -- URL de la PR, source citee, ou raison
+  rouvert_le    TEXT,              -- derniere reouverture automatique, ISO 8601
+                                   -- (colonne ajoutee le 2026-09-04 ; sur une
+                                   -- base existante : ALTER TABLE requetes_gsc
+                                   -- ADD COLUMN rouvert_le TEXT;)
 
   -- L'etat de la question AU MOMENT ou on l'a fermee. Sans ce gel, il est
   -- impossible de savoir si le traitement a servi a quelque chose : le releve
@@ -53,6 +67,13 @@ CREATE TABLE IF NOT EXISTS requetes_gsc (
   position_avant    REAL,
   traite_le         TEXT             -- date du gel, ISO 8601
 );
+
+-- Le gel est refait a chaque reouverture, et c'est voulu : sans cela, un
+-- dossier rouvert a 36 impressions garderait un gel a 2, se verrait triple
+-- des le lendemain, et rouvrirait chaque matin sans fin. Le gel dit donc
+-- « l'etat de la question la derniere fois qu'on l'a prise en main ». La
+-- raison de la fermeture precedente, elle, reste dans `detail` jusqu'a ce
+-- qu'un nouveau verdict la remplace.
 
 -- La file du jour se lit par statut puis par position : l'index porte les deux.
 CREATE INDEX IF NOT EXISTS idx_requetes_file   ON requetes_gsc (statut, position);
