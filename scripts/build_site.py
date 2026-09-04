@@ -644,7 +644,13 @@ def description(t, lang):
         bout = []
         tour, sur = tour_de_piste(t)
         if tour:
-            bout.append(f"{tour} m" if sur else f"{tour} m ?")
+            # Ailleurs sur le site, « 400 m ? » suffit : le point d'interrogation
+            # est une convention de tableau, et la ligne qui suit dit d'ou vient
+            # l'estimation. Ici il n'y a pas de ligne suivante, et le point final
+            # le collait en « 399 m ?. » sur 977 fiches. Une phrase demande un
+            # mot, pas un signe.
+            bout.append(f"{tour} m" if sur else
+                        (f"{tour} m environ" if lang == "fr" else f"approx. {tour} m"))
         if t.get("surface"):
             bout.append(minuscule(SOL[lang].get(t["surface"], t["surface"])))
         if t.get("couloirs"):
@@ -694,8 +700,10 @@ def description(t, lang):
     if t.get("dep_nom") and t.get("dep") not in (None, "", "00"):
         lieu = f"{lieu} ({t['dep_nom']})" if lieu else t["dep_nom"]
     tete = f"{nom_de(t, lang)}, {lieu}" if lieu else nom_de(t, lang)
+    # 23 fiches dont le recensement ne declare rien du tout : elles s'arretent au
+    # lieu, et meritent quand meme leur point.
     if not faits:
-        return tete[:157].rsplit(" ", 1)[0] + "…" if len(tete) > 160 else tete
+        return (tete[:156].rsplit(" ", 1)[0] + "…") if len(tete) > 159 else tete + "."
 
     # On coupe par faits entiers, jamais au milieu d'un mot : « vestiaires,
     # douches, sanitaires, 600… » laissait le lecteur avec un nombre sans unite
