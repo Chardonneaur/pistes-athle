@@ -294,7 +294,7 @@ class D1:
         p = subprocess.run(cmd, capture_output=True, text=True,
                            cwd=os.path.expanduser("~"))
         if p.returncode != 0:
-            sys.exit(f"ERREUR wrangler : {p.stderr[-500:]}")
+            sys.exit("ERREUR wrangler : " + _erreur_wrangler(p))
         # Wrangler prefixe sa sortie d'avertissements colores qui contiennent
         # eux-memes des crochets : chercher le premier « [ » tombe juste par
         # chance. On tente un decodage a chaque crochet jusqu'a ce qu'un
@@ -307,6 +307,42 @@ class D1:
                 except (json.JSONDecodeError, IndexError, AttributeError):
                     continue
         sys.exit(f"ERREUR : sortie wrangler illisible :\n{p.stdout[-500:]}")
+
+
+def _erreur_wrangler(p):
+    """Ce que wrangler a vraiment dit, ou qu'il l'ait dit.
+
+    Avec « --json », wrangler ecrit son erreur sur la SORTIE STANDARD et laisse
+    stderr vide. Lire stderr seul rend donc « ERREUR wrangler : » suivi de rien
+    — exactement au moment ou le message compte, et le symptome envoie chercher
+    du cote du script alors que la panne est dans la session Cloudflare.
+
+    Constate le 01/09/2026 : jeton OAuth local refuse par l'API (code 10000),
+    diagnostic vide, deux reconnexions perdues a chercher au mauvais endroit.
+    Le message etait dans la sortie qu'on ne lisait pas.
+    """
+    for flux in (p.stdout, p.stderr):
+        try:
+            d = json.loads(flux.strip()).get("error", {})
+        except (json.JSONDecodeError, AttributeError):
+            continue
+        notes = "; ".join(n.get("text", "") for n in d.get("notes", []))
+        detail = " — ".join(x for x in (d.get("text"), notes) if x)
+        if detail:
+            if d.get("code") == 10000:
+                # Se reconnecter ne sert a rien : la session OAuth de wrangler
+                # est refusee par D1 seul, meme fraichement consentie, meme avec
+                # d1:write dans ses portees. Voir docs/releve-search-console.md.
+                detail += ("\nLa session OAuth de wrangler n'ouvre pas D1, et se "
+                           "reconnecter n'y change rien. Prendre le transport HTTP, "
+                           "comme les GitHub Actions :\n"
+                           "  set -a; . ~/.config/pistes-athle/d1.env; set +a\n"
+                           "(CF_API_TOKEN cree avec la seule permission "
+                           "« Account · D1 · Edit ».)")
+            return detail
+    brut = (p.stderr.strip() or p.stdout.strip() or
+            f"aucune sortie, code de retour {p.returncode}")
+    return brut[-600:]
 
 
 def _litteral(v):

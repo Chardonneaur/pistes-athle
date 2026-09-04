@@ -16,7 +16,9 @@ dans la page n'existe simplement pas. Compter les IA avec un traceur de page,
 c'est compter les poissons avec un filet à papillons : l'outil n'est pas
 imprécis, il est hors sujet.
 
-D'où une mesure en deux endroits, et trois journaux.
+D'où une mesure en deux endroits, et trois journaux — auxquels s'ajoute un
+troisième instrument, qui ne compte pas des visites mais leur absence :
+les clics que l'IA de Google prend avant que le site ne soit atteint.
 
 ## Instrument 1 — `assets/matomo.js` : les humains envoyés par une IA
 
@@ -102,6 +104,110 @@ Les redirections (3xx) ne sont pas envoyées à Matomo : `www.pistes-athle.com`
 renvoie un 301 vers l'apex, et compter les deux ferait deux lignes pour une
 seule lecture. D1 les garde — un robot qui frappe `www` reste un fait.
 
+## Instrument 3 — `scripts/generative_gsc.py` : l'IA de Google
+
+Les deux premiers instruments voient les IA qui **viennent lire** le site.
+Celui-ci vise l'autre bout : l'IA de Google, qui répond à la place du site sans
+jamais le visiter. Ce n'est pas la même question, et ce n'est pas non plus le
+même degré de certitude — il faut le dire avant les chiffres.
+
+### Ce que Google publie, et ce qu'il refuse
+
+Search Console publie depuis le **3 juin 2026** un rapport « Recherche
+générative par IA », qui couvre les AI Overviews et l'AI Mode. Il a trois
+limites, et elles décident de tout ce qui suit :
+
+- il ne donne **que des impressions** — ni clic, ni CTR, ni position, ni
+  requête ;
+- il n'existe **que dans l'interface** ;
+- **l'API ne l'expose pas.** Le paramètre `type` s'arrête à `googleNews`, et
+  aucune valeur de `searchAppearance` ne désigne une surface IA.
+
+Cette dernière phrase est le genre d'affirmation qui devient fausse sans
+prévenir, et une limite d'API périmée coûte plus cher qu'une limite inconnue :
+elle empêche de chercher. Elle n'est donc écrite ici qu'en tant que *constat
+daté*, re-vérifiable en une commande :
+
+```bash
+python3 scripts/generative_gsc.py --sonde
+```
+
+La sonde relit le document de découverte de l'API, puis essaie une à une les
+valeurs qu'une surface IA porterait si elle s'ouvrait. Elle dit « rien n'a
+changé », ou elle dit que Google a ouvert — auquel cas ce document ment et il
+faut réécrire le script. Vérifié le **1er septembre 2026** : rien n'est ouvert.
+
+### La mesure, faute de mieux : l'érosion du clic à rang constant
+
+Une AI Overview ne fait pas perdre de position. Elle s'insère au-dessus du
+résultat, répond à sa place, et le lien reste où il était, avec ses impressions
+— mais sans le clic. C'est une **signature**, et c'est la seule chose que les
+données publiées permettent de suivre : position tenue, impressions tenues,
+clics perdus.
+
+Perdre des clics *en reculant* n'est pas un effet de l'IA, c'est une perte de
+rang ordinaire. Le script sépare les deux ; les confondre ferait accuser l'IA de
+tout ce qui va mal.
+
+### Le témoin, sans lequel la mesure ne vaut rien
+
+Une AI Overview se déclenche sur une **question**, pas sur un nom propre.
+Quelqu'un qui tape « cosec ostwald » cherche une adresse, et Google lui rend un
+lien ; quelqu'un qui tape « piste d'athlétisme ouverte au public toulouse » pose
+une question, et c'est là que l'IA répond à la place du site.
+
+D'où les deux familles, construites avec **le classement d'intentions du relevé
+quotidien** (`releve_gsc.intention`) plutôt qu'avec un second qui dériverait :
+
+| famille | ce qu'elle contient | rôle |
+|---|---|---|
+| **témoin** | `fiche` — le nom d'un stade tapé tel quel | non exposé à l'IA |
+| **exposé** | `acces`, `revetement`, `horaires`, `distance`, `existence`… | exposé |
+
+C'est le témoin qui fait la mesure. Si les deux familles perdent leurs clics
+ensemble, la cause est ailleurs : saison, refonte, déclassement. Si seul
+l'exposé s'effondre à rang comparable, c'est l'IA. Sans témoin, n'importe quelle
+baisse pourrait être attribuée à n'importe quoi — et le serait.
+
+### Ce qu'on ne saura pas
+
+Le script ne voit pas si une AI Overview s'est affichée. Il voit **la trace
+qu'elle laisse**. Deux impressions identiques peuvent recouvrir une page IA
+présente ou absente, et rien ici ne les distingue.
+
+Il ne voit pas non plus la longue traîne : Google anonymise les requêtes rares.
+Au 29 août 2026, **852 impressions sur 4 790 portent une requête nommée, soit
+18 %**. Le script affiche cet écart en tête de son rapport, parce que le lecteur
+qui l'ignore prendra 18 % du site pour le site.
+
+### S'en servir
+
+```bash
+python3 scripts/generative_gsc.py            # 28 jours contre les 28 précédents
+python3 scripts/generative_gsc.py --jours 90 # fenêtres plus larges
+python3 scripts/generative_gsc.py --sonde    # l'API s'est-elle ouverte ?
+python3 scripts/generative_gsc.py --csv export.csv
+```
+
+`--csv` prend l'export « Pages » du rapport de l'interface et le joint aux
+impressions Web de la même période. Il en sort la seule chose que l'interface ne
+montre nulle part : la **part** de l'affichage d'une page qui passe par une
+surface IA, et surtout la liste des pages que l'IA affiche alors que la
+recherche classique ne les affiche pas. Deux précautions : la période exportée
+doit être celle passée en `--jours`, et le total par page (`byPage`) ne s'aligne
+pas sur le total du site (`byProperty`) — ce sont deux agrégations différentes,
+pas une incohérence.
+
+### Il est trop tôt, et c'est écrit dans la sortie
+
+La propriété `sc-domain:pistes-athle.com` n'a de données que depuis le
+**22 août 2026**. Comparer deux fenêtres de 28 jours en demande 56 : la fenêtre
+témoin est vide, et le script refuse de conclure plutôt que de soustraire à
+partir de rien. Il n'y a rien à corriger — Google garde seize mois d'historique,
+la mesure deviendra lisible d'elle-même vers la fin octobre 2026. Le même refus
+protège la suite : sous **30 clics** cumulés sur les deux fenêtres, le verdict
+reste « trop peu pour conclure ».
+
 ## Une règle de conception : la mesure ne coûte jamais une page
 
 Le Worker est sur le chemin de **toutes** les visites du site. Les deux sorties
@@ -149,6 +255,7 @@ rapport archivé suivra au prochain passage du cron.
 | Combien de visiteurs viennent d'une IA ? | Matomo › Acquisition › **Assistants IA** |
 | Les robots tombent-ils sur des pages cassées ? | Matomo › **Broken Pages and Documents** |
 | Une installation vient d'être déployée, marche-t-elle ? | `BotTracking.getAIChatbotsRealTime` |
+| L'IA de Google prend-elle les clics du site ? | `scripts/generative_gsc.py`, § Instrument 3 |
 
 Le rapport le plus intéressant côté Matomo est **AI-Favoured Pages** : les pages
 que les IA vont chercher et que les humains ne demandent pas. C'est là que se lit
