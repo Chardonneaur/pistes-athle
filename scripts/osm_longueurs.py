@@ -248,6 +248,24 @@ def charger_sites(dep):
     return out
 
 
+def nie_sa_piste(site_id):
+    """Vrai si une contribution declare explicitement qu'il n'y a pas de piste.
+
+    `piste: false` dans data/tracks.json ne suffit pas : c'est aussi la valeur
+    par defaut des 605 installations dont le recensement ne declare simplement
+    aucune piste. Sur 26 d'entre elles, un anneau trace dans OpenStreetMap
+    signale au contraire une piste que le ministere ignore, et c'est
+    precisement ce que ce script sert a trouver. Seul un override qui pose
+    `piste: false` est un constat de terrain : quelqu'un est alle voir, et il
+    n'y a rien.
+    """
+    chemin = os.path.join(OVERRIDES, f"{site_id}.json")
+    if not os.path.exists(chemin):
+        return False
+    with open(chemin, encoding="utf-8") as f:
+        return json.load(f).get("piste") is False
+
+
 def ecrire_override(site_id, source, longueur=None, couloirs=None):
     """Ajoute `longueur_probable` et/ou `couloirs` sans toucher au reste.
 
@@ -336,7 +354,20 @@ def main():
         # Un desaccord se signale et se tranche a la main.
         declare = s.get("longueur_piste") or s.get("longueur_probable")
         etat = ""
-        if cible is None:
+        nie = nie_sa_piste(s["id"])
+        if nie:
+            # Un vide laisse par une visite n'est pas un vide a combler. La
+            # Neustrie (I440200018) a ete visitee le 27 aout 2026 : le seul
+            # anneau du complexe est une piste de roller, et la visite avait
+            # efface le developpement. Ce script l'a reecrit a 400 m dix jours
+            # plus tard, en mesurant exactement l'anneau que la visite venait de
+            # recuser — la fiche affichait donc un chiffre que sa propre note
+            # desavouait. Overpass ne sait pas distinguer un anneau de roller
+            # d'une piste ; quelqu'un qui y est alle, si.
+            refus += 1
+            etat = "  (visite sur place : pas de piste d'athletisme ici)"
+            cible = None
+        elif cible is None:
             refus += 1
             etat = "  (aucun developpement normalise assez proche)"
         elif declare is None:
@@ -351,7 +382,11 @@ def main():
         # peut donner l'un sans l'autre, et souvent c'est le cas.
         nb = couloirs_de(b.get("lanes"))
         longueur_a_ecrire = cible if (cible is not None and declare is None) else None
-        couloirs_a_ecrire = nb if (nb is not None and not s.get("couloirs")) else None
+        # les couloirs tombent avec le developpement : compter les couloirs d'un
+        # anneau dont la visite dit qu'il n'est pas une piste d'athletisme
+        # reintroduirait la meme erreur par l'autre champ.
+        couloirs_a_ecrire = (nb if (nb is not None and not s.get("couloirs") and not nie)
+                             else None)
         if couloirs_a_ecrire:
             couloirs_neufs += 1
             etat += f"  (+{couloirs_a_ecrire} couloirs)"
