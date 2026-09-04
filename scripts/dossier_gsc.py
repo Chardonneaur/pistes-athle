@@ -155,7 +155,7 @@ def file_priorisee(db, tout=False, limite=15):
     """
     lignes = db.sql(
         "SELECT cle, cible, intention, requete, variantes, page, impressions,"
-        " position, vu_le FROM requetes_gsc WHERE statut='file'")
+        " position, vu_le, rouvert_le, detail FROM requetes_gsc WHERE statut='file'")
 
     def rang(r):
         pos = r["position"] if r["position"] is not None else 999.0
@@ -176,9 +176,17 @@ def montre_file(db, tout, limite):
     for r in lignes:
         pos = f"{r['position']:5.1f}" if r["position"] is not None else "    ?"
         marque = "!" if r["intention"] == "existence" else " "
+        # Une question rouverte n'est pas une question neuve : elle a deja ete
+        # jugee sans source, et la relire sans le savoir revient a refaire la
+        # meme recherche pour rien.
+        if r.get("rouvert_le"):
+            marque = "R"
         print(f" {marque} {r['impressions']:4} imp  pos {pos}  {r['cle']}")
         print(f"      « {r['requete'][:70]} »"
               + (f"  (+{r['variantes'] - 1} formulations)" if r["variantes"] > 1 else ""))
+        if r.get("rouvert_le"):
+            print(f"      rouverte le {r['rouvert_le']}, deja fermee une fois : "
+                  f"{(r.get('detail') or '')[:80]}")
     print("\nLe dossier d'une question :"
           "\n  python3 scripts/dossier_gsc.py --dossier '<cle>'")
 
@@ -202,7 +210,13 @@ def dossier(db, cle):
           + (f"  (+{r['variantes'] - 1} autres)" if r["variantes"] > 1 else ""))
     print(f"impressions   {r['impressions']}   position {r['position']}")
     print(f"vue du        {r['vu_le']}  au  {r['revu_le']}")
-    print(f"statut        {r['statut']}" + (f"  — {r['detail']}" if r.get("detail") else ""))
+    print(f"statut        {r['statut']}" + (f"  : {r['detail']}" if r.get("detail") else ""))
+    if r.get("rouvert_le"):
+        print(f"reouverture   le {r['rouvert_le']}, parce que les impressions ont triple")
+        print( "              depuis la fermeture. Le verdict ci-dessus est l'ancien :")
+        print( "              ce qui a change est ce que la question vaut, pas la source")
+        print( "              disponible. Chercher plus loin que la derniere fois, ou")
+        print( "              refermer en disant ce qui a ete tente en plus.")
     if r.get("page"):
         print(f"atterrissage  {r['page']}")
 

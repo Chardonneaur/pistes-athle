@@ -138,12 +138,24 @@ Quatre statuts terminaux, et un seul se rouvre un jour :
 pourquoi rien ne l'a été**, pas un mot-clé. Un dossier fermé sur « rien trouvé » sans
 dire où l'on a cherché sera rouvert et refait à l'identique.
 
-Seul `sans-source` se rouvre, et à une condition stricte : impressions triplées **et**
-plus de 90 jours, au cas où une source soit parue entre-temps.
+Seul `sans-source` se rouvre. Le relevé quotidien le fait tout seul, dès que les
+impressions ont triplé depuis la fermeture **et** que l'une des deux portes s'ouvre :
+
+- **elles atteignent 10.** La question n'est plus rare. Ce qui a changé n'est pas la
+  source disponible, c'est l'effort que la question justifie : un « rien à écrire »
+  prononcé quand elle valait deux impressions n'engage plus à trente-six. C'est le
+  moment d'appeler la mairie, de lire l'orthophoto, ou d'aller voir ;
+- **ou 90 jours ont passé**, au cas où une source soit parue entre-temps.
+
+Une question rouverte se reconnaît dans la file au `R` en marge, et son dossier affiche
+le verdict précédent avec sa date. **Le lire avant de chercher** : refaire la même
+recherche infructueuse est exactement ce que la boucle essaie d'éviter.
 
 Le gel des compteurs (`impressions_avant`, `position_avant`, `traite_le`) est écrit par
-un déclencheur SQL, pas par le script — il n'y a rien à relever à la main. Le script
-relit la ligne après coup et prévient si le gel n'a pas eu lieu.
+un déclencheur SQL, pas par le script : il n'y a rien à relever à la main. Il est refait
+à chaque réouverture, sans quoi un dossier rouvert à 36 impressions garderait un gel à 2
+et rouvrirait chaque matin. Le script relit la ligne après coup et prévient si le gel
+n'a pas eu lieu.
 
 ### 6. La pull request
 

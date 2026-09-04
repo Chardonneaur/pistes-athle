@@ -247,6 +247,40 @@ fermé sans raison écrite est un dossier qu'il faudra rouvrir pour comprendre. 
 refuse aussi de refermer un dossier déjà clos, parce que le gel des compteurs
 aurait lieu une seconde fois et écraserait le point de départ.
 
+### Rouvrir ce qui a changé d'échelle
+
+Un seul statut revient en file, `sans-source`, et c'est le relevé quotidien qui
+le décide, sans intervention. Il faut d'abord que les impressions aient triplé
+depuis le gel, puis que l'une des deux portes s'ouvre :
+
+| porte | seuil | ce qu'elle attrape |
+|---|---|---|
+| l'échelle | 10 impressions | une demande qui explose en quelques jours |
+| le temps | 90 jours | une source parue depuis, sur une question qui dure |
+
+La première manquait, et elle a coûté cher. `complexe sportif pierre minssieux`
+a été fermée le 31 août avec 2 impressions ; quatre jours plus tard elle en
+avait 36, position 8,4, zéro clic, première requête du site en clics manqués.
+La seule règle du temps la gardait fermée jusqu'à fin novembre. Un triplement
+seul ne suffit pas non plus : de 1 à 3 impressions, c'est du bruit, d'où le
+plancher.
+
+Ce qui rouvre n'est pas la disponibilité d'une source, c'est **l'effort que la
+question justifie**. Un « rien à écrire » prononcé quand elle valait deux
+impressions n'engage plus à trente-six : il devient raisonnable d'appeler la
+mairie, de lire l'orthophoto, ou de programmer une visite.
+
+Le gel est refait à la réouverture. Sans cela, un dossier rouvert à 36
+impressions garderait un gel à 2, se verrait triplé dès le lendemain et
+rouvrirait chaque matin sans fin. `detail` n'est pas touché : le verdict
+précédent est ce qui empêche de refaire la même recherche pour rien, et
+`dossier_gsc.py` l'affiche en tête du dossier rouvert.
+
+Les trois nombres sont en haut de `scripts/releve_gsc.py`
+(`REOUVERTURE_FACTEUR`, `REOUVERTURE_PLANCHER`, `REOUVERTURE_JOURS`), avec le
+raisonnement qui les fixe. Chaque relevé imprime ce qu'il a rouvert et le
+compte dans `passages.note`.
+
 ## Savoir si tout cela sert à quelque chose
 
 Fermer un dossier ne dit pas qu'on a bien fait. Trois colonnes gèlent donc
