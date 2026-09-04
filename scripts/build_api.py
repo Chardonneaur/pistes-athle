@@ -115,7 +115,7 @@ def compact(t):
     # piste en cendree a un agent, et le mene a un sautoir. Le developpement et
     # les couloirs restent : quand ils viennent d'OpenStreetMap sur une fiche
     # que le recensement dit sans piste, ils signalent justement une piste
-    # oubliee — et `lpp` dit deja de lui-meme qu'il n'est qu'une estimation.
+    # oubliee, et `lpp` dit deja de lui-meme qu'il n'est qu'une estimation.
     if t.get("piste") and t.get("surface"):
         r["s"] = t["surface"]
     if t.get("piste") and t.get("type_piste"):

@@ -613,7 +613,7 @@ def minuscule(mot):
     Les etiquettes du site sont ecrites pour une colonne de tableau, donc
     capitalisees : « Cendree / stabilise », « Sautoir longueur ». Recopiees au
     milieu d'une phrase elles donnaient « Piste Sable, piste isolee, acces
-    libre » — une liste ou la moitie des items crient. `.lower()` ne convient
+    libre », une liste ou la moitie des items crient. `.lower()` ne convient
     pas : il abimerait « Synthetique (tartan) » le jour ou une etiquette portera
     un nom propre.
     """
@@ -628,8 +628,8 @@ def description(t, lang):
     montrait s'arretaient sous 80 : « Cosec, Ostwald : Piste Bitume / goudron. »
     Sur ces memes 653 fiches, le departement etait deja renseigne dans 100 % des
     cas, le type de piste dans 83 %, les sanitaires dans 65 %, les vestiaires
-    dans 53 % — tout cela declare, tout cela deja affiche plus bas sur la meme
-    page, et rien de tout cela dans la promesse faite au moteur.
+    dans 53 %. Tout cela est declare, tout cela est deja affiche plus bas sur la
+    meme page, et rien de tout cela n'entrait dans la promesse faite au moteur.
 
     Mesure qui a decide du chantier : a position egale, le gabarit de fiche
     convertissait de 18 a 30 % moins bien que celui de ville, sur les quatre
@@ -671,13 +671,13 @@ def description(t, lang):
         faits.append("couverte" if lang == "fr" else "indoor")
     if t["eclairage"]:
         # « eclairee » s'accorde avec la piste. Sur une fiche qui n'en a pas, la
-        # liste commencait par un adjectif sans nom — « Complexe Sportif de la
+        # liste commencait par un adjectif sans nom : « Complexe Sportif de la
         # Neustrie, Bouguenais : eclairee, acces libre ». Le nom du champ, lui,
         # tient debout tout seul.
         faits.append(("éclairée" if t["piste"] else "éclairage") if lang == "fr"
                      else "floodlit")
     # Un blanc n'est pas un non : on ne dit jamais l'acces ferme, seulement
-    # l'acces declare ouvert — libre, ou ouvert sur horaires.
+    # l'acces declare ouvert : libre, ou ouvert sur horaires.
     if t["acces_libre"]:
         faits.append("accès libre" if lang == "fr" else "free access")
     elif t["ouvert_public"]:
