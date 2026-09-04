@@ -361,7 +361,7 @@ def main():
             # anneau du complexe est une piste de roller, et la visite avait
             # efface le developpement. Ce script l'a reecrit a 400 m dix jours
             # plus tard, en mesurant exactement l'anneau que la visite venait de
-            # recuser — la fiche affichait donc un chiffre que sa propre note
+            # recuser. La fiche affichait donc un chiffre que sa propre note
             # desavouait. Overpass ne sait pas distinguer un anneau de roller
             # d'une piste ; quelqu'un qui y est alle, si.
             refus += 1
