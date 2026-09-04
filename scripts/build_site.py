@@ -150,7 +150,8 @@ T = {
         "dep_desc": "Les {n} sites d'athlétisme du département {dep} ({reg}) : revêtement, "
                     "couloirs, sautoirs, aires de lancer, éclairage, accès libre.",
         "nb_sites": lambda n: f"{n} site{'s' if n > 1 else ''}",
-        "sec_piste": "Piste", "sec_agres": "Agrès recensés",
+        "sec_piste": "Piste", "sec_equipement": "Équipement",
+        "sec_agres": "Agrès recensés",
         "sec_acces": "Accès & services", "sec_avis": "Avis des athlètes",
         "pub_etiq": "Publicité",
         "sec_photos": "Photos", "sec_proches": "Autres sites du département",
@@ -311,7 +312,8 @@ T = {
         "dep_desc": "The {n} athletics venues of the {dep} department ({reg}), France: surface, "
                     "lanes, jump and throwing areas, floodlighting, free access.",
         "nb_sites": lambda n: f"{n} venue{'s' if n > 1 else ''}",
-        "sec_piste": "Track", "sec_agres": "Recorded facilities",
+        "sec_piste": "Track", "sec_equipement": "Venue",
+        "sec_agres": "Recorded facilities",
         "sec_acces": "Access & amenities", "sec_avis": "Athlete reviews",
         "pub_etiq": "Advertisement",
         "sec_photos": "Photos", "sec_proches": "Other venues in the department",
@@ -953,8 +955,10 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
                                 "name": nom_eq, "value": True})
     if equipements:
         lieu["amenityFeature"] = equipements
+    # Meme regle qu'a l'affichage, et elle compte davantage ici : c'est ce bloc
+    # qu'un agent recopie comme un fait, sans lire la note qui le dement.
     proprietes = []
-    if t.get("surface"):
+    if t["piste"] and t.get("surface"):
         proprietes.append({"@type": "PropertyValue", "name": tr["kv"]["revetement"],
                            "value": SOL[lang].get(t["surface"], t["surface"])})
     if t.get("longueur_piste"):
@@ -1118,17 +1122,42 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
         return (f'<div class="kv"><dt>{E(cle)}</dt><dd>{E(str(valeur))}</dd></div>'
                 if valeur not in (None, "", False) else "")
 
+    # Le revetement et le type decrivent l'anneau lui-meme : sur une fiche qui
+    # dit qu'il n'y en a pas, ils la font mentir par son propre tableau.
+    # Saint-Colomban (I441550005) affichait « Cendree / stabilise » et « Piste
+    # isolee » au-dessus d'une note demontrant qu'aucune piste n'existe : la
+    # cendree du ministere y decrit l'aire d'elan d'un sautoir. Le ministere
+    # garde le droit de se tromper dans ses colonnes ; la fiche n'a pas celui de
+    # le recopier apres l'avoir dementi sur place. `config` faisait deja ce
+    # test, ces deux lignes le rejoignent.
+    #
+    # Le developpement et les couloirs, eux, restent : sur 26 fiches sans piste
+    # declaree, le developpement vient d'un anneau trace dans OpenStreetMap et
+    # s'affiche deja comme une estimation. C'est le signal d'une piste que le
+    # recensement ignore — precisement ce que le site cherche. On ne l'efface
+    # pas, on le laisse dire qu'il est estime.
+    anneau = t["piste"]
     piste = "".join([
-        kv(tr["kv"]["revetement"], SOL[lang].get(t.get("surface")) if t.get("surface") else None),
+        kv(tr["kv"]["revetement"],
+           SOL[lang].get(t.get("surface")) if anneau and t.get("surface") else None),
         kv(tr["kv"]["developpement"], developpement_affiche(t, lang)),
-        kv(tr["kv"]["type_piste"], tr["type_piste"].get(t.get("type_piste"))),
+        kv(tr["kv"]["type_piste"],
+           tr["type_piste"].get(t.get("type_piste")) if anneau else None),
         kv(tr["kv"]["couloirs"], t.get("couloirs")),
-        kv(tr["kv"]["config"], tr["couverte"] if t["couvert"] else (tr["plein_air"] if t["piste"] else None)),
+        kv(tr["kv"]["config"],
+           tr["couverte"] if t["couvert"] else (tr["plein_air"] if anneau else None)),
+    ])
+    # L'annee et la renovation datent l'installation, pas l'anneau. Titrer
+    # « Piste » un bloc qui ne porte plus qu'un « Mise en service 1955 »
+    # laisserait croire a une piste mise en service en 1955 sur 370 fiches qui
+    # n'en ont aucune : le titre suit ce que le bloc dit vraiment.
+    dates = "".join([
         kv(tr["kv"]["service"], t.get("annee")),
         kv(tr["kv"]["renovation"], t.get("renovation")),
     ])
-    if piste:
-        lignes.append(f'<h2>{E(tr["sec_piste"])}</h2><dl class="grid">{piste}</dl>')
+    if piste or dates:
+        titre = tr["sec_piste"] if piste else tr["sec_equipement"]
+        lignes.append(f'<h2>{E(titre)}</h2><dl class="grid">{piste}{dates}</dl>')
 
     if t["agres"] or t["agres_probables"]:
         items = "".join(f"<li>{E(AGRES[lang].get(a, a))}</li>" for a in tri_agres(t["agres"]))
@@ -1191,7 +1220,8 @@ def page_site(t, lang, voisins, url_base, depot, maj, ville_slug=None,
         items = "".join(
             f'<li><a href="{r}{url_site(lang, v["id"])}">{E(nom_de(v, lang))}'
             f'<span class="meta">{E(v.get("ville") or "")}'
-            + (f' · {E(SOL[lang].get(v.get("surface"), ""))}' if v.get("surface") else "")
+            + (f' · {E(SOL[lang].get(v.get("surface"), ""))}'
+               if v.get("piste") and v.get("surface") else "")
             + f'</span></a></li>'
             for v in voisins)
         lignes.append(f'<h2>{E(tr["sec_proches"])}</h2><ul class="liste">{items}</ul>')
@@ -1229,7 +1259,7 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot, villes
         if s.get("lat") is not None and s.get("lon") is not None:
             lieu["geo"] = {"@type": "GeoCoordinates",
                            "latitude": s["lat"], "longitude": s["lon"]}
-        if s.get("surface"):
+        if s.get("piste") and s.get("surface"):
             lieu["additionalProperty"] = [{"@type": "PropertyValue",
                                            "name": tr["kv"]["revetement"],
                                            "value": SOL[lang].get(s["surface"], s["surface"])}]
@@ -1276,15 +1306,9 @@ def page_departement(code, nom_dep, region, sites, lang, url_base, depot, villes
             etiquette = (f'<a href="{r}{url_ville(lang, sl)}">{E(ville_courante or "")}</a>'
                          if sl else E(ville_courante or ""))
             lignes.append(f'<h2 class="ville">{etiquette}</h2><ul class="liste">')
-        details = []
-        tour, sur = tour_de_piste(s)
-        if tour:
-            details.append(f"{tour} m" if sur else f"{tour} m ?")
-        if s.get("surface"):
-            details.append(SOL[lang].get(s["surface"], s["surface"]))
-        if s.get("couloirs"):
-            details.append(f"{s['couloirs']} couloirs" if lang == "fr" else f"{s['couloirs']} lanes")
-        details += [AGRES[lang][a] for a in tri_agres(s["agres"]) if a in AGRES[lang]]
+        # la meme ligne que partout ailleurs : elle etait recopiee ici, et la
+        # copie a failli garder le revetement des sites sans anneau.
+        details = resume_liste(s, lang)
         meta = f'<span class="meta">{E(" · ".join(details))}</span>' if details else ""
         lignes.append(f'<li><a href="{r}{url_site(lang, s["id"])}">'
                       f'{E(nom_de(s, lang))}{meta}</a></li>')
@@ -2543,7 +2567,7 @@ def criteres(sites):
                       f"« {SOL['fr'][sol]} »{{dep}} : développement, couloirs, agrès, accès.",
                 "en": f"The {{n}} athletics tracks recorded with a « {SOL['en'][sol]} » "
                       f"surface{{dep}}: lap length, lanes, equipment, access."},
-               [t for t in sites if t.get("surface") == sol],
+               [t for t in sites if t.get("surface") == sol and t["piste"]],
                f"surface/{SURFACE_EN[sol]}")
     return out
 
@@ -2570,7 +2594,7 @@ def item_ld(s, lang, url_base, nom_dep=None):
                            "addressCountry": "FR"}
     if s.get("lat") is not None and s.get("lon") is not None:
         lieu["geo"] = {"@type": "GeoCoordinates", "latitude": s["lat"], "longitude": s["lon"]}
-    if s.get("surface"):
+    if s.get("piste") and s.get("surface"):
         lieu["additionalProperty"] = [{"@type": "PropertyValue",
                                        "name": T[lang]["kv"]["revetement"],
                                        "value": SOL[lang].get(s["surface"], s["surface"])}]
@@ -2583,7 +2607,9 @@ def resume_liste(s, lang):
     tour, sur = tour_de_piste(s)
     if tour:
         details.append(f"{tour} m" if sur else f"{tour} m ?")
-    if s.get("surface"):
+    # un revetement ne se cite pas sous un site dont la fiche dit qu'il n'a pas
+    # d'anneau : la liste mentirait avant meme qu'on l'ouvre.
+    if s.get("piste") and s.get("surface"):
         details.append(SOL[lang].get(s["surface"], s["surface"]))
     if s.get("couloirs"):
         details.append(f"{s['couloirs']} couloirs" if lang == "fr"

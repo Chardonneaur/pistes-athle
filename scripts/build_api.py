@@ -110,9 +110,15 @@ def compact(t):
         r["lpp"] = t["longueur_probable"]
     if t.get("couloirs"):
         r["cl"] = t["couloirs"]
-    if t.get("surface"):
+    # Revetement et type decrivent l'anneau : sur une installation qui n'en a
+    # pas, ils ne partent pas. Sans quoi la facette surface/cinder promet une
+    # piste en cendree a un agent, et le mene a un sautoir. Le developpement et
+    # les couloirs restent : quand ils viennent d'OpenStreetMap sur une fiche
+    # que le recensement dit sans piste, ils signalent justement une piste
+    # oubliee — et `lpp` dit deja de lui-meme qu'il n'est qu'une estimation.
+    if t.get("piste") and t.get("surface"):
         r["s"] = t["surface"]
-    if t.get("type_piste"):
+    if t.get("piste") and t.get("type_piste"):
         r["tp"] = t["type_piste"]
     if t.get("acces_libre"):
         r["al"] = 1                       # jamais 0 : l'absence n'est pas un non
