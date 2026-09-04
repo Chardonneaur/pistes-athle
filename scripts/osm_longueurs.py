@@ -65,6 +65,21 @@ NORMALISES = (200, 250, 300, 333, 400)
 FACTEUR = 1.03
 # Au-dela, l'anneau OSM ne ressemble a aucun developpement connu : on se tait.
 TOLERANCE = 0.08
+# Tous les desaccords ne se valent pas, et les confondre coute cher : sur les
+# cinq signales dans l'Ain le 2 septembre 2026, quatre etaient explicables et un
+# seul etait une vraie erreur — quatre verifications a l'orthophoto pour rien.
+#
+# Ce qui les separe est le SENS de l'ecart. Un trace OSM est presque toujours
+# plus long que le developpement declare : le contributeur suit le bord
+# exterieur du revetement, jamais la lice. Sur les 400 m de Loire-Atlantique,
+# les perimetres allaient de 410 a 457 m, soit +2,5 % a +14 %. Un anneau plus
+# long que la declaration ne dit donc rien d'autre que le trait qui a ete suivi.
+#
+# L'inverse n'a que deux causes, et les deux valent le deplacement : un trace
+# incomplet (l'anneau d'Arthon-en-Retz s'arrete a 52 m de son depart), ou une
+# declaration fausse (Balan, annonce a 400 m pour un anneau trace a 327,7 m et
+# dont l'orthophoto montre qu'il ne peut pas les contenir — billet #64).
+PLANCHER = 0.95
 # Un anneau trace correctement a beaucoup de points : ses virages sont des
 # arcs. Une boucle de quatre ou cinq points est un rectangle — l'emprise du
 # stade, une cloture — pas une piste.
@@ -317,7 +332,7 @@ def main():
     boucles = anneaux(interroger(args.dep, args.cache))
     print(f"-> {len(boucles)} anneau(x) exploitable(s) dans OSM\n")
 
-    accords = desaccords = nouveaux = refus = 0
+    accords = desaccords = nouveaux = refus = contradictions = 0
     couloirs_neufs = 0
     ecrits = set()
     print(f"{'declare':>8} {'OSM':>7} {'estime':>7} {'coul':>5}  site")
@@ -345,7 +360,19 @@ def main():
             accords += 1
         else:
             desaccords += 1
-            etat = f"  <<< desaccord : le ministere dit {declare} m"
+            # Comparer au perimetre BRUT, pas a la valeur recalee : c'est le
+            # recalage qui fabriquait des desaccords de rien du tout. Le lycee
+            # Saint-Pierre est declare a 212 m pour un anneau trace a 204,5 m —
+            # sept metres — et sortait « en desaccord » au seul motif que 204,5
+            # se recale sur 200 et pas sur 212.
+            rapport = b["m"] / declare
+            if rapport < PLANCHER:
+                contradictions += 1
+                etat = (f"  <<< A VERIFIER : {declare} m declares, soit "
+                        f"{(1 / rapport - 1) * 100:.0f} % de plus que l'anneau trace")
+            else:
+                etat = (f"  (ecart de recalage : {declare} m declares pour "
+                        f"{b['m']:.1f} m traces — le trait suivi suffit a l'expliquer)")
 
         # Le developpement et les couloirs se gagnent separement : un anneau
         # peut donner l'un sans l'autre, et souvent c'est le cas.
@@ -365,16 +392,27 @@ def main():
                                        longueur=longueur_a_ecrire,
                                        couloirs=couloirs_a_ecrire))
 
-    print(f"\n{accords} accord(s) avec le ministere, {desaccords} desaccord(s), "
+    print(f"\n{accords} accord(s) avec le ministere, {desaccords} desaccord(s) "
+          f"dont {contradictions} a verifier, "
           f"{nouveaux} site(s) sans developpement declare, {refus} refus.")
     print(f"{couloirs_neufs} site(s) dont OSM donne les couloirs et le site pas encore.")
     if args.ecrire:
         print(f"-> {len(ecrits)} fichier(s) ecrit(s) dans data/overrides/")
     elif nouveaux or couloirs_neufs:
         print("-> relancez avec --ecrire pour renseigner ce qui manque.")
-    print("\nLes desaccords ne sont pas ecrits : une estimation ne renverse pas "
-          "une donnee declaree.\nVerifiez-les a la vue aerienne "
-          "(scripts/ortho.py) avant de trancher a la main.")
+    print("\nAucun desaccord n'est ecrit : une estimation ne renverse pas une "
+          "donnee declaree.")
+    if contradictions:
+        print(f"Les {contradictions} marques « A VERIFIER » sont ceux que le trait "
+              f"trace n'explique pas :\nl'anneau y est plus court que la declaration "
+              f"de plus de {(1 - PLANCHER) * 100:.0f} %. Regardez-les\na la vue aerienne "
+              f"(scripts/ortho.py) — soit le trace OSM est incomplet,\nsoit c'est la "
+              f"declaration qui est fausse.")
+    if desaccords - contradictions:
+        print(f"Les {desaccords - contradictions} autres ne sont que des ecarts de "
+              f"recalage : l'anneau trace reste\ncompatible avec la declaration — plus "
+              f"long, ou plus court de moins de\n{(1 - PLANCHER) * 100:.0f} %. Rien a "
+              f"verifier de ce cote.")
 
 
 if __name__ == "__main__":
