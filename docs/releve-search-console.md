@@ -247,6 +247,49 @@ fermé sans raison écrite est un dossier qu'il faudra rouvrir pour comprendre. 
 refuse aussi de refermer un dossier déjà clos, parce que le gel des compteurs
 aurait lieu une seconde fois et écraserait le point de départ.
 
+## L'autre lecture de la file : où aller voir
+
+Relevé le 5 septembre 2026, une semaine après la mise en service de la boucle :
+
+| | |
+|---|---|
+| impressions réelles, 28 jours | **16 917** pour 523 clics |
+| questions relevées, dont 749 ouvertes | **984** |
+| dont l'intention est `fiche` | **682**, soit 91 % de la file ouverte |
+| position moyenne de ces 682 | **24,8** |
+| questions à intention de champ (`acces`, `couvert`, `revetement`…) | **56**, 83 impressions |
+
+Ce déséquilibre n'est pas un défaut du relevé, c'est un fait sur la demande : la
+très grande majorité des gens ne posent pas de question, ils tapent un nom de
+stade. `dossier_gsc.py` n'a rien à leur répondre — il est fait pour chercher une
+source qui tranche un champ, et il n'y a pas de champ à trancher.
+
+La masse `fiche` dit pourtant quelque chose de précis, à condition de la lire
+autrement : **elle mesure la demande, stade par stade**. Croisée avec ce que
+chaque fiche porte déjà, elle donne la seule liste qui compte pour le travail de
+terrain — les installations que les gens cherchent et sur lesquelles le site
+n'a rien de première main. Au 5 septembre, **645 installations** sont dans ce
+cas, pour 2 212 impressions cumulées.
+
+```bash
+python3 scripts/demande_terrain.py              # les plus demandées
+python3 scripts/demande_terrain.py --dep 69     # un département
+python3 scripts/demande_terrain.py --tournee    # où une journée paie le plus
+```
+
+`--tournee` groupe par département parce que le coût d'un relevé est dans le
+trajet, pas dans la piste : trois fiches muettes et cherchées dans le même
+département valent mieux qu'une seule à l'autre bout du pays.
+
+Deux abstentions volontaires. Le script **ne redistribue pas** la demande d'une
+page de commune sur les stades de cette commune — 40 impressions sur
+`/ville/bouaye/` ne font pas 20 par stade, et cette arithmétique serait
+inventée ; la demande communale s'affiche donc à côté, comme un contexte de
+déplacement. Et il ne dit jamais qu'une fiche est « incomplète » : sa colonne de
+droite liste ce qu'une visite permettrait de **renseigner**, ce qui n'est pas la
+même chose qu'une absence constatée. C'est la règle du § « un champ vide ne dit
+pas non », appliquée jusque dans le vocabulaire d'un outil interne.
+
 ## Savoir si tout cela sert à quelque chose
 
 Fermer un dossier ne dit pas qu'on a bien fait. Trois colonnes gèlent donc
