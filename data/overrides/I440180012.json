@@ -1,5 +1,23 @@
 {
   "id": "I440180012",
-  "longueur_probable": 250,
-  "note": "Développement estimé à 250 m d'après le tracé de l'anneau dans OpenStreetMap (r15018498), non mesuré sur place."
+  "longueur_piste": 250,
+  "couloirs": 5,
+  "agres": ["longueur", "poids"],
+  "acces_libre": true,
+  "acces_note": "Aucun portail, aucun panneau, aucun horaire affiché : on entre à pied et on court (constaté le 5 septembre 2026). Vestiaires, douches et sanitaires sont annoncés par le recensement ; aucun n'a été vu ouvert.",
+  "note": "Visite du 5 septembre 2026. Les 250 m ont été relevés à la montre GPS sur un tour, ce qui confirme l'estimation tirée du tracé OpenStreetMap (r15018498) : le développement passe donc d'estimé à mesuré. Revêtement en enrobé, foulé sur place et non déduit d'une couleur vue du ciel. Cinq couloirs tracés, au marquage blanc encore net alors que le reste ne l'est plus : le terre-plein central n'est qu'une aire de gravier nu, et de la végétation remonte par endroits le long de la corde. Un caniveau à grille court sur tout le pourtour intérieur de l'anneau et évacue l'eau. Deux sautoirs en longueur, garnis de sable, et une aire de lancer du poids. Une bande d'enrobé sombre bordée de blanc traverse le terre-plein ; sa fonction n'a pas été identifiée sur place.",
+  "photos": [
+    {"fichier": "01-depart-ligne-droite-complexe-sportif-de-bellestre-bouaye.jpg", "legende": "Le marquage blanc encore net sur l'enrobé, au départ de la ligne droite ; à gauche, le caniveau à grille qui borde la corde.", "credit": "Ronan C."},
+    {"fichier": "02-caniveau-corde-complexe-sportif-de-bellestre-bouaye.jpg", "legende": "Le caniveau à grille suit la corde sur tout l'anneau ; à gauche, le terre-plein central réduit à une aire de gravier.", "credit": "Ronan C."},
+    {"fichier": "03-terre-plein-gravier-complexe-sportif-de-bellestre-bouaye.jpg", "legende": "Le terre-plein central : gravier nu et herbe sèche, où subsistent quelques lignes blanches effacées.", "credit": "Ronan C."},
+    {"fichier": "04-bande-enrobe-terre-plein-complexe-sportif-de-bellestre-bouaye.jpg", "legende": "Une bande d'enrobé sombre bordée de blanc traverse le gravier du terre-plein.", "credit": "Ronan C."}
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan C.",
+      "date": "2026-09-05",
+      "note": 2,
+      "texte": "Un anneau en enrobé de 250 m, mesurés à la montre GPS, et son seul luxe est d'être toujours accessible : ni portail ni panneau, on entre à pied et on court. L'entretien s'arrête là — le terre-plein central n'est plus qu'une aire de gravier nu. Le marquage, lui, est encore net : cinq couloirs parfaitement lisibles. Il y a de quoi faire autre chose que tourner en rond : deux sautoirs en longueur, avec du sable dans les deux, et une aire de lancer du poids. Des caniveaux à grille courent le long de la corde et évacuent l'eau. À réserver au travail au chrono quand la vraie piste est fermée, c'est-à-dire souvent."
+    }
+  ]
 }
