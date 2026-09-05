@@ -290,6 +290,63 @@ droite liste ce qu'une visite permettrait de **renseigner**, ce qui n'est pas la
 même chose qu'une absence constatée. C'est la règle du § « un champ vide ne dit
 pas non », appliquée jusque dans le vocabulaire d'un outil interne.
 
+## Les fiches que Google sert et que le site ne publie plus
+
+Data ES renumérote. Une installation change d'identifiant, ou sort du
+recensement, et la page `/site/<ancien>/` disparaît du build au matin suivant.
+Google, lui, continue de la servir pendant des semaines.
+
+Relevé le 5 septembre 2026, en croisant les 4 420 pages vues par Google avec
+`data/tracks.json` :
+
+| | |
+|---|---|
+| identifiants morts recevant encore des impressions | **36** |
+| impressions, 28 jours | **191** |
+| clics — donc des gens qui sont arrivés sur un 404 | **5** |
+
+Le plus lourd, `I740560034`, pesait à lui seul 48 impressions et 2 clics.
+
+`scripts/disparus.py` tient la liste dans `data/disparus.json`, et
+`build_site.py` publie pour chacun une **passerelle vers la page de la
+commune** au lieu d'un 404 sec.
+
+```bash
+python3 scripts/disparus.py                 # relève et met à jour le fichier
+python3 scripts/disparus.py --jours 180     # fenêtre plus large
+python3 scripts/disparus.py --simulation    # montre sans écrire
+```
+
+Quatre décisions, et leurs raisons.
+
+**La Search Console est la seule source possible.** Il faut savoir ce que le
+site publiait *avant*, et cette mémoire n'existe nulle part : `tracks.json` est
+régénéré à chaque build et n'est pas versionné, le plan du site en ligne est
+celui du dernier build — donc déjà purgé des morts.
+
+**Le fichier est cumulatif.** On n'y retire jamais une entrée parce qu'elle a
+cessé de recevoir des impressions : elle est seulement sortie de la fenêtre, et
+supprimer sa passerelle rendrait le 404 qu'on vient d'enlever.
+
+**La destination est la commune, jamais une autre fiche.** Un identifiant mort
+ne dit pas si le site a été renuméroté, fusionné ou démoli. Désigner une fiche
+de remplacement serait une équivalence inventée ; la page de la commune, elle,
+liste ce qui est encore recensé — dont, le plus souvent, la même installation
+sous son nouveau numéro. La commune se lit dans l'identifiant lui-même :
+`I440180009` est le neuvième équipement de la commune **44018**, Bouaye, et
+3 796 préfixes INSEE sur 3 813 ne désignent qu'une seule commune. Un préfixe
+partagé par deux communes est écarté plutôt qu'arbitré.
+
+**La destination est vérifiée sur le disque, pas supposée.** `page_disparu()`
+descend commune → département → accueil jusqu'à trouver une page qui existe
+vraiment dans le build. Deviner suffit à produire une redirection vers un 404,
+ce qui est pire que le 404 qu'on remplace.
+
+GitHub Pages ne sait pas rendre un 301 : la redirection se fait par
+meta-refresh immédiat, doublée d'un canonique. Ces pages sont **hors du plan du
+site** — on ne propose pas au moteur d'aller indexer une redirection, on la lui
+sert quand il repasse sur une adresse qu'il connaît déjà.
+
 ## Savoir si tout cela sert à quelque chose
 
 Fermer un dossier ne dit pas qu'on a bien fait. Trois colonnes gèlent donc

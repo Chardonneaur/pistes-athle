@@ -40,6 +40,9 @@ from releve_gsc import CRITERES_EN_FR
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
 A_VERIFIER = os.path.join(ROOT, "data", "a-verifier.json")
+# Identifiants que Data ES ne porte plus et que Google sert encore ;
+# tenu a jour par scripts/disparus.py. Voir page_disparu().
+DISPARUS = os.path.join(ROOT, "data", "disparus.json")
 
 # URL ecrite en dur dans index.html ; remplacee partout si --url differe.
 URL_DEFAUT = "https://pistes-athle.com"
@@ -2976,6 +2979,87 @@ def sitemap_index(fichiers, url_base):
             f"{corps}</sitemapindex>\n")
 
 
+def page_disparu(entree, lang, url_base, out):
+    """Passerelle pour un identifiant que Data ES ne porte plus.
+
+    Data ES renumerote : une installation change d'identifiant, la page
+    /site/<ancien>/ sort du build au matin suivant, et Google continue de la
+    servir pendant des semaines. Releve du 5 septembre 2026 : 36 identifiants
+    morts recevaient encore 191 impressions et 5 clics sur 28 jours, tous vers
+    un 404. Des gens cherchaient un stade, le trouvaient dans Google, et
+    tombaient sur rien.
+
+    On envoie donc vers la COMMUNE, jamais vers une autre fiche. Un identifiant
+    mort ne dit pas si le site a ete renumerote, fusionne ou demoli : designer
+    une fiche de remplacement serait une equivalence inventee. La page de la
+    commune, elle, liste ce qui est encore recense — dont, le plus souvent, la
+    meme installation sous son nouveau numero.
+
+    GitHub Pages ne sait pas rendre un 301 : la redirection se fait donc par
+    meta-refresh immediat, doublee d'un canonique vers la destination, et d'un
+    lien en clair pour qui n'obtiendrait ni l'un ni l'autre. Pas de noindex :
+    on veut justement que le moteur suive et consolide.
+    """
+    # On descend jusqu'a une destination qui existe VRAIMENT dans ce build,
+    # verifiee sur le disque. Deviner suffit a produire une redirection vers un
+    # 404, ce qui est pire que le 404 qu'on remplace : Papeete, commune 98714,
+    # n'a pas de page de departement.
+    candidats = []
+    if entree.get("commune"):
+        candidats.append((url_ville(lang, entree["commune"]), "commune"))
+    if entree.get("dep"):
+        candidats.append((url_dep(lang, entree["dep"]), "departement"))
+    candidats.append((url_appli(lang), "accueil"))
+    for vers, quoi in candidats:
+        if os.path.exists(os.path.join(out, vers, "index.html")):
+            break
+    # url_ville/url_dep rendent un chemin sans barre initiale (« ville/x/ ») :
+    # la barre se met ici, comme partout ailleurs dans ce fichier.
+    cible = f"{url_base}/{vers}"
+    fr = lang == "fr"
+    titre = ("Fiche déplacée — Où s'entraîner ?" if fr
+             else "Venue moved — Where to train?")
+    if fr:
+        corps = ("Cette installation n'est plus au recensement du ministère sous cet "
+                 "identifiant. Elle a pu être renumérotée, fusionnée avec une autre, "
+                 "ou en sortir.")
+        vers_txt = {"commune": "Voir les installations de la commune",
+                    "departement": "Voir les installations du département",
+                    "accueil": "Chercher une piste sur la carte"}[quoi]
+    else:
+        corps = ("This venue is no longer in the ministry register under this "
+                 "identifier. It may have been renumbered, merged into another "
+                 "one, or removed.")
+        vers_txt = {"commune": "See the venues in this town",
+                    "departement": "See the venues in this department",
+                    "accueil": "Search for a track on the map"}[quoi]
+    return f"""<!DOCTYPE html>
+<html lang="{lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{SECURITE_HEAD}
+<title>{titre}</title>
+<meta http-equiv="refresh" content="0; url={cible}">
+<link rel="canonical" href="{cible}">
+<meta name="theme-color" content="#0f172a">
+<link rel="icon" href="{url_base}/assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{url_base}/assets/page.css?v=14">
+</head>
+<body>
+<header class="page-bar">
+  <a class="home" href="{url_base}/{url_appli(lang)}">Où s'entraîner ?</a>
+</header>
+<main class="wrap">
+<h1>{'Fiche déplacée' if fr else 'Venue moved'}</h1>
+<p class="lede">{corps}</p>
+<ul class="liste"><li><a href="{cible}">{vers_txt}</a></li></ul>
+</main>
+</body>
+</html>
+"""
+
+
 def page_404(url_base, total):
     """Page servie par GitHub Pages pour toute URL inconnue.
 
@@ -3505,6 +3589,24 @@ def main():
     # avant elle — d'ou son ecriture ici, et l'annonce apres le deploiement.
     ecrire(os.path.join(out, f"{indexnow.CLE}.txt"), indexnow.CLE + "\n")
     ecrire(os.path.join(out, "404.html"), page_404(url_base, len(publiables)))
+
+    # --- passerelles vers la commune, pour les identifiants que Data ES ne
+    # porte plus. Volontairement HORS du plan du site : on ne propose pas au
+    # moteur de venir indexer une redirection, on la lui sert quand il repasse
+    # sur une adresse qu'il connait deja.
+    vivants = {t["id"] for t in publiables}
+    n_disparus = 0
+    if os.path.exists(DISPARUS):
+        with open(DISPARUS, encoding="utf-8") as f:
+            for e in json.load(f).get("sites", []):
+                # Un identifiant revenu au recensement reprend sa vraie fiche :
+                # la passerelle ne doit surtout pas l'ecraser.
+                if e["id"] in vivants:
+                    continue
+                for lang in ("fr", "en"):
+                    ecrire(os.path.join(out, url_site(lang, e["id"]), "index.html"),
+                           page_disparu(e, lang, url_base, out))
+                n_disparus += 1
     avec_piste = sum(1 for t in publiables if t["piste"])
     ecrire(os.path.join(out, "llms.txt"),
            llms_txt(url_base, len(publiables), avec_piste, par_dep, maj, depot,
@@ -3512,6 +3614,8 @@ def main():
 
     pages = sum(len(u) for u in urls.values())
     print(f"-> {out}")
+    if n_disparus:
+        print(f"   {n_disparus} passerelles vers la commune (identifiants disparus de Data ES)")
     print(f"   {len(publiables)} sites x 2 langues, {len(par_dep)} departements, "
           f"{pages} URL au plan du site")
     print(f"   {len(axes)} criteres, {len(communes) - len(deleguee_de)} communes "
