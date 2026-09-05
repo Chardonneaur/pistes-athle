@@ -1,5 +1,48 @@
 {
   "id": "I441880016",
+  "nom": "Stade Muriel Hurtis — Complexe des Chevrets",
+  "couloirs": 4,
   "longueur_piste": 250,
-  "note": "Le ministère déclare un développement de 200 m : l'anneau fait 250 m, relevé sur place. Le tracé OpenStreetMap de la piste mesure 247 m, ce qui va dans le même sens."
+  "surface": "synthetique",
+  "eclairage": true,
+  "acces_libre": true,
+  "agres": [
+    "longueur",
+    "triple",
+    "hauteur",
+    "perche",
+    "poids",
+    "disque",
+    "marteau",
+    "javelot",
+    "steeple"
+  ],
+  "url": "https://www.stphilbert.fr/complexe-sportif-des-chevrets/",
+  "acces_note": "Accès libre constaté : on entre sur la piste sans portail ni créneau. Le ministère déclare vestiaires, douches et sanitaires sur le site ; en pratique ils sont dans les salles du complexe, à côté, et non au bord de la piste.",
+  "note": "Visite du 5 septembre 2026, par quelqu'un qui s'y entraîne régulièrement. C'est la piste du club Athletic Retz Sud Lac.\n\nLe nom : la commune écrit « Le stade d'Athlétisme Muriel Hurtis » (stphilbert.fr, relevé le 5 septembre 2026), tandis que le recensement du ministère porte le nom de l'ensemble, « Complexe Sportif des Chevrets ». Le complexe regroupe aussi les salles Montreal, Tokyo, Athènes, Barcelone, Sydney et Mexico, deux terrains de football en herbe et un terrain synthétique. Le bâtiment visible depuis la piste porte le nom du stade de football voisin, Mickaël Landreau, à ne pas confondre avec la piste.\n\nDéveloppement de 250 m relevé sur place, contre 200 m déclarés par le ministère ; le tracé OpenStreetMap mesure 247 m, ce qui va dans le même sens. Quatre couloirs, comptés sur place. Revêtement synthétique confirmé au pied, et non déduit de la couleur rouge — la commune voisine des Grenais montre à quoi ce piège ressemble.\n\nConséquence directe des 250 m, et que rien d'autre ne dit : on ne peut pas courir un 100 m en ligne droite, la ligne se terminant dans l'aire de saut à la perche.\n\nAgrès vus sur place : sautoir de longueur et de triple, sautoir en hauteur, sautoir à la perche, aire de lancer du javelot, aires de lancer du poids, et une cage pour le marteau et le disque. Le steeple est inscrit parce que des mini-haies sont présentes, mais il n'y a pas de rivière : le parcours complet n'est pas praticable.\n\nÉclairage en service, non déclaré par le recensement. Les alentours se prêtent bien à l'échauffement en courant.",
+  "photos": [
+    {
+      "fichier": "01-ligne-droite-stade-muriel-hurtis-complexe-des-chevrets-saint-philbert-de-grand-lieu.jpg",
+      "legende": "La ligne droite en tartan vue depuis la main courante ; au fond, la cage de lancer et les matelas de saut bâchés.",
+      "credit": "Ronan C."
+    },
+    {
+      "fichier": "02-sautoir-longueur-stade-muriel-hurtis-complexe-des-chevrets-saint-philbert-de-grand-lieu.jpg",
+      "legende": "Le grand sautoir de longueur et sa planche d'appel, entre la piste et le stade de football voisin.",
+      "credit": "Ronan C."
+    },
+    {
+      "fichier": "03-anneau-et-cage-de-lancer-stade-muriel-hurtis-complexe-des-chevrets-saint-philbert-de-grand-lieu.jpg",
+      "legende": "L'anneau de 250 m et son virage ; à droite, la cage grillagée du marteau et du disque en bord de terre-plein.",
+      "credit": "Ronan C."
+    }
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan C.",
+      "date": "2026-09-05",
+      "note": 5,
+      "texte": "La piste où je m'entraîne souvent, et celle du club, l'AR Sud Lac. Son seul défaut tient dans un chiffre : 250 m. On ne peut pas y courir un 100 m en ligne droite — on finit dans l'aire de saut à la perche — et le tour est déroutant quand on a l'habitude des 400 m. Pour tout le reste, c'est difficile à prendre en défaut : quatre couloirs en tartan, en libre accès, avec un équipement qu'on ne trouve pas souvent ouvert à tout le monde. Sautoirs de longueur et de triple, de hauteur, de perche, une belle aire de javelot, des aires de poids, une cage pour le marteau et le disque, et des mini-haies de steeple — sans rivière. Les salles voisines ont des vestiaires, et on peut facilement partir s'échauffer aux alentours. Pour un club ou pour une séance seul, c'est une chance ; il faut juste accepter de compter ses tours autrement."
+    }
+  ]
 }
