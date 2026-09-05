@@ -1,5 +1,21 @@
 {
   "id": "I440180009",
-  "agres_probables": ["longueur", "perche", "poids", "disque", "marteau"],
-  "note": "Agrès déduits de l'orthophoto IGN, non vérifiés sur place : cage grillagée de lancer dans le virage sud, cercle de poids sur dalle carrée en bord de virage est, matelas bâché vert au bout d'un long couloir d'élan le long de la ligne droite nord, et deux fosses de sable aux extrémités du couloir sud. Un matelas bâché bleu supplémentaire, sur le tablier du virage sud, suggère un sautoir en hauteur."
+  "couloirs": 6,
+  "agres": ["longueur", "triple", "perche", "javelot", "poids", "disque", "marteau"],
+  "ouvert_public": false,
+  "acces_note": "Panneau boulonné sur le portail, relevé le 5 septembre 2026 : « Accès réservé aux établissements scolaires et aux clubs sportifs sur les créneaux autorisés » (Ville de Bouaye). L'enceinte était fermée ce jour-là, comme elle l'est presque toujours. Vestiaires, douches et sanitaires sont annoncés par le recensement ; aucun n'a été vu ouvert.",
+  "note": "Visite du 5 septembre 2026, faite depuis l'extérieur de la clôture : l'enceinte était fermée. Six couloirs sur l'anneau, sept sur la ligne droite, numérotés au sol au départ. Agrès vus par-dessus la clôture : sautoir de longueur et de triple (plusieurs planches d'appel), sautoir à la perche, couloir de javelot, aire de lancer du poids, et une cage grillagée sur le terre-plein, qui sert le disque et le marteau. Aucun sautoir en hauteur n'a été repéré, ce qui ne vaut pas constat d'absence. Le bâtiment d'entrée porte la mention « Piste intercommunale d'athlétisme ». Cette visite remplace les agrès qui n'étaient jusqu'ici que déduits de l'orthophoto IGN. Le recensement du ministère classait le site « ouvert au public sur horaires » ; le panneau du portail dit le contraire, et la mention a été retirée — la fiche se tait sur l'accès plutôt que d'affirmer une fermeture.",
+  "photos": [
+    {"fichier": "01-depart-ligne-droite-stade-patrick-perrais-bouaye.jpg", "legende": "Le départ de la ligne droite en synthétique rouge, couloirs numérotés de 1 à 7, vu depuis la clôture.", "credit": "Ronan C."},
+    {"fichier": "02-cage-de-lancer-stade-patrick-perrais-bouaye.jpg", "legende": "La cage grillagée de lancer sur le terre-plein, et deux matelas de saut bâchés rangés en bord de piste.", "credit": "Ronan C."},
+    {"fichier": "03-panneau-acces-stade-patrick-perrais-bouaye.jpg", "legende": "Le panneau boulonné sur le portail : accès réservé aux établissements scolaires et aux clubs sportifs sur les créneaux autorisés.", "credit": "Ronan C."}
+  ],
+  "avis": [
+    {
+      "auteur": "Ronan C.",
+      "date": "2026-09-05",
+      "note": 5,
+      "texte": "La piste du secteur, celle où s'entraîne l'Herbauge : synthétique, six couloirs sur l'anneau et sept en ligne droite, avec tout ce qu'il faut autour — sautoirs en longueur et triple, perche, javelot, aire de poids, cage de disque et marteau. Je n'ai pas repéré de sautoir en hauteur ; ça ne veut pas dire qu'il n'y en a pas. Le problème n'est pas la piste, il est au portail : elle est fermée quasiment tout le temps, et un panneau rappelle que l'accès est réservé aux établissements scolaires et aux clubs sportifs sur les créneaux autorisés. Le 5 septembre 2026 encore, j'ai tout regardé par-dessus la clôture. Pour qui court en club, l'outil est excellent. Pour tous les autres, c'est une frustration : on voit tout et on n'entre pas."
+    }
+  ]
 }
