@@ -1,0 +1,330 @@
+{
+ "genere": "2026-09-05",
+ "source": "Search Console, 2026-05-06 -> 2026-09-03",
+ "sites": [
+  {
+   "id": "I740560034",
+   "insee": "74056",
+   "commune": null,
+   "dep": "74",
+   "impressions": 48,
+   "clics": 2,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I420440023",
+   "insee": "42044",
+   "commune": "le-chambon-feugerolles",
+   "dep": "42",
+   "impressions": 16,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I692040022",
+   "insee": "69204",
+   "commune": "saint-genis-laval",
+   "dep": "69",
+   "impressions": 16,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I674820110",
+   "insee": "67482",
+   "commune": "strasbourg",
+   "dep": "67",
+   "impressions": 15,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I830340008",
+   "insee": "83034",
+   "commune": "carqueiranne",
+   "dep": "83",
+   "impressions": 15,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I341230014",
+   "insee": "34123",
+   "commune": null,
+   "dep": "34",
+   "impressions": 8,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I121330009",
+   "insee": "12133",
+   "commune": "luc-la-primaube",
+   "dep": "12",
+   "impressions": 6,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I352380120",
+   "insee": "35238",
+   "commune": "rennes",
+   "dep": "35",
+   "impressions": 6,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I764750008",
+   "insee": "76475",
+   "commune": null,
+   "dep": "76",
+   "impressions": 5,
+   "clics": 1,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550259",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 5,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I562060017",
+   "insee": "56206",
+   "commune": "saint-ave",
+   "dep": "56",
+   "impressions": 5,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I033210014",
+   "insee": "03321",
+   "commune": "yzeure",
+   "dep": "03",
+   "impressions": 4,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I380530004",
+   "insee": "38053",
+   "commune": "bourgoin-jallieu",
+   "dep": "38",
+   "impressions": 3,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I394340011",
+   "insee": "39434",
+   "commune": "poligny",
+   "dep": "39",
+   "impressions": 3,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I422220007",
+   "insee": "42222",
+   "commune": null,
+   "dep": "42",
+   "impressions": 3,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I511080058",
+   "insee": "51108",
+   "commune": "chalons-en-champagne",
+   "dep": "51",
+   "impressions": 3,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I674820196",
+   "insee": "67482",
+   "commune": "strasbourg",
+   "dep": "67",
+   "impressions": 3,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I987140004",
+   "insee": "98714",
+   "commune": null,
+   "dep": "987",
+   "impressions": 2,
+   "clics": 2,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I151690004",
+   "insee": "15169",
+   "commune": null,
+   "dep": "15",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550754",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I321600017",
+   "insee": "32160",
+   "commune": "l-isle-jourdain",
+   "dep": "32",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I342760006",
+   "insee": "34276",
+   "commune": null,
+   "dep": "34",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I385630005",
+   "insee": "38563",
+   "commune": "voiron",
+   "dep": "38",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I742690003",
+   "insee": "74269",
+   "commune": null,
+   "dep": "74",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I871510002",
+   "insee": "87151",
+   "commune": null,
+   "dep": "87",
+   "impressions": 2,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550701",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I693880055",
+   "insee": "69388",
+   "commune": "lyon-8e-arrondissement",
+   "dep": "69",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I051790025",
+   "insee": "05179",
+   "commune": "veynes",
+   "dep": "05",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550650",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550653",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I315550670",
+   "insee": "31555",
+   "commune": "toulouse",
+   "dep": "31",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I462240010",
+   "insee": "46224",
+   "commune": null,
+   "dep": "46",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I480990011",
+   "insee": "48099",
+   "commune": null,
+   "dep": "48",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I573320025",
+   "insee": "57332",
+   "commune": "hombourg-haut",
+   "dep": "57",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I764820007",
+   "insee": "76482",
+   "commune": "offranville",
+   "dep": "76",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  },
+  {
+   "id": "I930490014",
+   "insee": "93049",
+   "commune": "neuilly-plaisance",
+   "dep": "93",
+   "impressions": 1,
+   "clics": 0,
+   "vu_le": "2026-09-05"
+  }
+ ]
+}
