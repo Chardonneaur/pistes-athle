@@ -149,6 +149,44 @@ def sans_accent(texte):
                    if unicodedata.category(c) != "Mn")
 
 
+# Les slugs de critere sont TRADUITS, contrairement aux identifiants de site,
+# aux slugs de commune et aux codes de departement. « /pistes/acces-libre/ » et
+# « /en/tracks/free-access/ » sont la meme page dans deux langues, donc la meme
+# question : sans cette table, elles ouvriraient deux dossiers, et la moitie
+# anglaise de la file serait comptee a part de la francaise.
+#
+# La table est ici, et non dans build_site.py qui fabrique les pages, parce que
+# c'est la memoire de la boucle qui doit etre la piece fiable. build_site.py la
+# lit et refuse de construire un critere qu'elle ignore : un critere ajoute sans
+# passer par ici casse le build, il ne disparait pas silencieusement du releve.
+#
+# Les slugs identiques dans les deux langues (« 400m », « 250m ») n'y figurent
+# pas : ils traversent la traduction sans changer.
+CRITERES_EN_FR = {
+    "athletics-stadium": "stade-athletisme",
+    "free-access":       "acces-libre",
+    # revetements
+    "asphalt":           "bitume",
+    "cinder":            "cendree",
+    "grass":             "gazon",
+    "indoor":            "interieur",
+    "natural":           "naturel",
+    "sand":              "sable",
+    "synthetic":         "synthetique",
+    # agres
+    "discus":            "disque",
+    "hammer":            "marteau",
+    "high-jump":         "hauteur",
+    "javelin":           "javelot",
+    "long-jump":         "longueur",
+    "pole-vault":        "perche",
+    "shot-put":          "poids",
+    "steeplechase":      "steeple",
+    "triple-jump":       "triple",
+}
+CRITERES_EN_FR.update({f"{n}-lanes": f"{n}-couloirs" for n in range(2, 9)})
+
+
 def cible(page):
     """Ce que la page d'atterrissage designe.
 
@@ -174,8 +212,13 @@ def cible(page):
         # distinctes sur un seul departement.
         code = parts[1]
         return "dep:" + (code.zfill(2) if code.isdigit() and len(code) < 2 else code)
-    if tete == "pistes" and len(parts) > 1:
-        return "critere:" + "/".join(parts[1:])
+    if tete in ("pistes", "tracks") and len(parts) > 1:
+        # Seul le premier segment est traduit : le second, quand il existe, est
+        # un slug de departement (« 400m/drome »), identique dans les deux
+        # langues comme les codes et les noms de commune.
+        reste = parts[1:]
+        reste[0] = CRITERES_EN_FR.get(reste[0], reste[0])
+        return "critere:" + "/".join(reste)
     return "inconnu"
 
 

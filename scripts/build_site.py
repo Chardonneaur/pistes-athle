@@ -31,6 +31,11 @@ import indexnow
 from build_api import (ADSENSE_CLIENT, ADSENSE_ENCART_JS, ADSENSE_HEAD,
                        ADSENSE_SLOT_FICHE, DISCIPLINES, MATOMO_HEAD, SECURITE_HEAD,
                        SURFACE_EN, encart_adsense, slug)
+# La table des slugs de critere traduits vit avec le releve Search Console, qui
+# en depend pour rattacher une page anglaise a la question francaise. Import sur
+# une seule constante, et releve_gsc.py n'importe que la bibliotheque standard :
+# construire le site ne demande donc ni identifiants Google ni acces reseau.
+from releve_gsc import CRITERES_EN_FR
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRACKS = os.path.join(ROOT, "data", "tracks.json")
@@ -2561,6 +2566,17 @@ def criteres(sites):
     out = []
 
     def ajoute(sl_fr, sl_en, titre, desc, retenus, api):
+        # Le releve Search Console rattache une page anglaise a la question
+        # francaise en traduisant le slug de critere. Un critere que sa table
+        # ignore tomberait en « inconnu » : la page serait servie, les gens
+        # cliqueraient, et la boucle n'en saurait rien. Casser le build est le
+        # seul rappel qui ne s'oublie pas.
+        if sl_en != sl_fr and CRITERES_EN_FR.get(sl_en) != sl_fr:
+            raise SystemExit(
+                f"[ERREUR] critere « {sl_fr} » / « {sl_en} » inconnu de la table de"
+                " traduction du releve Search Console.\n"
+                f"  Ajouter \"{sl_en}\": \"{sl_fr}\" a CRITERES_EN_FR, dans"
+                " scripts/releve_gsc.py.")
         if retenus:
             out.append({"slug": {"fr": sl_fr, "en": sl_en}, "titre": titre,
                         "desc": desc, "sites": retenus, "api": api})
