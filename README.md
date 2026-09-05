@@ -436,6 +436,7 @@ scripts/pistes_absentes.py  anneaux OSM que l'annuaire ignore : audit de couvert
 scripts/marches_publics.py  marchés publics : les pistes payées mais pas recensées
 scripts/lieux_a_regarder.py  toponymie + city-stades BD TOPO -> planches-contact
 scripts/conseils_municipaux.py  délibérations des conseils municipaux : file de lecture
+scripts/demande_terrain.py  demande Search Console x fiches muettes : où aller voir
 data/overrides/*.json       contributions de la communauté (corrections, avis, photos)
 data/photos/<id>/           photos optimisées, une par site
 data/tracks.json            jeu de données publié (généré, non versionné)
