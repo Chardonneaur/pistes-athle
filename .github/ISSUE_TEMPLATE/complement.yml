@@ -1,0 +1,74 @@
+name: "Compléter la fiche d'une piste / Complete a venue record"
+description: "Préciser les agrès, horaires ou conditions d'accès / Add equipment, opening hours or access conditions"
+title: "[Complément] "
+labels: ["complément", "données"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Pas de compte GitHub ? Le [formulaire du site](https://chardonneaur.github.io/pistes-athle/#contribuer)
+        envoie la même contribution par e-mail. / *No GitHub account? The
+        [form on the site](https://chardonneaur.github.io/pistes-athle/#contribuer) sends the same contribution by email.*
+  - type: input
+    id: id
+    attributes:
+      label: "Référence du site / Venue reference"
+      placeholder: "I352380090"
+  - type: input
+    id: nom
+    attributes:
+      label: "Nom du stade et commune / Stadium name and town"
+      placeholder: "Stade Robert Poirier, Rennes (35)"
+    validations:
+      required: true
+  - type: checkboxes
+    id: agres
+    attributes:
+      label: "Agrès réellement présents / Equipment actually present"
+      options:
+        - label: "Sautoir en longueur"
+        - label: "Sautoir de triple saut"
+        - label: "Sautoir en hauteur"
+        - label: "Sautoir à la perche"
+        - label: "Aire de lancer du poids"
+        - label: "Aire de lancer du disque"
+        - label: "Aire de lancer du marteau"
+        - label: "Couloir de lancer du javelot"
+        - label: "Rivière de steeple"
+  - type: dropdown
+    id: surface
+    attributes:
+      label: "Revêtement de la piste / Track surface"
+      options:
+        - "Je ne sais pas"
+        - "Synthétique (tartan)"
+        - "Bitume / goudron"
+        - "Cendrée / stabilisé"
+        - "Herbe / terre"
+        - "Il n'y a pas de piste"
+  - type: input
+    id: couloirs
+    attributes:
+      label: "Couloirs et développement / Lanes and lap length"
+      placeholder: "6 couloirs, 400 m"
+  - type: dropdown
+    id: acces
+    attributes:
+      label: "Conditions d'accès / Access conditions"
+      options:
+        - "Je ne sais pas"
+        - "Accès totalement libre"
+        - "Ouvert au public à certains horaires"
+        - "Réservé aux clubs / licenciés"
+        - "Réservé aux scolaires"
+        - "Fermé au public"
+  - type: input
+    id: horaires
+    attributes:
+      label: "Horaires d'ouverture (facultatif) / Opening hours (optional)"
+      placeholder: "Lun-ven 8h-22h, week-end 9h-19h"
+  - type: textarea
+    id: note
+    attributes:
+      label: "Bon à savoir (facultatif) / Good to know (optional)"
+      placeholder: "Portail côté nord souvent ouvert, perche uniquement sur réservation au club…"

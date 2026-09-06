@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Pas de compte GitHub ? / No GitHub account?"
+    url: https://pistes-athle.com/#contribuer
+    about: "Le formulaire du site envoie votre contribution par e-mail. / The form on the site sends your contribution by email."
+  - name: "Ce qui rend une contribution utile / What makes a good contribution"
+    url: https://github.com/Chardonneaur/pistes-athle/blob/HEAD/CONTRIBUTING.md
+    about: "Le vocabulaire du recensement, et les quatre règles qui evitent d'ecrire un fait faux. / The survey's vocabulary, and the four rules that keep a wrong fact out."

@@ -1,0 +1,62 @@
+name: "Vérifier un anneau candidat / Check a candidate loop"
+description: "Dire si un anneau repéré dans OpenStreetMap est une piste d'athlétisme / Tell us whether a loop found in OpenStreetMap is a running track"
+title: "[Vérification] "
+labels: ["verification", "données"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ces anneaux sont **des candidats, pas des pistes**. Ils sont cartographiés dans
+        OpenStreetMap et absents du recensement du ministère — mais un anneau peut être
+        un circuit de karting, une piste de BMX, un anneau d'entraînement hippique ou un
+        tracé qui n'existe plus. Personne n'y est allé.
+
+        Votre réponse tranche. Un « non » vaut autant qu'un « oui » : il retire du bruit
+        de la liste et évite à quelqu'un de se déplacer pour rien.
+
+        *These loops are **candidates, not tracks**. They are mapped in OpenStreetMap and
+        missing from the French ministry's census — but a loop can be a karting circuit,
+        a BMX track, a horse-training ring, or a trace of something long gone. Nobody has
+        been there. A "no" is as useful as a "yes".*
+  - type: input
+    id: osm
+    attributes:
+      label: "Référence de l'anneau / Loop reference"
+      description: "Pré-remplie depuis la page. Ex. way/490405957 / Pre-filled from the page."
+      placeholder: "way/490405957"
+    validations:
+      required: true
+  - type: input
+    id: lieu
+    attributes:
+      label: "Commune / Town"
+      placeholder: "Casson (44)"
+  - type: dropdown
+    id: verdict
+    attributes:
+      label: "Est-ce une piste d'athlétisme ? / Is it a running track?"
+      options:
+        - "Oui — un anneau de course, avec ou sans couloirs marqués / Yes"
+        - "Non — c'est autre chose (karting, BMX, hippique, chemin…) / No"
+        - "L'anneau n'existe plus sur place / The loop no longer exists"
+        - "Je ne sais pas dire depuis la vue aérienne / Cannot tell from the aerial view"
+    validations:
+      required: true
+  - type: input
+    id: quoi
+    attributes:
+      label: "Si ce n'est pas une piste, qu'est-ce que c'est ? / If not a track, what is it?"
+      placeholder: "Anneau d'entraînement pour chevaux"
+  - type: textarea
+    id: connaissance
+    attributes:
+      label: "Comment le savez-vous ? / How do you know?"
+      description: "« J'habite à côté », « j'y cours », « vu sur la vue aérienne » — tout est utile, et la source compte autant que la réponse. / Everything helps, and the source matters as much as the answer."
+      placeholder: "J'habite la commune, c'est la piste du collège."
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: "Ce que vous savez de plus (facultatif) / Anything else (optional)"
+      description: "Nombre de couloirs, revêtement, accès libre ou fermé, agrès de saut ou de lancer, nom du stade. Rien n'est obligatoire. / Lanes, surface, access, jumping or throwing facilities, stadium name. Nothing is required."
