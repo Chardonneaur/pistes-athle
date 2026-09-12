@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://fundingchoicesmessages.google.com; script-src 'self' https://cdn.matomo.cloud https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ronanchardonneau.matomo.cloud https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>API — Où s'entraîner ?</title>
+<meta name="description" content="Interroger l'annuaire des pistes d'athlétisme françaises : facettes statiques, index compact, OpenAPI.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://pistes-athle.com/api/tracks/">
+<link rel="service-desc" type="application/json" href="https://pistes-athle.com/openapi.json">
+<link rel="stylesheet" href="../../assets/page.css?v=15">
+<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="../../assets/matomo.js?v=3" defer></script>
+<link rel="preconnect" href="https://pagead2.googlesyndication.com">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1527587552576457" crossorigin="anonymous"></script>
+<script type="application/json" id="capabilities">{"service": "Ou s'entrainer ? — API des pistes d'athletisme francaises", "openapi": "https://pistes-athle.com/openapi.json", "documentation": "https://pistes-athle.com/llms.txt", "license": "https://github.com/etalab/licence-ouverte/blob/master/LO.md", "build": "2026-09-12", "count": 7296, "query_api": {"available": true, "endpoint": "https://pistes-athle-api.athle.workers.dev/api/tracks", "note": null, "parameters": ["city", "department", "lat", "lon", "radius", "track_length", "lanes_min", "surface", "track_type", "free_access", "has_reviews", "certainty", "long_jump", "triple_jump", "high_jump", "pole_vault", "shot_put", "discus", "hammer", "javelin", "steeplechase", "limit", "page"]}, "index_url": "https://pistes-athle.com/api/index.json", "endpoints": {"track": "https://pistes-athle.com/api/tracks/{id}.json", "department": "https://pistes-athle.com/api/tracks/department/{code}.json", "city": "https://pistes-athle.com/api/tracks/city/{department}/{city-slug}.json", "discipline": "https://pistes-athle.com/api/tracks/discipline/{discipline}.json", "discipline_in_department": "https://pistes-athle.com/api/tracks/discipline/{discipline}/{department}.json", "length": "https://pistes-athle.com/api/tracks/length/{metres}.json", "surface": "https://pistes-athle.com/api/tracks/surface/{surface}.json", "track_type": "https://pistes-athle.com/api/tracks/track-type/{track_type}.json", "lanes_min": "https://pistes-athle.com/api/tracks/lanes/{n}.json", "free_access": "https://pistes-athle.com/api/tracks/free-access.json", "reviewed": "https://pistes-athle.com/api/tracks/reviewed.json", "geo_cell": "https://pistes-athle.com/api/geo/{lat}/{lon}.json"}, "vocabularies": {"disciplines": ["discus", "hammer", "high_jump", "javelin", "long_jump", "pole_vault", "shot_put", "steeplechase", "triple_jump"], "surfaces": ["synthetic", "asphalt", "cinder", "sand", "grass", "natural", "indoor"], "track_types": ["stade", "couloirs_2_4", "isolee"]}, "contract": {"free_access": "true | unknown. `false` est refuse : 5 696 installations n'ont pas d'information d'acces, et un blanc n'est pas un non.", "disciplines": "Filtrent sur les agres declares. Les agres deduits d'une orthophoto sont rendus a part, dans agres_probables.", "has_reviews": "true | false. Le false est ici legitime, contrairement a free_access : l'absence d'avis est un fait de cette base. Sur cet hote statique, les 7 270 installations sans avis s'obtiennent en retirant reviewed.json de index.json."}, "facets_generated": 6682}</script>
+</head>
+<body>
+<header class="page-bar"><a class="home" href="../../">Où s'entraîner ?</a></header>
+<main class="wrap">
+<h1>API des pistes d'athlétisme</h1>
+<p>Vous êtes probablement arrivé ici en appelant <code>/api/tracks?…</code>. Ce site est
+hébergé sur GitHub&nbsp;Pages, qui sert des fichiers statiques et <strong>ignore la chaîne de
+requête</strong> : les paramètres n'ont pas pu être appliqués, et cette page ne prétend pas
+avoir filtré quoi que ce soit.</p>
+<p>Le document de capacités lisible par une machine est ci-dessus dans
+<code>&lt;script id="capabilities"&gt;</code>, et à part&nbsp;:
+<a href="../tracks.json">/api/tracks.json</a>.</p>
+<h2>Trois façons d'interroger l'annuaire</h2>
+<ul class="liste">
+<li><a href="../index.json">/api/index.json</a><span class="meta">Les 7 296 installations
+réduites aux champs filtrables, en un fichier. Téléchargez, filtrez localement : n'importe
+quelle conjonction, sans serveur.</span></li>
+<li><a href="../tracks/free-access.json">Facettes pré-calculées</a><span class="meta">Un
+fichier par critère simple : département, commune, discipline, développement, revêtement,
+couloirs, accès libre, cellule géographique.</span></li>
+<li><a href="../../openapi.json">/openapi.json</a><span class="meta">Le contrat complet, y
+compris les paramètres de recherche combinables servis par le serveur de recherche lorsqu'il
+est déployé.</span></li>
+</ul>
+<h2>Deux règles à connaître avant d'interpréter une réponse</h2>
+<p><code>acces_libre</code> vaut <code>true</code> ou <code>null</code>, jamais
+<code>false</code> : 5 696 installations sur 7 296 n'ont aucune information d'accès, et
+un blanc n'est pas un refus.</p>
+<p>Les disciplines filtrent sur les agrès <em>déclarés</em> par l'exploitant. Ce qu'un
+contributeur a déduit d'une orthophoto est rendu à part, dans <code>agres_probables</code> —
+et <code>saut_indetermine</code> signifie « il y a un sautoir, on ne sait pas lequel ».</p>
+</main>
+<footer class="wrap src"><p><a href="../../">Voir la carte</a> ·
+<a href="../../llms.txt">llms.txt</a> ·
+<a href="https://github.com/Chardonneaur/pistes-athle">Code source</a></p></footer>
+</body>
+</html>

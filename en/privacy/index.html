@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'none'; frame-src https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://www.google.com https://fundingchoicesmessages.google.com; script-src 'self' https://cdn.matomo.cloud https://pagead2.googlesyndication.com https://tpc.googlesyndication.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ronanchardonneau.matomo.cloud https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Privacy — Where to train?</title>
+<meta name="description" content="What this site measures, what it does not, and why there is no cookie banner to click: cookieless analytics, a crawler log, and what contributing publishes.">
+<meta name="theme-color" content="#0f172a">
+<link rel="canonical" href="https://pistes-athle.com/en/privacy/">
+<link rel="alternate" hreflang="fr" href="https://pistes-athle.com/confidentialite/">
+<link rel="alternate" hreflang="en" href="https://pistes-athle.com/en/privacy/">
+<link rel="alternate" hreflang="x-default" href="https://pistes-athle.com/confidentialite/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Where to train?">
+<meta property="og:locale" content="en_GB">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:title" content="Privacy — Where to train?">
+<meta property="og:description" content="What this site measures, what it does not, and why there is no cookie banner to click: cookieless analytics, a crawler log, and what contributing publishes.">
+<meta property="og:url" content="https://pistes-athle.com/en/privacy/">
+<meta property="og:image" content="https://pistes-athle.com/assets/og.png">
+<meta property="og:image:alt" content="Where to train?">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../../assets/page.css?v=15">
+<link rel="preconnect" href="https://cdn.matomo.cloud">
+<link rel="preconnect" href="https://ronanchardonneau.matomo.cloud">
+<script src="../../assets/matomo.js?v=3" defer></script>
+<link rel="preconnect" href="https://pagead2.googlesyndication.com">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1527587552576457" crossorigin="anonymous"></script>
+<script src="../../assets/adsense.js?v=2" defer></script>
+<link rel="service-desc" type="application/json" href="https://pistes-athle.com/openapi.json">
+<link rel="alternate" type="application/json" href="https://pistes-athle.com/api/index.json" title="Index des installations (JSON)">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://pistes-athle.com/en/"}, {"@type": "ListItem", "position": 2, "name": "Privacy", "item": "https://pistes-athle.com/en/privacy/"}]}</script>
+</head>
+<body>
+<header class="page-bar">
+  <a class="home" href="../../en/">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c3.5-8 7-11 11-11 3 0 5 1.6 6 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><path d="M7 21c3-7 6-9.5 9.5-9.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".5"/></svg>
+    Where to train?</a>
+  <a class="lang" href="../../confidentialite/" hreflang="fr" lang="fr">Français</a>
+</header>
+<main class="wrap">
+<nav class="crumb"><a href="../../en/">Home</a> › Privacy</nav>
+<h1>Privacy</h1>
+<p class="lede">No cookie, no advertising, no profile. The only measurement here is anonymous, and it exists to answer one question: do AI agents read this directory, and do they send people to it? Here is exactly what is recorded — and what is not.</p>
+<div class="prose">
+<h2>What is measured</h2>
+
+<p>Audience measurement runs on <a href="https://matomo.org/" rel="noopener">Matomo</a>,
+   hosted in Europe. When a page opens, it records that page's address, the site or search
+   engine you came from, a country and region derived from the IP address, the device type,
+   the browser and its language, the screen size, the time spent on the page, and the outbound
+   links clicked — OpenStreetMap, the town hall website, the directions link.</p>
+<p>The IP address is not kept whole: its last two bytes are zeroed before storage —
+   <code>62.210.0.0</code>, not <code>62.210.x.y</code>. That stub is what places the visit in a
+   country and a region; it designates nobody. Checked on 25 August 2026 against the stored data
+   itself, not merely against a setting.</p>
+<p>What you type in the search box is recorded too, along with how many results it returned —
+   once you stop typing, never letter by letter. The reason is precise: a search that returns
+   nothing points at a track missing from the directory, and there is no other way to learn of
+   it. That box is for finding a stadium: do not write anything about yourself in it.</p>
+<p>One extra flag is recorded, and only when it is true: <code>navigator.webdriver</code>,
+   which your browser sets by itself when it is driven by a program rather than by a person.
+   It serves to tell automated agent visits apart from yours. Nothing goes looking for it: the
+   browser announces it, and when it is false nothing is written — a blank does not say
+   &laquo;&nbsp;human&nbsp;&raquo;, it says no signal was seen. No fingerprint is computed,
+   neither of your hardware nor of the way you move the mouse.</p>
+<p>None of this names you, and nothing ties two visits together: with no cookie and no stored
+   identifier, you come back tomorrow as a complete stranger.</p>
+<p>What it is for: this project asks one precise question — do AI agents read this directory,
+   and do they send people to it? Matomo answers the human half, by sorting arrivals coming
+   from ChatGPT, Perplexity, Claude or Gemini. Without the measurement, the answer would stay
+   a hunch.</p>
+<h2>No cookie for measurement, a banner for advertising</h2>
+
+<p>The tracker's first instruction is <code>disableCookies()</code>: no cookie is set, nothing
+   is written to or read from your device in order to measure the audience. That is what makes
+   a consent request unnecessary — the law requires it for accessing your terminal, which this
+   site does not do. The processing itself rests on the controller's legitimate interest
+   (GDPR article 6(1)(f)): knowing whether what he publishes is read.</p>
+<p>A browser sending the <em>Do Not Track</em> header is not measured at all: not anonymised,
+   not trimmed — not measured. It costs a few visits; it buys the right to write that sentence
+   without a footnote.</p>
+<p>The whole setting is thirty lines long, and it is public:
+   <a href="https://github.com/Chardonneaur/pistes-athle/blob/master/assets/matomo.js" rel="noopener">assets/matomo.js</a>.
+   The day a cookie appeared there, this page would say so the same day.</p>
+
+<p>Advertising cannot do without one: an advertisement accesses your device, so it asks for your
+   consent. The banner you see on your first visit is only about that. This site's audience
+   measurement never needed one, and still does not.</p>
+<h2>Advertising</h2>
+
+<p>Venue pages carry <strong>one advertising slot</strong>, served by Google AdSense. Just one,
+   always in the same place: after the &laquo;&nbsp;Access &amp; amenities&nbsp;&raquo; section,
+   that is, after the answer you came for. It is labelled <strong>&laquo;&nbsp;Advertisement&nbsp;&raquo;</strong>,
+   because you must be able to tell without effort what the ministry declares from what an
+   advertiser pays for.</p>
+<p>Nowhere else: not in the application, not on city, department or criterion pages. And no
+   automatic ads — Google does not place anything wherever it likes.</p>
+<p><strong>An advertisement accesses your device</strong>, which this site's audience measurement
+   does not. Hence the consent banner on your first visit: without your agreement, no
+   personalised advertisement can be served. Refusing takes nothing away from the directory —
+   same venues, same filters, same data, same search.</p>
+<p>What Google receives falls under its rules, not ours:
+   <a href="https://policies.google.com/technologies/partner-sites" rel="noopener">how Google uses
+   data from sites that use it</a>. In return we receive no data about you: a revenue total, and
+   nothing else.</p>
+<p>Why advertising: this site is free, with no account and no subscription, and its data stays
+   open and downloadable. Advertising pays for the domain name and part of the time spent
+   enriching the directory. You can block it and lose nothing — the code folds the slot away
+   instead of asking anything of you:
+   <a href="https://github.com/Chardonneaur/pistes-athle/blob/master/assets/adsense.js" rel="noopener">assets/adsense.js</a>.</p>
+<h2>An affiliate link</h2>
+
+<p>Venue pages also carry <strong>one Amazon affiliate link</strong>, in the same place as the
+   advertising slot and labelled <strong>&laquo;&nbsp;Sponsored&nbsp;&raquo;</strong>. It is a
+   link and nothing more: it displays no image or script from Amazon, sets no cookie, and calls
+   no server until you click it.</p>
+<p>If you click and then buy, Amazon pays us a commission. Amazon then knows the visit came from
+   here; what it does with that falls under its rules. Here too we receive only a total: never
+   who bought what.</p>
+<h2>What this site does not do</h2>
+
+<ul>
+  <li>No account, no password, no sign-up.</li>
+  <li>No profile built by us: audience measurement stays cookieless and
+      identifier-free. The advertising slot is described above — we receive no data about you
+      from it, only a revenue total.</li>
+  <li>No selling, no exchange of data with a commercial third party.</li>
+  <li>No browser fingerprinting, no cross-site tracking.</li>
+  <li>No email address collected behind your back: you only give one by writing in, and it is
+      then used to reply to you.</li>
+</ul>
+<h2>Your location never leaves your device</h2>
+
+<p>The &laquo;&nbsp;near me&nbsp;&raquo; button asks the browser for your position, and the
+   browser asks you. It is used to sort the list by distance, inside the page, on your device.
+   It is sent nowhere: not to the site, not to Matomo, not to the map. Declining costs you the
+   distance sort and nothing else; searching by town or postcode returns the same directory.</p>
+<h2>What stays on your device</h2>
+
+<p>No cookie, but two technical things, neither of which is an identifier:</p>
+<ul>
+  <li>an <strong>offline cache</strong> (a <em>service worker</em>) holding the app's files and
+      the venues, so the directory still works in a stadium with no signal;</li>
+  <li>a <code>reparation</code> key in the tab's memory (<em>sessionStorage</em>), which stops
+      the app reloading in a loop after an update, and disappears when you close the tab.</li>
+</ul>
+<p>Clearing the site's data in your browser removes both.</p>
+<h2>Robots, on the other hand, are logged</h2>
+
+<p>The domain goes through Cloudflare, where a small program records the passage of crawlers:
+   Googlebot, GPTBot, ClaudeBot, PerplexityBot and the rest. It is the only place they can be
+   seen from — a crawler does not run JavaScript, so no in-page measurement ever reaches it.</p>
+<p>That log holds <strong>no human visit</strong> and <strong>no IP address</strong>. One line
+   is: the UTC timestamp, the robot's canonical name, its <em>user-agent</em>, the host, the
+   requested path, the page type, the response code, and the country of the data centre the
+   request comes from — which designates a machine, never a person. The code is there to read:
+   <a href="https://github.com/Chardonneaur/pistes-athle/blob/master/logs/worker.js" rel="noopener">logs/worker.js</a>.</p>
+<h2>What your browser requests from other servers</h2>
+
+<p>Drawing a map or an aerial view forces your browser to fetch files elsewhere. Those servers
+   then see, as any requested server does, your IP address and your browser. None of them
+   receives your location, or any data about you from this site.</p>
+<ul>
+  <li><strong>GitHub Pages</strong> and <strong>Cloudflare</strong> — hosting and delivery of
+      the pages.</li>
+  <li><strong>cdn.matomo.cloud</strong> and <strong>ronanchardonneau.matomo.cloud</strong> —
+      the audience measurement described above.</li>
+  <li><strong>tile.openstreetmap.org</strong> — the base map tiles, once you open the map tab.</li>
+  <li><strong>data.geopf.fr</strong> — the IGN aerial views shown on venues that have no photo
+      yet. The images are not stored here; they are requested from the French Géoplateforme as
+      the page is displayed.</li>
+  <li><strong>pagead2.googlesyndication.com</strong> and Google's ad
+      servers — the slot described above. They see your IP address, and what they do with it
+      falls under Google's rules.</li>
+  <li><strong>Google Maps</strong> — only if you click &laquo;&nbsp;Directions&nbsp;&raquo; or
+      &laquo;&nbsp;Opening hours&nbsp;&raquo;: you then leave this site, and Google's rules
+      apply.</li>
+</ul>
+
+<p><strong>This list stops being exhaustive as soon as an advertisement is displayed.</strong>
+   The creative comes from the server of whichever advertiser won the auction, and nobody can
+   enumerate those in advance. That is why this site's security policy, which used to restrict
+   images to a named list, now allows any HTTPS server. We would rather write it down than let
+   you believe the list is complete.</p>
+<h2>Contributing means publishing</h2>
+
+<p>A photo, a review or a correction is published on the site under the ODbL licence, with the
+   credit you give. You write that credit yourself: a first name, a full name or a pseudonym,
+   as you prefer — it is the only thing about you that will appear.</p>
+<p>Two routes, and they are not equivalent. The <strong>GitHub form</strong> opens a public
+   thread under your GitHub account, visible to everyone. <strong>Email</strong> lands in a
+   private inbox: your address is used to answer you, never published, never used for anything
+   else.</p>
+<p>A contribution can be taken off the site on request. What others have already reused under
+   the licence, however, is beyond the project's reach: that is the price of freely reusable
+   data, and it is better known before you send.</p>
+<h2>Your rights, and who to write to</h2>
+
+<p>The GDPR gives you rights of access, rectification, erasure and objection. For contributions
+   — displayed name, photos, reviews, emails exchanged — this is straightforward: they can be
+   found, corrected, deleted.</p>
+<p>For audience measurement, honesty is due: since it keeps no identifier, nothing makes it
+   possible to find <em>your</em> visits among the others, to show them to you, or to erase them
+   selectively. The only way out is preventive: turn <em>Do Not Track</em> on in your browser,
+   and you will not be measured at all.</p>
+<p>Data controller: Ronan Chardonneau. To write: <code>ronanchardonneau (at) gmail.com</code> —
+   the address is not a clickable link, for the reason it appears nowhere else in this site's
+   HTML: harvesters would read it. You can also go through the
+   <a href="https://github.com/Chardonneaur/pistes-athle/issues" rel="noopener">GitHub repository</a>.</p>
+<p>If you disagree with how any of this is handled, you may lodge a complaint with the French
+   <a href="https://www.cnil.fr/en/home" rel="noopener">CNIL</a>.</p>
+</div>
+<p class="src">This page describes the code published on 12 September 2026. It changes the day that code changes.</p>
+
+</main>
+<footer class="wrap src">
+  <p><a href="../../en/">Open the interactive map</a> ·
+     <a href="../../en/departments/">Browse by department</a> ·
+     <a href="../../en/loops-to-check/">Loops to check</a> ·
+     <a href="../../en/privacy/">Privacy</a> ·
+     <a href="https://github.com/Chardonneaur/pistes-athle">Source code</a></p>
+</footer>
+</body>
+</html>

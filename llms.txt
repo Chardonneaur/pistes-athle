@@ -1,0 +1,125 @@
+# Où s'entraîner ? / Where to train?
+
+> Annuaire libre des 7 296 installations d'athlétisme de France (6 690 avec piste),
+> avec leur revêtement, leurs agrès, leurs conditions d'accès et leurs coordonnées.
+> Open directory of the 7,296 athletics venues in France (6,690 with a running track),
+> including surface, equipment, access conditions and coordinates.
+
+Données issues du Recensement des équipements sportifs (Data ES) du ministère français chargé
+des Sports, sous Licence Ouverte 2.0, enrichies par des contributions communautaires.
+Data from the French sports ministry's facilities census (Data ES), Licence Ouverte 2.0,
+enriched by community contributions. Dernière génération / last build: 2026-09-12.
+
+## Jeu de données / Dataset
+
+- [tracks.json](https://pistes-athle.com/data/tracks.json): l'intégralité du jeu de données en un seul fichier
+  JSON (~1,5 Mo). Les clés sont abrégées ; l'objet `keymap` du fichier donne la correspondance
+  vers les noms complets (`n` = nom, `v` = ville, `y`/`x` = latitude/longitude, `s` = revêtement,
+  `g` = agrès, `lp` = longueur de piste, `cl` = couloirs, `al` = accès libre…). `deps` associe
+  chaque code de département à son nom et à sa région. / Whole dataset in one JSON file; the
+  `keymap` object maps the short keys to full field names.
+- Licence : [Licence Ouverte 2.0](https://github.com/etalab/licence-ouverte/blob/master/LO.md) —
+  réutilisation libre, y compris commerciale, avec mention de la source.
+
+## Pages HTML (sans JavaScript) / Plain HTML pages
+
+- [Application française](https://pistes-athle.com/) — carte, filtres et recherche (nécessite JavaScript).
+- [English app](https://pistes-athle.com/en/) — same application in English.
+- Les deux pages d'accueil portent une FAQ (accès libre, longueur d'un tour de piste,
+  revêtements, provenance des données), balisée en JSON-LD `FAQPage`.
+  / Both home pages carry a JSON-LD `FAQPage` covering access, lap length, surfaces and sourcing.
+- [Annuaire par département](https://pistes-athle.com/departements/) — les 108 départements.
+- [Directory by department](https://pistes-athle.com/en/departments/) — English version.
+- [Confidentialité](https://pistes-athle.com/confidentialite/) / [Privacy](https://pistes-athle.com/en/privacy/) — ce que le
+  site mesure (Matomo sans cookie), ce que le journal des robots enregistre, et les serveurs
+  tiers que la page appelle. / what the site measures, what the crawler log records, and which
+  third-party servers the page calls.
+- Une page par installation / one page per venue:
+  `https://pistes-athle.com/site/<ID>/` (fr) et `https://pistes-athle.com/en/track/<ID>/` (en), où `<ID>` est
+  l'identifiant national de l'installation (champ `i` du JSON, ex. `I441310030`).
+- Une page par département / one page per department:
+  `https://pistes-athle.com/departement/<CODE>/` (fr) et `https://pistes-athle.com/en/department/<CODE>/` (en),
+  où `<CODE>` est le code INSEE du département (ex. `44`, `2A`, `971`).
+- Chaque page site porte un balisage JSON-LD `SportsActivityLocation` avec adresse, coordonnées,
+  agrès, accès et avis. / Every venue page embeds JSON-LD.
+
+## Interroger l'annuaire / Querying the directory
+
+- [openapi.json](https://pistes-athle.com/openapi.json) : le contrat complet, en OpenAPI 3.1 — paramètres de
+  recherche, schéma des réponses, vocabulaires. / The full contract, OpenAPI 3.1.
+- [api/tracks.json](https://pistes-athle.com/api/tracks.json) : document de capacités. Il dit ce que cet hôte
+  sait faire et quelles URL appeler. **À lire en premier.** / Capability document; read this first.
+- [api/index.json](https://pistes-athle.com/api/index.json) : les 7 296 installations réduites aux champs
+  filtrables, en un fichier (~1 Mo). De quoi faire soi-même n'importe quelle conjonction de
+  critères. / The whole directory reduced to its filterable fields, in one file.
+- Facettes pré-calculées, un fichier JSON par critère / pre-computed facets, one JSON file each:
+  `api/tracks/<ID>.json` · `api/tracks/department/<CODE>.json` · `api/tracks/city/<DEP>/<SLUG>.json` ·
+  `api/tracks/discipline/<DISCIPLINE>.json` (et `/<DEP>.json`) · `api/tracks/length/<METRES>.json` ·
+  `api/tracks/surface/<REVETEMENT>.json` · `api/tracks/lanes/<N>.json` ·
+  `api/tracks/free-access.json` · `api/tracks/reviewed.json` ·
+  `api/geo/<LAT>/<LON>.json` (cellule de 0,1 degré).
+- **Recherche à paramètres combinables** : `https://pistes-athle-api.athle.workers.dev/api/tracks`.
+  Tous les critères se combinent en conjonction (ET), et la recherche par rayon accepte des
+  coordonnées quelconques — ce qu'aucun fichier pré-calculé ne peut offrir. Exemple :
+  `https://pistes-athle-api.athle.workers.dev/api/tracks?lat=47.21&lon=-1.55&radius=20&free_access=true`
+  / Combinable query parameters, including radius search around arbitrary coordinates.
+- Ce miroir-ci est **statique** : la chaîne de requête y est ignorée par l'hébergeur. Les facettes
+  ci-dessus et le serveur de recherche répondent aux mêmes questions — l'un fichier par fichier,
+  l'autre en un appel. / This mirror is static; the search server above takes parameters.
+- Deux règles de lecture / two reading rules: `acces_libre` vaut `true` ou `null`, **jamais**
+  `false` — un blanc n'est pas un refus ; et les disciplines filtrent sur les agrès **déclarés**,
+  ceux qu'un contributeur a déduits d'une orthophoto étant rendus à part.
+  / `acces_libre` is never `false`, only `true` or `null`; discipline filters use declared
+  equipment only.
+- `nb_avis` fait exception : zéro y est un fait, pas un blanc. Cette base sait si quelqu'un a
+  décrit un site, donc `has_reviews=false` est légitime là où `free_access=false` ne l'est pas.
+  Les 7 296 moins les 5 décrites forment la file d'attente de la contribution — croisez-la
+  avec une commune ou un département pour savoir où aller voir.
+  / `nb_avis` is the exception: zero is a fact, so `has_reviews=false` is meaningful.
+
+## Pages de recherche / Search pages
+
+- Par commune / by town: `https://pistes-athle.com/ville/<SLUG>/` et `https://pistes-athle.com/en/city/<SLUG>/`.
+  Paris, Lyon et Marseille regroupent leurs arrondissements, que Data ES sépare.
+  / Paris, Lyon and Marseille aggregate their arrondissements.
+- Par critère / by criterion: `https://pistes-athle.com/pistes/<CRITERE>/` et `https://pistes-athle.com/en/tracks/<CRITERION>/`.
+  La liste des critères est close : les voici tous, plutôt que des exemples. Une adresse
+  déduite au lieu d'être lue ici mène à une 404 — vu le 25/08/2026, un agent a demandé
+  `/criteres/piste-400m/`, qui n'a jamais existé, pour `/pistes/400m/`.
+  / The list of criteria is closed; here it is in full rather than by example. A guessed
+  address leads to a 404.
+  fr: `stade-athletisme`, `400m`, `350m`, `333m`, `330m`, `300m`, `250m`, `200m`, `150m`, `100m`, `8-couloirs`, `7-couloirs`, `6-couloirs`, `5-couloirs`, `4-couloirs`, `3-couloirs`, `2-couloirs`, `acces-libre`, `steeple`, `longueur`, `triple`, `hauteur`, `perche`, `poids`, `disque`, `marteau`, `javelot`, `synthetique`, `bitume`, `cendree`, `sable`, `gazon`, `naturel`, `interieur`
+  en: `athletics-stadium`, `400m`, `350m`, `333m`, `330m`, `300m`, `250m`, `200m`, `150m`, `100m`, `8-lanes`, `7-lanes`, `6-lanes`, `5-lanes`, `4-lanes`, `3-lanes`, `2-lanes`, `free-access`, `steeplechase`, `long-jump`, `triple-jump`, `high-jump`, `pole-vault`, `shot-put`, `discus`, `hammer`, `javelin`, `synthetic`, `asphalt`, `cinder`, `sand`, `grass`, `natural`, `indoor`
+- Croisement avec un département / crossed with a department:
+  `https://pistes-athle.com/pistes/<CRITERE>/<DEPARTEMENT>/`. Seules les intersections comptant au moins trois
+  installations existent : une page qui répéterait une seule fiche n'apporterait rien.
+  / Only intersections with at least three venues are generated.
+- Chaque page de recherche porte le lien vers la facette d'API qui rend la même sélection en JSON.
+  / Every search page links to the API facet returning the same selection.
+
+## Photos de terrain / Field photos
+
+- Les photos sont prises sur place par des contributeurs, jamais générées ni reprises ailleurs.
+  Elles vivent sous `https://pistes-athle.com/data/photos/<ID>/`, nommées d'après leur sujet, le stade et la
+  commune. / Photos are taken on site by contributors; filenames describe subject, venue and town.
+- Chaque photo est déclarée en JSON-LD `ImageObject` sur la page de son site, avec sa légende,
+  son auteur, ses dimensions et le lieu photographié, et listée dans le plan de site
+  ([sitemap.xml](https://pistes-athle.com/sitemap.xml)) via l'extension `image:`.
+  / Each photo is described as an `ImageObject` and declared in the image sitemap.
+- Licence des photos : [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/), avec le crédit
+  de leur auteur — distincte de la Licence Ouverte qui couvre les données.
+  / Photos are ODbL 1.0 with author credit, unlike the data itself.
+- Une installation sans photo affiche à la place une orthophoto IGN (BD ORTHO®, Licence Ouverte
+  2.0), datée de son millésime : elle montre l'implantation, pas l'état des agrès.
+  / Venues without a photo show a dated IGN aerial view instead.
+
+## À savoir / Caveats
+
+- Les données sont **déclaratives** : saisies par les propriétaires des installations, elles
+  peuvent être incomplètes ou périmées, en particulier les conditions d'accès.
+  / Records are self-declared and may be outdated, especially access conditions.
+- Certaines fiches indiquent « aire de saut » ou « aire de lancer » sans préciser la discipline :
+  elles sont marquées comme probables (`gp` dans le JSON, mentions en pointillés sur le site).
+  / Some records report a jump or throwing area without naming the discipline; those are flagged
+  as uncertain.
+- Corrections et ajouts : https://pistes-athle.com/ ou https://github.com/Chardonneaur/pistes-athle
