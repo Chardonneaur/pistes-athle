@@ -1,0 +1,193 @@
+/* Feuille de style des pages statiques (une par site, par département).
+   Ces pages sont du HTML complet, lisible sans JavaScript : c'est ce que
+   voient les moteurs de recherche et les agents IA. */
+:root{
+  /* Sur l'orange sombre, le blanc tombe a 2,26:1 — il en faut 4,5. On pose
+     donc la couleur du texte porte par l'accent dans un jeton plutot que
+     d'ecrire #fff en dur : en clair il reste blanc (5,18:1), en sombre il
+     passe au bleu nuit du fond (8,32:1). */
+  --bg:#f6f7f9; --surface:#fff; --ink:#0f172a; --muted:#5b6a7d; --line:#e4e8ee;
+  --on-accent:#fff; --star:#b45309;
+  --accent:#c2410c; --accent-soft:#fff1e9; --ok:#0d7d5a; --ok-soft:#e6f5ef;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#0b1120;--surface:#131c2e;--ink:#e8eef7;--muted:#93a3b8;--line:#243247;
+        --on-accent:#0b1120;--star:#fbbf24;
+        --accent:#fb923c;--accent-soft:#3a1f10;--ok:#34d399;--ok-soft:#123328;}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);
+  font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%}
+a{color:var(--accent)}
+img{max-width:100%}
+
+.page-bar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;
+  justify-content:space-between;padding:10px 16px;background:var(--surface);
+  border-bottom:1px solid var(--line)}
+.page-bar .home{display:flex;align-items:center;gap:8px;font-weight:700;
+  text-decoration:none;color:var(--ink);font-size:15px}
+.page-bar svg{width:22px;height:22px;color:var(--accent)}
+.page-bar .lang{font-size:12.5px;color:var(--muted);text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 64px}
+.crumb{font-size:12.5px;color:var(--muted);margin:0 0 14px}
+.crumb a{color:var(--muted)}
+h1{font-size:26px;line-height:1.25;letter-spacing:-.02em;margin:0 0 6px}
+h2{font-size:14px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+  margin:30px 0 10px}
+.loc{color:var(--muted);margin:0 0 14px;font-size:15px}
+.lede{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;margin:0 0 18px}
+.rating{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted);margin:0 0 14px}
+.stars{color:var(--star);letter-spacing:1px}
+
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 8px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:11px;
+  border:1px solid var(--line);background:var(--surface);text-decoration:none;
+  color:var(--ink);font-size:14.5px;font-weight:600}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:0}
+.kv{background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:10px 12px}
+.kv dt{font-size:12px;color:var(--muted);margin:0}
+.kv dd{margin:2px 0 0;font-size:15px;font-weight:600}
+
+.eq{display:flex;flex-wrap:wrap;gap:7px;padding:0;margin:0;list-style:none}
+.eq li{font-size:14px;padding:6px 12px;border-radius:8px;background:var(--accent-soft);
+  color:var(--accent);font-weight:600}
+.eq li.maybe{background:var(--surface);color:var(--muted);border:1px dashed var(--line)}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0}
+.gallery figure{margin:0}
+/* Les photos vont du panorama au portrait : on respecte leur cadrage plutot
+   que de recadrer de force. Les attributs width/height du HTML reservent la place. */
+.gallery img{width:100%;height:auto;border-radius:12px;background:var(--surface);display:block}
+.gallery figcaption{font-size:12.5px;color:var(--muted);margin-top:5px}
+
+/* Vue aerienne : affichee quand le site n'a aucune photo de terrain. La legende
+   la distingue clairement d'une photo contribuee. */
+.aerial{margin:0}
+.aerial img{width:100%;height:auto;border-radius:12px;background:var(--surface);display:block;
+  border:1px solid var(--line)}
+.aerial figcaption{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.45}
+.aerial figcaption span{display:block;opacity:.75}
+
+.avis{background:var(--surface);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;margin-bottom:9px}
+/* Remarque libre sur un site : correction, reserve, origine d'une donnee. */
+.note{background:var(--surface);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;
+  padding:10px 13px;font-size:14.5px;color:var(--muted);line-height:1.5}
+
+.avis header{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:4px;font-size:13.5px}
+.avis header time{color:var(--muted);font-size:12.5px;margin-left:auto}
+.avis p{margin:0;font-size:14.5px}
+
+.liste{list-style:none;padding:0;margin:0;display:grid;gap:7px}
+.liste a{display:block;background:var(--surface);border:1px solid var(--line);
+  border-radius:11px;padding:11px 13px;text-decoration:none;color:var(--ink)}
+.liste .meta{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.cols{columns:2 220px;gap:18px}
+.cols a{display:block;padding:3px 0;font-size:14.5px}
+.ville{margin:22px 0 8px;font-size:16px;font-weight:700;text-transform:none;letter-spacing:0;color:var(--ink)}
+
+.src{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:34px;
+  border-top:1px solid var(--line);padding-top:16px}
+.src a{color:var(--muted)}
+
+/* ---------- page contributeurs ---------- */
+.palmares{list-style:none;padding:0;margin:0 0 8px;display:grid;gap:7px;counter-reset:none}
+.palmares li{display:flex;align-items:center;gap:12px;padding:11px 14px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.palmares .rang{flex:none;width:26px;height:26px;border-radius:50%;display:grid;
+  place-items:center;background:var(--accent-soft);color:var(--accent);
+  font-weight:700;font-size:13px}
+.palmares strong{display:block}
+.palmares .meta{display:block;font-size:12.5px;color:var(--muted)}
+
+.contributions{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.contributions li{display:flex;align-items:center;gap:12px;padding:8px;
+  background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.contributions img{flex:none;width:96px;height:72px;object-fit:cover;border-radius:8px;
+  background:var(--line)}
+.contributions .quoi{min-width:0}
+.contributions a{font-weight:600;text-decoration:none}
+.contributions .loc,.contributions .meta{display:block;font-size:12.5px;color:var(--muted)}
+
+.appel{margin:26px 0 8px;padding:16px;border-radius:14px;
+  background:var(--accent-soft);border:1px solid var(--line)}
+.appel strong{display:block;font-size:16px}
+.appel p{margin:6px 0 12px;font-size:14.5px;color:var(--muted)}
+.appel .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;
+  border-radius:11px;text-decoration:none;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);font-weight:600}
+.appel .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+
+/* ---------- page confidentialité ---------- */
+/* Du texte suivi, pas des cartes : la seule page du site qui se lise d'un bout
+   à l'autre. Les h2 y sont des repères, pas des étiquettes de section. */
+.prose{max-width:64ch}
+.prose h2{margin:28px 0 8px}
+.prose p{margin:0 0 12px;font-size:15px}
+.prose ul{margin:0 0 14px;padding-left:20px;font-size:15px}
+.prose li{margin:0 0 6px}
+.prose code{font:13.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:2px 5px}
+
+/* Deux chemins côte à côte : avec compte GitHub, ou sans. */
+.appel .boutons{display:flex;flex-wrap:wrap;gap:9px}
+
+/* Les anneaux a verifier : une vue aerienne, ce qu'OpenStreetMap en dit, et
+   deux liens. Pas une fiche — rien ici n'est affirme, tout est demande. */
+.candidats{list-style:none;padding:0;margin:0;display:grid;gap:16px}
+.candidats li{background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;overflow:hidden}
+.candidats img{width:100%;height:auto;display:block;background:var(--line)}
+.candidats .quoi{display:block;padding:11px 13px 13px}
+.candidats .quoi strong{font-size:15.5px}
+.candidats .meta{display:block;font-size:12.5px;color:var(--muted);margin:2px 0 9px}
+.candidats .liens{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:13.5px}
+@media (min-width:620px){.candidats{grid-template-columns:repeat(2,1fr)}}
+
+/* Emplacement publicitaire. Deux exigences tenues ici plutot qu'en JavaScript :
+   la hauteur est RESERVEE avant que l'annonce arrive — sans quoi elle pousse
+   le texte vers le bas, et ces fiches se battent en position 10 — et
+   l'etiquette est visible sans effort, parce qu'un visiteur doit pouvoir
+   distinguer ce que le ministere declare de ce qu'un annonceur paie.
+   assets/adsense.js replie le bloc entier si aucune annonce n'est servie. */
+.pub{margin:26px 0;padding:0;border:0;background:none}
+.pub-etiq{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 5px}
+.pub ins.adsbygoogle{display:block;min-height:250px;background:var(--surface);
+  border:1px solid var(--line);border-radius:12px;overflow:hidden}
+/* Le bloc est de forme carree et pleine largeur : sur un telephone de 360 px il
+   fait ~360 px de haut, pas 250. La reservation suit donc la largeur — faute de
+   pouvoir la connaitre, une annonce responsive n'annoncant pas sa taille
+   d'avance. Il reste quelques dizaines de pixels d'incertitude : mieux vaut
+   reserver a peu pres juste que franchement faux. */
+@media (max-width:420px){.pub ins.adsbygoogle{min-height:320px}}
+
+/* Lien affilie Amazon. Meme place et meme retrait que .pub, meme etiquette qui
+   le distingue du releve du ministere. Un lien, pas un cadre : aucune hauteur a
+   reserver, aucun script, aucune image tierce — le visuel est une icone en
+   ligne. Vide si PARTENAIRE_LIEN n'est pas renseigne : rien n'est rendu. */
+.partenaire{margin:26px 0}
+.partenaire-etiq{display:block;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 5px}
+.partenaire-lien{display:flex;align-items:center;gap:14px;padding:14px 16px;
+  border:1px solid var(--line);border-radius:12px;background:var(--surface);
+  text-decoration:none;color:var(--ink)}
+.partenaire-lien:hover{border-color:var(--accent)}
+.partenaire-pic{flex:0 0 auto;width:26px;height:26px;color:var(--accent)}
+.partenaire-txt{display:block;font-size:13.5px;line-height:1.45;min-width:0}
+.partenaire-txt strong{display:block;font-size:15px;margin:0 0 2px}
+.partenaire-cta{flex:0 0 auto;align-self:center;white-space:nowrap;font-weight:600;
+  font-size:13px;padding:9px 14px;border-radius:8px;
+  background:var(--accent);color:var(--on-accent)}
+.partenaire-note{display:block;margin:10px 0 0;font-size:11px;color:var(--muted)}
+@media (max-width:420px){
+  .partenaire-lien{flex-wrap:wrap}
+  .partenaire-cta{width:100%;text-align:center}
+}
