@@ -1,0 +1,19 @@
+{
+  "name": "Where to train? — Athletics tracks in France",
+  "short_name": "Where to train",
+  "description": "Find the nearest athletics track in France and what it offers: jump areas, throwing circles, surface.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "../en/",
+  "scope": "../",
+  "id": "/en/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f7f9",
+  "theme_color": "#0f172a",
+  "categories": ["sports", "navigation"],
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
